@@ -8,7 +8,7 @@
 - Admin portal / account managemnt TBD
 
 
-# 
+## Scriptieonderwerpen
 - Jarno: How to secure an open source website
 - Ivar: TBD
-- Nedim: Toeghakelijks / gebruikvriendelijks voor niet technische mensen
+- Nedim: Toegankelijk / gebruiksvriendelijk voor mensen zonder programmeerervaring

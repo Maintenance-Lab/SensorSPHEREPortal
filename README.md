@@ -10,5 +10,5 @@
 
 ## Scriptieonderwerpen
 - Jarno: How to secure an open source website
-- Ivar: TBD
+- Ivar: How to make this open-source project as accessible as possible
 - Nedim: Toegankelijk / gebruiksvriendelijk voor mensen zonder programmeerervaring

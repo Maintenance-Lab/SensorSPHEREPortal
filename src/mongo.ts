@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+var global: any = global || {};
 
 import { MONGODB_URI } from "./config.js";
 

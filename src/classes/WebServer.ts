@@ -29,9 +29,9 @@ class WebServer extends EventEmitter {
     // cookies/session/etc gets passed through
     this.app.set("trust proxy", 1);
 
-    this.app.get("/", (_: Request, res: Response) => {
-      return res.send("ResearchRunner Data Home");
-    });
+    // this.app.get("/", (_: Request, res: Response) => {
+    //   return res.send("ResearchRunner Data Home");
+    // });
 
     // this.app.use(auth()); // Every request must have auth header
     this.app.use(express.json({limit: '900mb'}));

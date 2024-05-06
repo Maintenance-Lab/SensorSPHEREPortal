@@ -9,6 +9,7 @@ import { PORT } from "../config.js";
 // import auth from "../middleware/auth.js";
 // import cors from "../middleware/cors.js";
 import routes from "../routes/index.js";
+import cors from "../middleware/cors.js";
 
 class WebServer extends EventEmitter {
   public app: Express | null = null;
@@ -35,7 +36,7 @@ class WebServer extends EventEmitter {
 
     // this.app.use(auth()); // Every request must have auth header
     this.app.use(express.json({limit: '900mb'}));
-    // this.app.use(cors());
+    this.app.use(cors());
 
     this.app.use(routes);
 

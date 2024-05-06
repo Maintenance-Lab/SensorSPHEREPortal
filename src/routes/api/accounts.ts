@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { IS_PROD } from "src/config";
+import { IS_PROD } from "../../config.js";
 import {
   getAccountByEmail,
   getAccountById,

@@ -1,27 +1,22 @@
-import React from "react";
-import Home from "./Pages/Home";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import NotFound from "./Pages/NotFound/NotFound";
-import { ProtectedRoute } from "./Helpers/ProtectedRoute";
-import Login from "./Pages/Login/Login";
+import { useRoutes } from 'react-router-dom';
+import router from 'src/router';
 
-const App: React.FC = () => (
-  <BrowserRouter>
-    <Routes>
-      {/* <Route path="*" element={<NotFound />} /> */}
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route
-        path="/test"
-        element={
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        }
-      />
-      {/* <Route path="users/:id" element={<Users />} /> */}
-    </Routes>
-  </BrowserRouter>
-);
+import AdapterDateFns from '@mui/lab/AdapterDateFns';
+import LocalizationProvider from '@mui/lab/LocalizationProvider';
 
+import { CssBaseline } from '@mui/material';
+import ThemeProvider from './theme/ThemeProvider';
+
+function App() {
+  const content = useRoutes(router);
+
+  return (
+    <ThemeProvider>
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <CssBaseline />
+        {content}
+      </LocalizationProvider>
+    </ThemeProvider>
+  );
+}
 export default App;

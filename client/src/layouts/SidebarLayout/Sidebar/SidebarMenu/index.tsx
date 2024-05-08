@@ -31,6 +31,7 @@ import ChromeReaderModeTwoToneIcon from '@mui/icons-material/ChromeReaderModeTwo
 import WorkspacePremiumTwoToneIcon from '@mui/icons-material/WorkspacePremiumTwoTone';
 import CameraFrontTwoToneIcon from '@mui/icons-material/CameraFrontTwoTone';
 import DisplaySettingsTwoToneIcon from '@mui/icons-material/DisplaySettingsTwoTone';
+import { getUser } from 'src/Helpers/cookies';
 
 const MenuWrapper = styled(Box)(
   ({ theme }) => `
@@ -176,6 +177,35 @@ const SubMenuWrapper = styled(Box)(
 
 function SidebarMenu() {
   const { closeSidebar } = useContext(SidebarContext);
+  const user = getUser();
+
+  const isAdmin = user && user.role === 'administrator';
+  const adminMenu = isAdmin ? (
+    <List
+      component="div"
+      subheader={
+        <ListSubheader component="div" disableSticky>
+          Administration
+        </ListSubheader>
+      }
+    >
+      <SubMenuWrapper>
+        <List component="div">
+          <ListItem component="div">
+            <Button
+              disableRipple
+              component={RouterLink}
+              onClick={closeSidebar}
+              to="/admin/users"
+              startIcon={<BrightnessLowTwoToneIcon />}
+            >
+              Manage Users
+            </Button>
+          </ListItem>
+        </List>
+      </SubMenuWrapper>
+    </List>
+  ) : null;
 
   return (
     <>
@@ -188,15 +218,31 @@ function SidebarMenu() {
                   disableRipple
                   component={RouterLink}
                   onClick={closeSidebar}
-                  to="/overview"
+                  to="/projects"
                   startIcon={<DesignServicesTwoToneIcon />}
                 >
-                  Overview
+                  Projects
+                </Button>
+              </ListItem>
+              <ListItem component="div">
+                <Button
+                  disableRipple
+                  component={RouterLink}
+                  onClick={closeSidebar}
+                  to="/account"
+                  startIcon={<AccountCircleTwoToneIcon />}
+                >
+                  My account
                 </Button>
               </ListItem>
             </List>
           </SubMenuWrapper>
         </List>
+
+        {adminMenu}
+
+        {/* Original samples we can use and look at */}
+
         <List
           component="div"
           subheader={

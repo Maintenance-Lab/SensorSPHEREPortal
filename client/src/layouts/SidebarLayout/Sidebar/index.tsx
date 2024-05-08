@@ -17,6 +17,7 @@ import {
 
 import SidebarMenu from './SidebarMenu';
 import Logo from 'src/components/LogoSign';
+import { getUser, logout } from 'src/Helpers/cookies';
 
 const SidebarWrapper = styled(Box)(
   ({ theme }) => `
@@ -34,6 +35,7 @@ function Sidebar() {
   const { sidebarToggle, toggleSidebar } = useContext(SidebarContext);
   const closeSidebar = () => toggleSidebar();
   const theme = useTheme();
+  const user = getUser()
 
   return (
     <>
@@ -81,15 +83,14 @@ function Sidebar() {
         />
         <Box p={2}>
           <Button
-            href="https://bloomui.com"
-            target="_blank"
-            rel="noopener noreferrer"
+            href={user ? null : "/login"}
             variant="contained"
-            color="warning"
+            // color="#1f2737"
             size="small"
             fullWidth
+            onClick={user ? logout : null}
           >
-            Upgrade to PRO
+            {user ? "Logout" : "Login"}
           </Button>
         </Box>
       </SidebarWrapper>

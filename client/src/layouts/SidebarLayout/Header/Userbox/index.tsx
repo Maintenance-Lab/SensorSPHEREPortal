@@ -22,7 +22,8 @@ import ExpandMoreTwoToneIcon from '@mui/icons-material/ExpandMoreTwoTone';
 import AccountBoxTwoToneIcon from '@mui/icons-material/AccountBoxTwoTone';
 import LockOpenTwoToneIcon from '@mui/icons-material/LockOpenTwoTone';
 import AccountTreeTwoToneIcon from '@mui/icons-material/AccountTreeTwoTone';
-import getUser from 'src/Helpers/getUser';
+import { getUser, logout } from 'src/Helpers/cookies';
+import DesignServicesTwoToneIcon from '@mui/icons-material/DesignServicesTwoTone';
 
 const UserBoxButton = styled(Button)(
   ({ theme }) => `
@@ -96,22 +97,18 @@ function HeaderUserbox() {
       </MenuUserBox>
       <Divider sx={{ mb: 0 }} />
       <List sx={{ p: 1 }} component="nav">
-        <ListItem button to="/management/profile/details" component={NavLink}>
-          <AccountBoxTwoToneIcon fontSize="small" />
-          <ListItemText primary="My Profile" />
+        <ListItem button to="/projects" component={NavLink}>
+          <DesignServicesTwoToneIcon fontSize="small" />
+          <ListItemText primary="Projects" />
         </ListItem>
-        <ListItem button to="/dashboards/messenger" component={NavLink}>
-          <InboxTwoToneIcon fontSize="small" />
-          <ListItemText primary="Messenger" />
-        </ListItem>
-        <ListItem button to="/management/profile/settings" component={NavLink}>
+        <ListItem button to="/account" component={NavLink}>
           <AccountTreeTwoToneIcon fontSize="small" />
           <ListItemText primary="Account Settings" />
         </ListItem>
       </List>
       <Divider />
       <Box sx={{ m: 1 }}>
-        <Button color="primary" fullWidth>
+        <Button color="primary" onClick={logout} fullWidth>
           <LockOpenTwoToneIcon sx={{ mr: 1 }} />
           Sign out
         </Button>
@@ -120,7 +117,7 @@ function HeaderUserbox() {
   ) : (
     <>
       <Box sx={{ m: 1 }}>
-        <Button color="primary" fullWidth>
+        <Button color="primary" href="/login" fullWidth>
           <LockOpenTwoToneIcon sx={{ mr: 1 }} />
           Sign in
         </Button>

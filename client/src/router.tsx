@@ -36,7 +36,7 @@ const UserProfile = Loader(
   lazy(() => import('src/content/applications/Users/profile'))
 );
 const UserSettings = Loader(
-  lazy(() => import('src/content/applications/Users/settings'))
+  lazy(() => import('src/content/pages/account/settings'))
 );
 
 // Components
@@ -98,9 +98,27 @@ const routes: RouteObject[] = [
           {
             path: '',
             element: <Login />
-          },
+          }
         ]
       },
+
+      {
+        // Protected route: Account settings
+        path: 'account',
+        element: (
+          <ProtectedRoute>
+            <SidebarLayout />
+          </ProtectedRoute>
+        ),
+        children: [
+          {
+            path: '',
+            element: <UserSettings />
+          }
+        ]
+      },
+
+      // Template Pages
       {
         path: 'status',
         children: [

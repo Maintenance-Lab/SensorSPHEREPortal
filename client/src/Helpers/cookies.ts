@@ -19,4 +19,11 @@ const getUser = () => {
   }
 };
 
-export default getUser;
+export const logout = () => {
+  const cookies = new Cookies();
+  cookies.remove('token');
+  window.location.href = window.location.origin
+};
+
+
+export { getUser };

@@ -88,20 +88,9 @@ const routes: RouteObject[] = [
         element: <Overview />
       },
       {
-        path: 'overview',
-        element: <Navigate to="/" replace />
-      },
-      {
         path: 'login',
-        element: <SidebarLayout />,
-        children: [
-          {
-            path: '',
-            element: <Login />
-          }
-        ]
+        element: <Login />
       },
-
       {
         // Protected route: Account settings
         path: 'account',

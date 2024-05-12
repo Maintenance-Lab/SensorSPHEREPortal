@@ -19,7 +19,7 @@ router.post("/", async (req, res) => {
       })
       .json({ success: true, location: "/dashboards", error: null });
   }
-  return res.status(401).send("Invalid credentials");
+  return res.json({ success: false, location: null, error: "Invalid login credentials" });
 });
 
 export default router;

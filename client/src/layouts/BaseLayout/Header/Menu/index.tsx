@@ -85,13 +85,9 @@ function HeaderMenu() {
         }}
       >
         <List disablePadding component={Box} display="flex">
-          <ListItem
-            button
-            component={NavLink}
-            to="/"
-          >
+          <ListItem button component={NavLink} to="/">
             <img
-              src="icon.png"
+              src="/icon.png"
               alt="Home"
               style={{
                 width: '50px',

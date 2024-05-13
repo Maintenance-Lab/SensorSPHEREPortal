@@ -1,0 +1,411 @@
+import { useState, useEffect } from 'react';
+import {
+  AppBar,
+  Toolbar,
+  Button,
+  TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Switch,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography
+} from '@mui/material';
+import { makeStyles } from '@mui/styles';
+import { Theme } from '@mui/material/styles';
+import { isEmail } from 'src/Helpers/utils';
+
+const useStyles = makeStyles((theme: Theme) => ({
+  toolbar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    margin: theme.spacing(1)
+  },
+  table: {
+    minWidth: 650
+  },
+  tableCellHeader: {
+    fontWeight: 'bold',
+    backgroundColor: theme.palette.action.hover
+  },
+  whiteInput: {
+    color: '#fff',
+    borderColor: '#fff',
+    '& label.Mui-focused': {
+      color: '#fff'
+    },
+    '& .MuiInput-underline:after': {
+      borderBottomColor: '#fff'
+    },
+    '& .MuiOutlinedInput-root': {
+      '& fieldset': {
+        borderColor: '#fff'
+      },
+      '&:hover fieldset': {
+        borderColor: '#fff'
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#fff'
+      }
+    }
+  },
+  whiteSelect: {
+    color: '#fff',
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#fff'
+    },
+    '&:hover .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#fff'
+    },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#fff'
+    },
+    '& .MuiSvgIcon-root': {
+      color: '#fff' // For the dropdown icon
+    }
+  }
+}));
+
+const fetchData = async () => {
+  // Fetch data from your API or server
+  const res = await fetch('/api/admin/accounts', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
+
+  if (!res.ok) {
+    console.error('Failed to fetch data');
+    return [];
+  }
+  const data = await res.json();
+  if (!data.success) {
+    console.error(data.error);
+    return [];
+  } else return data.accounts;
+
+  //   return [
+  //     {
+  //       _id: '1',
+  //       enabled: true,
+  //       name: 'admin',
+  //       email: 'admin@custom-code.nl',
+  //       hasChangedPassword: false,
+  //       createdAt: '2024-06-13T13:19:09.810Z',
+  //       role: 'administrator',
+  //       hasAvatar: false
+  //     },
+  //     {
+  //       _id: '2',
+  //       enabled: true,
+  //       name: 'demo',
+  //       email: 'demo@custom-code.nl',
+  //       hasChangedPassword: true,
+  //       createdAt: '2024-05-13T13:19:09.810Z',
+  //       __v: 0,
+  //       role: 'student',
+  //       hasAvatar: false
+  //     }
+  //   ];
+};
+
+const ManageUsers = () => {
+  const classes = useStyles();
+
+  const [accounts, setAccounts] = useState([]);
+  const [search, setSearch] = useState('');
+  const [sortedAccounts, setSortedAccounts] = useState([]);
+  const [sortCriteria, setSortCriteria] = useState('_id');
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    role: ''
+  });
+
+  const updateAccount = async (id: string, update: any) => {
+    const index = accounts.findIndex((account) => account._id === id);
+    const account = accounts[index];
+    if (!account) return;
+    Object.assign(account, update);
+    accounts[index] = account;
+    setAccounts([...accounts]); // Update the state
+  };
+
+  const createAccount = async () => {
+    const { name, email, role } = formData;
+    if (!name || !email || !role) {
+      setError('All fields are required');
+      return;
+    }
+    if (!isEmail(email)) {
+      setError('Invalid email address');
+      return;
+    }
+
+    fetch('/api/admin/accounts/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      },
+      body: JSON.stringify({
+        ...formData
+      })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const { success, error, account } = data;
+        if (success) {
+          handleClose();
+          setAccounts([...accounts, account]);
+        } else setError(error || 'Failed to create account');
+      })
+      .catch((error) => console.error(error));
+  };
+
+  const handleResetPassword = (id: string) => {
+    // Implement this
+  };
+
+  const handleToggleEnabled = (id: string, currentVal: boolean) => {
+    updateAccount(id, { enabled: !currentVal });
+  };
+
+  const handleToggleChangedPassword = (id: string, currentVal: boolean) =>
+    updateAccount(id, { hasChangedPassword: !currentVal });
+
+  const handleRemoveAvatar = (id: string) =>
+    updateAccount(id, { hasAvatar: false });
+
+  const handleSearch = (e: any) => setSearch(e.target.value);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setError('');
+    setOpen(false);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
+  useEffect(() => {
+    fetchData().then((data) => setAccounts(data));
+  }, []);
+
+  useEffect(() => {
+    accounts.sort((a, b) => {
+      let returnvalue = 0;
+      if (a[sortCriteria] < b[sortCriteria]) returnvalue = -1;
+      if (a[sortCriteria] > b[sortCriteria]) returnvalue = 1;
+      if (typeof a[sortCriteria] === 'boolean') returnvalue *= -1;
+
+      return returnvalue;
+    });
+    const filteredAccounts = accounts.filter((account) =>
+      Object.values(account).join(' ').includes(search)
+    );
+    setSortedAccounts([...filteredAccounts]);
+  }, [sortCriteria, accounts, search]);
+
+  return (
+    <div>
+      {/* Placeholder for the page title */}
+      <AppBar position="static">
+        <Toolbar className={classes.toolbar}>
+          <Button color="inherit" variant="outlined" onClick={handleClickOpen}>
+            Create Account
+          </Button>
+          <TextField
+            label="Search"
+            variant="outlined"
+            className={classes.whiteInput}
+            InputLabelProps={{
+              style: { color: '#fff' } // Label style
+            }}
+            InputProps={{
+              style: { color: '#fff' } // Input text style
+            }}
+            onChange={handleSearch}
+          />
+          <FormControl
+            variant="outlined"
+            style={{ minWidth: 120 }}
+            className={classes.whiteSelect}
+          >
+            <InputLabel style={{ color: '#fff' }}>Sort by</InputLabel>
+            <Select
+              value={sortCriteria}
+              onChange={(e) => setSortCriteria(e.target.value)}
+              label="Sort by"
+            >
+              <MenuItem value="_id">ID</MenuItem>
+              <MenuItem value="role">Role</MenuItem>
+              <MenuItem value="hasChangedPassword">
+                Has Changed Password
+              </MenuItem>
+              <MenuItem value="createdBy">Created By</MenuItem>
+              <MenuItem value="createdAt">Created At</MenuItem>
+              <MenuItem value="email">Email</MenuItem>
+              <MenuItem value="name">Name</MenuItem>
+            </Select>
+          </FormControl>
+        </Toolbar>
+      </AppBar>
+
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="form-dialog-title"
+      >
+        <DialogTitle id="form-dialog-title">Create Account</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="name"
+            name="name"
+            label="Name"
+            type="text"
+            fullWidth
+            value={formData.name}
+            onChange={handleChange}
+          />
+          <TextField
+            margin="dense"
+            id="email"
+            name="email"
+            label="Email"
+            type="email"
+            fullWidth
+            value={formData.email}
+            onChange={handleChange}
+          />
+          <FormControl fullWidth margin="dense">
+            <InputLabel id="role-label">Role</InputLabel>
+            <Select
+              labelId="role-label"
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              label="Role"
+            >
+              <MenuItem value="administrator">Administrator</MenuItem>
+              <MenuItem value="student">Student</MenuItem>
+              <MenuItem value="teacher">Teacher</MenuItem>
+              <MenuItem value="staff">Staff</MenuItem>
+            </Select>
+            <Typography color="error">{error}</Typography>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={createAccount} color="primary">
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <TableContainer component={Paper}>
+        <Table className={classes.table} aria-label="simple table">
+          <TableHead>
+            <TableRow>
+              <TableCell className={classes.tableCellHeader}>Name</TableCell>
+              <TableCell className={classes.tableCellHeader}>Email</TableCell>
+              <TableCell className={classes.tableCellHeader}>Enabled</TableCell>
+              <TableCell className={classes.tableCellHeader}>
+                Has Changed Password
+              </TableCell>
+              <TableCell className={classes.tableCellHeader}>Role</TableCell>
+              <TableCell className={classes.tableCellHeader}>
+                Created By
+              </TableCell>
+              <TableCell className={classes.tableCellHeader}>
+                Created At
+              </TableCell>
+              <TableCell className={classes.tableCellHeader}>
+                Reset Password
+              </TableCell>
+              <TableCell className={classes.tableCellHeader}>
+                Has Avatar
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {sortedAccounts.map((account, index) => (
+              <TableRow key={index}>
+                <TableCell>{account.name}</TableCell>
+                <TableCell>{account.email}</TableCell>
+                <TableCell>
+                  <Switch
+                    checked={account.enabled}
+                    onChange={() =>
+                      handleToggleEnabled(account._id, account.enabled)
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <Switch
+                    checked={account.hasChangedPassword}
+                    onChange={() =>
+                      handleToggleChangedPassword(
+                        account._id,
+                        account.hasChangedPassword
+                      )
+                    }
+                  />
+                </TableCell>
+                <TableCell>{account.role}</TableCell>
+                <TableCell>{account?.createdBy || 'Unknown'}</TableCell>
+                <TableCell>
+                  {new Date(account.createdAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  <Button onClick={() => handleResetPassword(account._id)}>
+                    Reset
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  {account.hasAvatar ? (
+                    <Button onClick={() => handleRemoveAvatar(account._id)}>
+                      Remove Avatar
+                    </Button>
+                  ) : (
+                    'No'
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </div>
+  );
+};
+
+export default ManageUsers;

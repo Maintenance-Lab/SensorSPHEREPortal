@@ -1,25 +1,45 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { IS_PROD, JWT_ACCESS_SECRET, JWT_EXPIRESIN } from "../../config.js";
+import { getAccountByNameOrEmail } from "../../services/Account.js";
+import { verify } from "@node-rs/argon2";
 
 const router = Router();
-
-router.get("/", (_, res) => {
-  res.send("login route");
-});
 
 router.post("/", async (req, res) => {
   console.log("login route", req.body);
   const { username, password } = req.body;
-  if (username === "admin" && password === "admin") {
-    const token = jwt.sign({ id: 1, name: "admin", role: "administrator" }, JWT_ACCESS_SECRET, { expiresIn: JWT_EXPIRESIN });
+
+  try {
+    const account = await getAccountByNameOrEmail(username);
+    if (!account) return res.json({ success: false, location: null, error: "Invalid login credentials" });
+
+    if (!account.enabled)
+      return res.json({
+        success: false,
+        location: null,
+        error: "Account is disabled, contact your system administrator",
+      });
+
+    const isValid = await verify(account.password, password);
+    if (!isValid) return res.json({ success: false, location: null, error: "Invalid login credentials" });
+
+    const { _id, name, role, hasAvatar } = account;
+
+    const token = jwt.sign({ _id, name, role, hasAvatar }, JWT_ACCESS_SECRET, {
+      expiresIn: JWT_EXPIRESIN,
+    });
+
     return res
       .cookie("token", token, {
         secure: IS_PROD,
+        maxAge: JWT_EXPIRESIN * 1000,
       })
       .json({ success: true, location: "/dashboards", error: null });
+  } catch (error) {
+    if (!IS_PROD) console.error("Error logging in", error);
+    return res.json({ success: false, location: null, error: "Error logging in, please try again later" });
   }
-  return res.json({ success: false, location: null, error: "Invalid login credentials" });
 });
 
 export default router;

@@ -3,7 +3,8 @@
  */
 import { EventEmitter } from "events";
 import { createServer, Server } from "http";
-import express, { Express, Request, Response } from "express";
+import express, { Express } from "express";
+import cookieparser from "cookie-parser";
 
 import { PORT } from "../config.js";
 // import auth from "../middleware/auth.js";
@@ -35,8 +36,9 @@ class WebServer extends EventEmitter {
     // });
 
     // this.app.use(auth()); // Every request must have auth header
-    this.app.use(express.json({limit: '900mb'}));
+    this.app.use(express.json());
     this.app.use(cors());
+    this.app.use(cookieparser());
 
     this.app.use(routes);
 

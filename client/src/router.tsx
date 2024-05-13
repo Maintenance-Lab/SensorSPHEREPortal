@@ -7,7 +7,6 @@ import BaseLayout from 'src/layouts/BaseLayout';
 
 import SuspenseLoader from './Components/SuspenseLoader';
 import { ProtectedRoute } from './Helpers/ProtectedRoute';
-import Login from './content/pages/login/Login';
 
 const Loader = (Component) => (props) =>
   (
@@ -16,6 +15,10 @@ const Loader = (Component) => (props) =>
     </Suspense>
   );
 
+// Base
+
+const Login = Loader(lazy(() => import('src/content/pages/login/Login')));
+
 // Pages
 
 const Overview = Loader(lazy(() => import('src/content/overview')));
@@ -23,6 +26,7 @@ const Overview = Loader(lazy(() => import('src/content/overview')));
 // Dashboards
 
 const Crypto = Loader(lazy(() => import('src/content/dashboards/Crypto')));
+const ManageUsers = Loader(lazy(() => import('src/content/pages/admin/users/')));
 
 // Applications
 
@@ -103,6 +107,21 @@ const routes: RouteObject[] = [
           {
             path: '',
             element: <UserSettings />
+          }
+        ]
+      },
+      {
+        // Protected route: Admin settings
+        path: 'admin',
+        element: (
+          <ProtectedRoute>
+            <SidebarLayout />
+          </ProtectedRoute>
+        ),
+        children: [
+          {
+            path: 'users',
+            element: <ManageUsers />
           }
         ]
       },

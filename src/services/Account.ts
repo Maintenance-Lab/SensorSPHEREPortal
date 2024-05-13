@@ -97,7 +97,7 @@ export const updateAccount = (id: string, item: Partial<AccountModel>) => {
         // Create a document if one isn't found.
         upsert: false,
       };
-      const result = await Account.findOneAndUpdate(query, newItem, options);
+      const result = await Account.findOneAndUpdate(query, newItem, options).populate("createdBy");
       return resolve(result);
     } catch (error) {
       reject(error);

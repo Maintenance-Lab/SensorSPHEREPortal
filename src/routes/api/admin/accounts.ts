@@ -1,13 +1,31 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { IS_PROD, JWT_ACCESS_SECRET } from "../../../config.js";
-import { createAccount, getAllAccounts } from "../../../services/Account.js";
+import { createAccount, getAllAccounts, updateAccount } from "../../../services/Account.js";
 import { hash } from "@node-rs/argon2";
 import { handleMongoError } from "../../../tools/utils.js";
 import mongoose from "mongoose";
 import { Request, Response } from "express";
+import { AccountModel } from "../../../models/Account.js";
 
 const AdminAccountRouter = Router();
+
+const createAccountResponse = (account: Partial<AccountModel>): Partial<AccountModel> => {
+  let { _id, enabled, name, email, meta, createdBy, createdAt, hasChangedPassword, role, hasAvatar } = account;
+  if (createdBy && typeof createdBy === "object") createdBy = createdBy.name || "System";
+  return {
+    _id,
+    enabled,
+    name,
+    email,
+    meta,
+    createdBy,
+    createdAt,
+    hasChangedPassword,
+    role,
+    hasAvatar,
+  };
+};
 
 const isAdmin = (req: Request, res: Response) => {
   const cookies = req.cookies || {};
@@ -35,16 +53,7 @@ AdminAccountRouter.get("/", async (req, res) => {
 
     const accounts = await getAllAccounts();
     const responseAccounts = accounts.map((account: any) => {
-      return {
-        _id: account._id,
-        enabled: account.enabled,
-        name: account.name,
-        email: account.email,
-        role: account.role,
-        hasAvatar: account.hasAvatar,
-        createdAt: account.createdAt,
-        createdBy: account.createdBy ? account.createdBy.name : "System",
-      };
+      return createAccountResponse(account);
     });
 
     return res.json({ success: true, error: null, accounts: responseAccounts });
@@ -71,16 +80,9 @@ AdminAccountRouter.post("/create", async (req, res) => {
     const password = await hash("password");
     const newAccount = await createAccount({ name, email, role, password, createdBy: account._id });
 
-    const resposeAccount = {
-      _id: newAccount._id,
-      enabled: newAccount.enabled,
-      name: newAccount.name,
-      email: newAccount.email,
-      role: newAccount.role,
-      hasAvatar: newAccount.hasAvatar,
-      createdAt: newAccount.createdAt,
-      createdBy: account.name,
-    };
+    const resposeAccount = createAccountResponse(newAccount);
+    if (!resposeAccount) return res.status(500);
+    resposeAccount["createdBy"] = account.name || "System";
 
     return res.json({ success: true, error: null, account: resposeAccount });
   } catch (error: any) {
@@ -89,6 +91,29 @@ AdminAccountRouter.post("/create", async (req, res) => {
       return res.json({ success: false, error: message });
     } else {
       if (!IS_PROD) console.error("Error creating account", error.message);
+      return res.json({ success: false, error: error.message });
+    }
+  }
+});
+
+AdminAccountRouter.post("/update", async (req, res) => {
+  try {
+    const account = isAdmin(req, res);
+    if (!account) return;
+
+    const { _id, ...rest } = req.body;
+    if (!_id) return res.status(400);
+
+    const updatedAccount: any = await updateAccount(_id, rest);
+    const resposeAccount = createAccountResponse(updatedAccount);
+
+    return res.json({ success: true, error: null, account: resposeAccount });
+  } catch (error: any) {
+    if (error instanceof mongoose.mongo.MongoError) {
+      const message = handleMongoError(error);
+      return res.json({ success: false, error: message });
+    } else {
+      if (!IS_PROD) console.error("Error updating account", error.message);
       return res.json({ success: false, error: error.message });
     }
   }

@@ -143,7 +143,26 @@ const ManageUsers = () => {
     if (!account) return;
     Object.assign(account, update);
     accounts[index] = account;
-    setAccounts([...accounts]); // Update the state
+    setAccounts([...accounts])
+
+    fetch('/api/admin/accounts/update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      },
+      body: JSON.stringify({
+        _id: id,
+        ...update
+      })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const { success, error } = data;
+        if (!success) console.error(error || 'Failed to update account');
+        else setAccounts([...accounts]);
+      })
+      .catch((error) => console.error(error));
   };
 
   const createAccount = async () => {

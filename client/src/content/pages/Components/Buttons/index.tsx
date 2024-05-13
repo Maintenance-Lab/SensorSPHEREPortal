@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
-import PageTitle from 'src/components/PageTitle';
-import PageTitleWrapper from 'src/components/PageTitleWrapper';
+import PageTitle from 'src/Components/PageTitle';
+import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import {
   Button,
   Container,
@@ -11,7 +11,7 @@ import {
   CardContent,
   Divider
 } from '@mui/material';
-import Footer from 'src/components/Footer';
+import Footer from 'src/Components/Footer';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 

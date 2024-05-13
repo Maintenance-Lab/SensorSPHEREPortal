@@ -30,16 +30,24 @@ const useStyles = makeStyles((theme: Theme) => ({
   }
 }));
 
+const redirectToLogin = () => {
+  window.location.href = '/login';
+};
+
+const redirectToProjects = () => {
+  window.location.href = '/projects';
+}
+
 function Overview() {
   const classes = useStyles();
   const user = getUser();
 
   const loginButton = user ? (
-    <Button className={classes.actionButton} variant="contained" color="primary">
+    <Button className={classes.actionButton} variant="contained" color="primary" onClick={redirectToProjects}>
       Go to Projects
     </Button>
   ) : (
-    <Button className={classes.actionButton} variant="contained" color="primary">
+    <Button className={classes.actionButton} variant="contained" color="primary" onClick={redirectToLogin}>
       Login
     </Button>
   );

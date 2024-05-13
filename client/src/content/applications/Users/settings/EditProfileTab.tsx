@@ -10,8 +10,8 @@ import {
 
 import EditTwoToneIcon from '@mui/icons-material/EditTwoTone';
 import DoneTwoToneIcon from '@mui/icons-material/DoneTwoTone';
-import Text from 'src/components/Text';
-import Label from 'src/components/Label';
+import Text from 'src/Components/Text';
+import Label from 'src/Components/Label';
 
 function EditProfileTab() {
   return (

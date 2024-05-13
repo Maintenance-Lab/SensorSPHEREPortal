@@ -1,9 +1,9 @@
 import { useState, ChangeEvent } from 'react';
 import { Helmet } from 'react-helmet-async';
 import PageHeader from './PageHeader';
-import PageTitleWrapper from 'src/components/PageTitleWrapper';
+import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import { Container, Tabs, Tab, Grid } from '@mui/material';
-import Footer from 'src/components/Footer';
+import Footer from 'src/Components/Footer';
 import { styled } from '@mui/material/styles';
 
 import EditProfileTab from './EditProfileTab';

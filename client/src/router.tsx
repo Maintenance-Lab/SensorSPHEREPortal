@@ -5,7 +5,7 @@ import { RouteObject } from 'react-router';
 import SidebarLayout from 'src/layouts/SidebarLayout';
 import BaseLayout from 'src/layouts/BaseLayout';
 
-import SuspenseLoader from 'src/components/SuspenseLoader';
+import SuspenseLoader from './Components/SuspenseLoader';
 import { ProtectedRoute } from './Helpers/ProtectedRoute';
 import Login from './content/pages/login/Login';
 

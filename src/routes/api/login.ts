@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { IS_PROD, JWT_ACCESS_SECRET, JWT_EXPIRESIN } from "../../config.js";
 import { getAccountByNameOrEmail } from "../../services/Account.js";
 import { verify } from "@node-rs/argon2";
+import { createLoginSession } from "../../services/LoginSession.js";
 
 const router = Router();
 
@@ -24,11 +25,16 @@ router.post("/", async (req, res) => {
     const isValid = await verify(account.password, password);
     if (!isValid) return res.json({ success: false, location: null, error: "Invalid login credentials" });
 
-    const { _id, name, role, hasAvatar } = account;
+    const { _id, name, role, hasAvatar, email } = account;
 
-    const token = jwt.sign({ _id, name, role, hasAvatar }, JWT_ACCESS_SECRET, {
+    const token = jwt.sign({ _id, name, role, hasAvatar, email }, JWT_ACCESS_SECRET, {
       expiresIn: JWT_EXPIRESIN,
     });
+
+    const userAgent = req.headers["user-agent"];
+    const ip: any = req.socket.remoteAddress || req.headers["x-forwarded-for"];
+
+    await createLoginSession({ Account: _id, token, userAgent, ip });
 
     return res
       .cookie("token", token, {

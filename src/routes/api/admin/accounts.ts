@@ -1,55 +1,16 @@
 import { Router } from "express";
-import jwt from "jsonwebtoken";
-import { IS_PROD, JWT_ACCESS_SECRET } from "../../../config.js";
+import { IS_PROD } from "../../../config.js";
 import { createAccount, getAllAccounts, updateAccount } from "../../../services/Account.js";
 import { hash } from "@node-rs/argon2";
 import { handleMongoError } from "../../../tools/utils.js";
 import mongoose from "mongoose";
-import { Request, Response } from "express";
-import { AccountModel } from "../../../models/Account.js";
+import { isAdmin, createAccountResponse } from "../../../utils.js";
 
 const AdminAccountRouter = Router();
 
-const createAccountResponse = (account: Partial<AccountModel>): Partial<AccountModel> => {
-  let { _id, enabled, name, email, meta, createdBy, createdAt, hasChangedPassword, role, hasAvatar } = account;
-  if (createdBy && typeof createdBy === "object") createdBy = createdBy.name || "System";
-  return {
-    _id,
-    enabled,
-    name,
-    email,
-    meta,
-    createdBy,
-    createdAt,
-    hasChangedPassword,
-    role,
-    hasAvatar,
-  };
-};
-
-const isAdmin = (req: Request, res: Response) => {
-  const cookies = req.cookies || {};
-
-  if (!cookies.token) {
-    res.status(401).send("Unauthorized");
-    return false;
-  }
-
-  const account: any = jwt.verify(cookies.token, JWT_ACCESS_SECRET);
-  if (!account) {
-    res.status(401).send("Unauthorized");
-    return false;
-  }
-  if (account.role !== "administrator") {
-    res.status(403).send("Forbidden");
-    return false;
-  }
-  return account;
-};
-
 AdminAccountRouter.get("/", async (req, res) => {
   try {
-    if (!isAdmin(req, res)) return;
+    if (!await isAdmin(req, res)) return;
 
     const accounts = await getAllAccounts();
     const responseAccounts = accounts.map((account: any) => {
@@ -70,7 +31,7 @@ AdminAccountRouter.get("/", async (req, res) => {
 
 AdminAccountRouter.post("/create", async (req, res) => {
   try {
-    const account = isAdmin(req, res);
+    const account = await isAdmin(req, res);
     if (!account) return;
 
     const { name, email, role } = req.body;
@@ -98,7 +59,7 @@ AdminAccountRouter.post("/create", async (req, res) => {
 
 AdminAccountRouter.post("/update", async (req, res) => {
   try {
-    const account = isAdmin(req, res);
+    const account = await isAdmin(req, res);
     if (!account) return;
 
     const { _id, ...rest } = req.body;

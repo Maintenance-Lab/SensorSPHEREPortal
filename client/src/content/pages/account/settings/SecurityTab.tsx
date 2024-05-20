@@ -28,7 +28,7 @@ import {
 
 import DoneTwoToneIcon from '@mui/icons-material/DoneTwoTone';
 import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
-import { format, subHours, subWeeks, subDays } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 const ButtonError = styled(Button)(
   ({ theme }) => `
@@ -60,17 +60,9 @@ interface SecurityTabProps {
   sessions: any;
 }
 
-const deleteSession = async (id: string) => {
-  const response = await fetch(`/api/account/session/${id}`, {
-    method: 'DELETE',
-    headers: { credentials: 'include' }
-  });
-  if (response.status == 401) window.location.replace('/login');
-  return response.json();
-};
-
 function SecurityTab(props: SecurityTabProps) {
   const theme = useTheme();
+  const navigate = useNavigate();
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -78,6 +70,15 @@ function SecurityTab(props: SecurityTabProps) {
   const [filteredSessions, setFilteredSessions] = useState<any[]>(
     sessions.length > rowsPerPage ? sessions.slice(0, rowsPerPage) : sessions
   );
+
+  const deleteSession = async (id: string) => {
+    const response = await fetch(`/api/account/session/${id}`, {
+      method: 'DELETE',
+      headers: { credentials: 'include' }
+    });
+    if (response.status == 401) navigate('/login');
+    return response.json();
+  };
 
   useEffect(() => {
     setSessions(props.sessions);

@@ -1,5 +1,6 @@
 import Cookies from 'universal-cookie';
 import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 
 const getUser = () => {
   const cookies = new Cookies();
@@ -20,10 +21,10 @@ const getUser = () => {
 };
 
 export const logout = () => {
+  const navigate = useNavigate();
   const cookies = new Cookies();
   cookies.remove('token');
-  window.location.href = window.location.origin
+  navigate('/');
 };
-
 
 export { getUser };

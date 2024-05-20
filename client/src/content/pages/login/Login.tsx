@@ -10,6 +10,7 @@ import {
 import { makeStyles } from '@mui/styles';
 import { getUser } from 'src/Helpers/cookies';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const useStyles = makeStyles((theme: Theme) => ({
   container: {
@@ -43,7 +44,8 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 const Login = () => {
   const user = getUser();
-  if (user) window.location.href = '/projects'; // Redirect to home if already logged in
+  const navigate = useNavigate();
+  if (user) navigate('/projects'); // Redirect to home if already logged in
 
   const classes = useStyles();
   const [error, setError] = useState('');
@@ -79,7 +81,7 @@ const Login = () => {
       .then((res) => res.json())
       .then((data) => {
         const { success, error, location } = data;
-        if (success) window.location.href = location;
+        if (success) navigate(location);
         else setError(error || 'Invalid login credentials');
       })
       .catch((error) => console.error(error));
@@ -107,11 +109,7 @@ const Login = () => {
           >
             Login
           </Button>
-          {error && (
-          <Typography color="error">
-            {error}
-          </Typography>
-        )}
+          {error && <Typography color="error">{error}</Typography>}
         </form>
       </Paper>
     </Container>

@@ -5,6 +5,7 @@ import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import { Container, Tabs, Tab, Grid, Typography } from '@mui/material';
 import Footer from 'src/Components/Footer';
 import { styled } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
 
 import EditProfileTab from './EditProfileTab';
 import NotificationsTab from './NotificationsTab';
@@ -18,23 +19,28 @@ const TabsWrapper = styled(Tabs)(
 `
 );
 
-const getAccount = async () => {
-  const response = await fetch('/api/account', {
-    headers: { credentials: 'include' }
-  });
-  if (response.status === 401) window.location.replace('/login');
-  const data = await response.json();
-  return data;
-};
-
 function ManagementUserSettings() {
+  const navigate = useNavigate();
   const [currentTab, setCurrentTab] = useState<string>('edit_profile');
   const [account, setAccount] = useState<any | null>(null);
   const [loginSessions, setLoginSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  const getAccount = async () => {
+    const response = await fetch('/api/account', {
+      headers: { credentials: 'include' }
+    });
+    if (response.status === 401) {
+      navigate('/login');
+      return null;
+    }
+    const data = await response.json();
+    return data;
+  };
+
   useEffect(() => {
     getAccount().then((data) => {
+      if (!data) return;
       setAccount(data.account);
       setLoginSessions(data.sessions);
       setLoading(false);
@@ -89,9 +95,13 @@ function ManagementUserSettings() {
           </TabsWrapper>
         </Grid>
         <Grid item xs={12}>
-          {currentTab === 'edit_profile' && <EditProfileTab account={account} />}
+          {currentTab === 'edit_profile' && (
+            <EditProfileTab account={account} />
+          )}
           {/* {currentTab === 'notifications' && <NotificationsTab />} */}
-          {currentTab === 'security' && <SecurityTab sessions={loginSessions} />}
+          {currentTab === 'security' && (
+            <SecurityTab sessions={loginSessions} />
+          )}
         </Grid>
       </Grid>
     </Container>

@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { Theme } from '@mui/material/styles';
 import { makeStyles } from '@mui/styles';
 import { getUser } from 'src/Helpers/cookies';
+import { useNavigate } from 'react-router-dom';
 
 const useStyles = makeStyles((theme: Theme) => ({
   logo: {
@@ -16,7 +17,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     textAlign: 'center',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   buttonBox: {
     display: 'flex',
@@ -30,24 +31,31 @@ const useStyles = makeStyles((theme: Theme) => ({
   }
 }));
 
-const redirectToLogin = () => {
-  window.location.href = '/login';
-};
-
-const redirectToProjects = () => {
-  window.location.href = '/projects';
-}
-
 function Overview() {
   const classes = useStyles();
   const user = getUser();
+  const navigate = useNavigate();
+
+  const redirectToLogin = () => navigate('/login');
+
+  const redirectToProjects = () => navigate('/projects');
 
   const loginButton = user ? (
-    <Button className={classes.actionButton} variant="contained" color="primary" onClick={redirectToProjects}>
+    <Button
+      className={classes.actionButton}
+      variant="contained"
+      color="primary"
+      onClick={redirectToProjects}
+    >
       Go to Projects
     </Button>
   ) : (
-    <Button className={classes.actionButton} variant="contained" color="primary" onClick={redirectToLogin}>
+    <Button
+      className={classes.actionButton}
+      variant="contained"
+      color="primary"
+      onClick={redirectToLogin}
+    >
       Login
     </Button>
   );
@@ -57,8 +65,8 @@ function Overview() {
       <Helmet>
         <title>SensorSphere Portal</title>
       </Helmet>
-      <Container maxWidth="lg" style={{marginTop: 100}} className='test'>
-        <Card className={classes.card} style={{padding: 50}}>
+      <Container maxWidth="lg" style={{ marginTop: 100 }} className="test">
+        <Card className={classes.card} style={{ padding: 50 }}>
           <img src="icon.png" className={classes.logo}></img>
           <Typography variant="h1" component="h1" gutterBottom>
             SensorSphere Portal
@@ -69,7 +77,11 @@ function Overview() {
           </Typography>
           <Box className={classes.buttonBox}>
             {loginButton}
-            <Button className={classes.actionButton} variant="contained" color="secondary">
+            <Button
+              className={classes.actionButton}
+              variant="contained"
+              color="secondary"
+            >
               Contact Us
             </Button>
           </Box>

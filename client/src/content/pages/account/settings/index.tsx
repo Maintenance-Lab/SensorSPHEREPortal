@@ -48,7 +48,7 @@ function ManagementUserSettings() {
   }, []);
 
   const tabs = [
-    { value: 'edit_profile', label: 'Edit Profile' },
+    { value: 'edit_profile', label: 'Your Profile' },
     // { value: 'notifications', label: 'Notifications' },
     { value: 'security', label: 'Passwords/Security' }
   ];

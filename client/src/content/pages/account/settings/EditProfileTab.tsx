@@ -22,7 +22,7 @@ function EditProfileTab({ account }: EditProfileTabProps) {
     <Grid container spacing={3}>
       <Grid item xs={12}>
         <Card>
-          <Box
+          {/* <Box
             p={3}
             display="flex"
             alignItems="center"
@@ -39,7 +39,7 @@ function EditProfileTab({ account }: EditProfileTabProps) {
             <Button variant="text" startIcon={<EditTwoToneIcon />}>
               Edit
             </Button>
-          </Box>
+          </Box> */}
           <Divider />
           <CardContent sx={{ p: 4 }}>
             <Typography variant="subtitle2">

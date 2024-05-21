@@ -11,7 +11,7 @@ export const getAllAccounts = (): Promise<AccountModel[]> => {
   });
 };
 
-export const getAccountById = (id: string) => {
+export const getAccountById = (id: string): Promise<AccountModel> => {
   return new Promise(async (resolve, reject) => {
     try {
       const doc = await Account.findById(id);

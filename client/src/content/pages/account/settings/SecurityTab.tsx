@@ -23,12 +23,19 @@ import {
   TableRow,
   TableContainer,
   useTheme,
-  styled
+  styled,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  Snackbar
 } from '@mui/material';
 
 import DoneTwoToneIcon from '@mui/icons-material/DoneTwoTone';
 import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
 import { useNavigate } from 'react-router-dom';
+import MuiAlert from '@mui/material/Alert';
 
 const ButtonError = styled(Button)(
   ({ theme }) => `
@@ -71,6 +78,64 @@ function SecurityTab(props: SecurityTabProps) {
     sessions.length > rowsPerPage ? sessions.slice(0, rowsPerPage) : sessions
   );
 
+  const [currentPass, setCurrentPass] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [confirmNewPass, setConfirmNewPass] = useState('');
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'info' | 'warning' | 'error';
+  }>({ open: false, message: '', severity: 'success' });
+
+  const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const handlePasswordDialogOpen = () => {
+    setOpenPasswordDialog(true);
+  };
+
+  const handlePasswordDialogClose = () => {
+    setOpenPasswordDialog(false);
+  };
+
+  const handleChangePassword = async () => {
+    if (newPass !== confirmNewPass) {
+      setSnackbar({
+        open: true,
+        message: 'New passwords do not match',
+        severity: 'error'
+      });
+      return;
+    }
+    const response = await fetch('/api/account/password', {
+      method: 'POST',
+      headers: { credentials: 'include', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPass, newPass })
+    });
+    if (response.status == 401) navigate('/login');
+    const data = await response.json();
+    if (response.status == 200) {
+      setSnackbar({
+        open: true,
+        message: 'Password updated successfully',
+        severity: 'success'
+      });
+      setCurrentPass('');
+      setNewPass('');
+      setConfirmNewPass('');
+    } else {
+      setSnackbar({
+        open: true,
+        message: data.message || 'Failed to update password',
+        severity: 'error'
+      });
+    }
+    handlePasswordDialogClose();
+  };
+
   const deleteSession = async (id: string) => {
     const response = await fetch(`/api/account/session/${id}`, {
       method: 'DELETE',
@@ -89,8 +154,6 @@ function SecurityTab(props: SecurityTabProps) {
       sessions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
     );
   }, [sessions, page, rowsPerPage]);
-
-  // set
 
   const handleChangePage = (
     event: MouseEvent<HTMLButtonElement> | null,
@@ -127,22 +190,13 @@ function SecurityTab(props: SecurityTabProps) {
                 primary="Change Password"
                 secondary="You can change your password here"
               />
-              <Button size="large" variant="outlined">
+              <Button
+                size="large"
+                variant="outlined"
+                onClick={handlePasswordDialogOpen}
+              >
                 Change password
               </Button>
-            </ListItem>
-            <Divider component="li" />
-            <ListItem sx={{ p: 3 }}>
-              <ListItemText
-                primaryTypographyProps={{ variant: 'h5', gutterBottom: true }}
-                secondaryTypographyProps={{
-                  variant: 'subtitle2',
-                  lineHeight: 1
-                }}
-                primary="Two-Factor Authentication"
-                secondary="Enable PIN verification for all sign in attempts"
-              />
-              <Switch color="primary" />
             </ListItem>
           </List>
         </Card>
@@ -171,7 +225,6 @@ function SecurityTab(props: SecurityTabProps) {
                   <TableRow key={session._id} hover>
                     <TableCell>{session.userAgent}</TableCell>
                     <TableCell>{session.ip}</TableCell>
-                    {/* <TableCell>{log.location}</TableCell> */}
                     <TableCell>
                       {new Date(session.date).toLocaleString()}
                     </TableCell>
@@ -215,83 +268,59 @@ function SecurityTab(props: SecurityTabProps) {
         </Card>
       </Grid>
 
-      {/* Social Accounts, aka google oauth links */}
-      {/* <>
-      <Grid item xs={12}>
-        <Box pb={2}>
-          <Typography variant="h3">Social Accounts</Typography>
-          <Typography variant="subtitle2">
-            Manage connected social accounts options
-          </Typography>
-        </Box>
-        <Card>
-          <List>
-            <ListItem sx={{ p: 3 }}>
-              <ListItemAvatar sx={{ pr: 2 }}>
-                <AvatarWrapper src="/static/images/logo/google.svg" />
-              </ListItemAvatar>
-              <ListItemText
-                primaryTypographyProps={{ variant: 'h5', gutterBottom: true }}
-                secondaryTypographyProps={{
-                  variant: 'subtitle2',
-                  lineHeight: 1
-                }}
-                primary="Google"
-                secondary="A Google account hasn’t been yet added to your account"
-              />
-              <Button color="secondary" size="large" variant="contained">
-                Connect
-              </Button>
-            </ListItem>
-          </List>
-        </Card>
-      </Grid>
-      <Grid item xs={12}>
-        <Card>
-          <List>
-            <ListItem sx={{ p: 3 }}>
-              <ListItemAvatar sx={{ pr: 2 }}>
-                <AvatarSuccess>
-                  <DoneTwoToneIcon />
-                </AvatarSuccess>
-              </ListItemAvatar>
-              <ListItemText
-                primaryTypographyProps={{ variant: 'h5', gutterBottom: true }}
-                secondaryTypographyProps={{
-                  variant: 'subtitle2',
-                  lineHeight: 1
-                }}
-                primary="Facebook"
-                secondary="Your Facebook account has been successfully connected"
-              />
-              <ButtonError size="large" variant="contained">
-                Revoke access
-              </ButtonError>
-            </ListItem>
-            <Divider component="li" />
-            <ListItem sx={{ p: 3 }}>
-              <ListItemAvatar sx={{ pr: 2 }}>
-                <AvatarSuccess>
-                  <DoneTwoToneIcon />
-                </AvatarSuccess>
-              </ListItemAvatar>
-              <ListItemText
-                primaryTypographyProps={{ variant: 'h5', gutterBottom: true }}
-                secondaryTypographyProps={{
-                  variant: 'subtitle2',
-                  lineHeight: 1
-                }}
-                primary="Twitter"
-                secondary="Your Twitter account was last syncronized 6 days ago"
-              />
-              <ButtonError size="large" variant="contained">
-                Revoke access
-              </ButtonError>
-            </ListItem>
-          </List>
-        </Card>
-      </Grid>
-      </> */}
+      <Dialog open={openPasswordDialog} onClose={handlePasswordDialogClose}>
+        <DialogTitle>Change Password</DialogTitle>
+        <DialogContent>
+          <TextField
+            margin="dense"
+            label="Current Password"
+            type="password"
+            fullWidth
+            value={currentPass}
+            onChange={(e) => setCurrentPass(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label="New Password"
+            type="password"
+            fullWidth
+            value={newPass}
+            onChange={(e) => setNewPass(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label="Confirm New Password"
+            type="password"
+            fullWidth
+            value={confirmNewPass}
+            onChange={(e) => setConfirmNewPass(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handlePasswordDialogClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleChangePassword} color="primary">
+            Change Password
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <MuiAlert
+          onClose={handleSnackbarClose}
+          severity={snackbar.severity}
+          elevation={6}
+          variant="filled"
+        >
+          {snackbar.message}
+        </MuiAlert>
+      </Snackbar>
     </Grid>
   );
 }

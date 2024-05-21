@@ -8,8 +8,9 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute: any = ({ children }: ProtectedRouteProps) => {
   const user = getUser();
+  console.log(user);
 
-  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (!user) return <Navigate to="/login" />;
 
   return children;
 };

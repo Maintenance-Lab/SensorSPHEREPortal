@@ -116,7 +116,11 @@ const ManageUsers = () => {
     role: '',
     password: generateRandomString(8)
   });
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'info' | 'warning' | 'error';
+  }>({ open: false, message: '', severity: 'success' });
 
   const handleSnackbarClose = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -146,15 +150,30 @@ const ManageUsers = () => {
         const { success, error } = data;
         if (!success) {
           console.error(error || 'Failed to update account');
-          setSnackbar({ open: true, message: error || 'Failed to update account', severity: 'error' });
+          setSnackbar({
+            open: true,
+            message: error || 'Failed to update account',
+            severity: 'error'
+          });
         } else {
           setAccounts([...accounts]);
-          setSnackbar({ open: true, message: 'Account updated successfully', severity: 'success' });
+          const password = update?.password || '';
+          setSnackbar({
+            open: true,
+            message: password
+              ? `Password reset to ${password}`
+              : 'Account updated successfully',
+            severity: 'success'
+          });
         }
       })
       .catch((error) => {
         console.error(error);
-        setSnackbar({ open: true, message: 'Failed to update account', severity: 'error' });
+        setSnackbar({
+          open: true,
+          message: 'Failed to update account',
+          severity: 'error'
+        });
       });
   };
 
@@ -162,12 +181,20 @@ const ManageUsers = () => {
     const { name, email, role } = formData;
     if (!name || !email || !role) {
       setError('All fields are required');
-      setSnackbar({ open: true, message: 'All fields are required', severity: 'error' });
+      setSnackbar({
+        open: true,
+        message: 'All fields are required',
+        severity: 'error'
+      });
       return;
     }
     if (!isEmail(email)) {
       setError('Invalid email address');
-      setSnackbar({ open: true, message: 'Invalid email address', severity: 'error' });
+      setSnackbar({
+        open: true,
+        message: 'Invalid email address',
+        severity: 'error'
+      });
       return;
     }
 
@@ -193,31 +220,41 @@ const ManageUsers = () => {
             role: '',
             password: generateRandomString(8)
           });
-          setSnackbar({ open: true, message: 'Account created successfully', severity: 'success' });
+          setSnackbar({
+            open: true,
+            message: 'Account created successfully',
+            severity: 'success'
+          });
         } else {
           setError(error || 'Failed to create account');
-          setSnackbar({ open: true, message: error || 'Failed to create account', severity: 'error' });
+          setSnackbar({
+            open: true,
+            message: error || 'Failed to create account',
+            severity: 'error'
+          });
         }
       })
       .catch((error) => {
         console.error(error);
-        setSnackbar({ open: true, message: 'Failed to create account', severity: 'error' });
+        setSnackbar({
+          open: true,
+          message: 'Failed to create account',
+          severity: 'error'
+        });
       });
   };
 
   const handleResetPassword = (id: string) => {
-    // Implement this
-    setSnackbar({ open: true, message: 'Password reset functionality not implemented', severity: 'info' });
+    const password = generateRandomString(8);
+    updateAccount(id, { password, hasChangedPassword: false });
   };
 
   const handleToggleEnabled = (id: string, currentVal: boolean) => {
     updateAccount(id, { enabled: !currentVal });
-    setSnackbar({ open: true, message: 'Account status updated', severity: 'success' });
   };
 
   const handleRoleChange = (id: string, role: string) => {
     updateAccount(id, { role });
-    setSnackbar({ open: true, message: 'Role updated successfully', severity: 'success' });
   };
 
   const handleSearch = (e: any) => setSearch(e.target.value);
@@ -453,7 +490,7 @@ const ManageUsers = () => {
       >
         <MuiAlert
           onClose={handleSnackbarClose}
-          // severity={snackbar.severity}
+          severity={snackbar.severity}
           elevation={6}
           variant="filled"
         >

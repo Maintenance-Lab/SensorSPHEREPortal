@@ -65,6 +65,8 @@ AdminAccountRouter.post("/update", async (req, res) => {
     const { _id, ...rest } = req.body;
     if (!_id) return res.status(400);
 
+    if (rest.password) rest.password = await hash(rest.password);
+
     const updatedAccount: any = await updateAccount(_id, rest);
     const resposeAccount = createAccountResponse(updatedAccount);
 

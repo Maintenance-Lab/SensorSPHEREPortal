@@ -105,8 +105,7 @@ export const getSession = async (req: Request, res: Response): Promise<SessionRe
       return false;
     }
 
-    // Get the IP address of the client. RemoteAddress is the most secure way to get the IP.
-    const ip = req.socket.remoteAddress || req.headers["x-forwarded-for"];
+    const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
     // Check if the IP matches. We do not check user agents as this will be anoying when a browser updates.
     if (session.ip !== ip) {

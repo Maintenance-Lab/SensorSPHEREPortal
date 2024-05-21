@@ -32,7 +32,7 @@ router.post("/", async (req, res) => {
     });
 
     const userAgent = req.headers["user-agent"];
-    const ip: any = req.socket.remoteAddress || req.headers["x-forwarded-for"];
+    const ip: any = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
     await createLoginSession({ Account: _id, token, userAgent, ip });
 

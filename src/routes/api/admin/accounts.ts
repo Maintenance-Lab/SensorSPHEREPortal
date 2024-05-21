@@ -34,12 +34,12 @@ AdminAccountRouter.post("/create", async (req, res) => {
     const account = await isAdmin(req, res);
     if (!account) return;
 
-    const { name, email, role } = req.body;
-    if (!name || !email || !role) return res.status(400);
+    const { name, email, role, password } = req.body;
+    if (!name || !email || !role || password) return res.status(400);
 
     // TODO: Create random password, mail it to user
-    const password = await hash("password");
-    const newAccount = await createAccount({ name, email, role, password, createdBy: account._id });
+    const hashedPassword = await hash(password);
+    const newAccount = await createAccount({ name, email, role, password: hashedPassword, createdBy: account._id });
 
     const resposeAccount = createAccountResponse(newAccount);
     if (!resposeAccount) return res.status(500);

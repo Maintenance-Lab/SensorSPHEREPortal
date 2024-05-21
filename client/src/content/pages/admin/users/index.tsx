@@ -20,11 +20,14 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Typography
+  Typography,
+  Snackbar
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { Theme } from '@mui/material/styles';
-import { isEmail } from 'src/Helpers/utils';
+import { generateRandomString, isEmail } from 'src/Helpers/utils';
+import { Helmet } from 'react-helmet-async';
+import MuiAlert from '@mui/material/Alert';
 
 const useStyles = makeStyles((theme: Theme) => ({
   toolbar: {
@@ -96,30 +99,6 @@ const fetchData = async () => {
     console.error(data.error);
     return [];
   } else return data.accounts;
-
-  //   return [
-  //     {
-  //       _id: '1',
-  //       enabled: true,
-  //       name: 'admin',
-  //       email: 'admin@custom-code.nl',
-  //       hasChangedPassword: false,
-  //       createdAt: '2024-06-13T13:19:09.810Z',
-  //       role: 'administrator',
-  //       hasAvatar: false
-  //     },
-  //     {
-  //       _id: '2',
-  //       enabled: true,
-  //       name: 'demo',
-  //       email: 'demo@custom-code.nl',
-  //       hasChangedPassword: true,
-  //       createdAt: '2024-05-13T13:19:09.810Z',
-  //       __v: 0,
-  //       role: 'student',
-  //       hasAvatar: false
-  //     }
-  //   ];
 };
 
 const ManageUsers = () => {
@@ -134,8 +113,14 @@ const ManageUsers = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    role: ''
+    role: '',
+    password: generateRandomString(8)
   });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   const updateAccount = async (id: string, update: any) => {
     const index = accounts.findIndex((account) => account._id === id);
@@ -143,7 +128,7 @@ const ManageUsers = () => {
     if (!account) return;
     Object.assign(account, update);
     accounts[index] = account;
-    setAccounts([...accounts])
+    setAccounts([...accounts]);
 
     fetch('/api/admin/accounts/update', {
       method: 'POST',
@@ -159,20 +144,30 @@ const ManageUsers = () => {
       .then((res) => res.json())
       .then((data) => {
         const { success, error } = data;
-        if (!success) console.error(error || 'Failed to update account');
-        else setAccounts([...accounts]);
+        if (!success) {
+          console.error(error || 'Failed to update account');
+          setSnackbar({ open: true, message: error || 'Failed to update account', severity: 'error' });
+        } else {
+          setAccounts([...accounts]);
+          setSnackbar({ open: true, message: 'Account updated successfully', severity: 'success' });
+        }
       })
-      .catch((error) => console.error(error));
+      .catch((error) => {
+        console.error(error);
+        setSnackbar({ open: true, message: 'Failed to update account', severity: 'error' });
+      });
   };
 
   const createAccount = async () => {
     const { name, email, role } = formData;
     if (!name || !email || !role) {
       setError('All fields are required');
+      setSnackbar({ open: true, message: 'All fields are required', severity: 'error' });
       return;
     }
     if (!isEmail(email)) {
       setError('Invalid email address');
+      setSnackbar({ open: true, message: 'Invalid email address', severity: 'error' });
       return;
     }
 
@@ -192,24 +187,38 @@ const ManageUsers = () => {
         if (success) {
           handleClose();
           setAccounts([...accounts, account]);
-        } else setError(error || 'Failed to create account');
+          setFormData({
+            name: '',
+            email: '',
+            role: '',
+            password: generateRandomString(8)
+          });
+          setSnackbar({ open: true, message: 'Account created successfully', severity: 'success' });
+        } else {
+          setError(error || 'Failed to create account');
+          setSnackbar({ open: true, message: error || 'Failed to create account', severity: 'error' });
+        }
       })
-      .catch((error) => console.error(error));
+      .catch((error) => {
+        console.error(error);
+        setSnackbar({ open: true, message: 'Failed to create account', severity: 'error' });
+      });
   };
 
   const handleResetPassword = (id: string) => {
     // Implement this
+    setSnackbar({ open: true, message: 'Password reset functionality not implemented', severity: 'info' });
   };
 
   const handleToggleEnabled = (id: string, currentVal: boolean) => {
     updateAccount(id, { enabled: !currentVal });
+    setSnackbar({ open: true, message: 'Account status updated', severity: 'success' });
   };
 
-  const handleToggleChangedPassword = (id: string, currentVal: boolean) =>
-    updateAccount(id, { hasChangedPassword: !currentVal });
-
-  const handleRemoveAvatar = (id: string) =>
-    updateAccount(id, { hasAvatar: false });
+  const handleRoleChange = (id: string, role: string) => {
+    updateAccount(id, { role });
+    setSnackbar({ open: true, message: 'Role updated successfully', severity: 'success' });
+  };
 
   const handleSearch = (e: any) => setSearch(e.target.value);
 
@@ -251,7 +260,9 @@ const ManageUsers = () => {
 
   return (
     <div>
-      {/* Placeholder for the page title */}
+      <Helmet>
+        <title>Manage Users</title>
+      </Helmet>
       <AppBar position="static">
         <Toolbar className={classes.toolbar}>
           <Button color="inherit" variant="outlined" onClick={handleClickOpen}>
@@ -337,6 +348,16 @@ const ManageUsers = () => {
               <MenuItem value="teacher">Teacher</MenuItem>
               <MenuItem value="staff">Staff</MenuItem>
             </Select>
+            <TextField
+              margin="dense"
+              id="password"
+              name="password"
+              label="Password"
+              type="text"
+              fullWidth
+              value={formData.password}
+              onChange={handleChange}
+            />
             <Typography color="error">{error}</Typography>
           </FormControl>
         </DialogContent>
@@ -357,9 +378,6 @@ const ManageUsers = () => {
               <TableCell className={classes.tableCellHeader}>Name</TableCell>
               <TableCell className={classes.tableCellHeader}>Email</TableCell>
               <TableCell className={classes.tableCellHeader}>Enabled</TableCell>
-              <TableCell className={classes.tableCellHeader}>
-                Has Changed Password
-              </TableCell>
               <TableCell className={classes.tableCellHeader}>Role</TableCell>
               <TableCell className={classes.tableCellHeader}>
                 Created By
@@ -370,9 +388,9 @@ const ManageUsers = () => {
               <TableCell className={classes.tableCellHeader}>
                 Reset Password
               </TableCell>
-              <TableCell className={classes.tableCellHeader}>
+              {/* <TableCell className={classes.tableCellHeader}>
                 Has Avatar
-              </TableCell>
+              </TableCell> */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -389,17 +407,20 @@ const ManageUsers = () => {
                   />
                 </TableCell>
                 <TableCell>
-                  <Switch
-                    checked={account.hasChangedPassword}
-                    onChange={() =>
-                      handleToggleChangedPassword(
-                        account._id,
-                        account.hasChangedPassword
-                      )
-                    }
-                  />
+                  <FormControl variant="outlined" fullWidth>
+                    <Select
+                      value={account.role}
+                      onChange={(e) =>
+                        handleRoleChange(account._id, e.target.value)
+                      }
+                    >
+                      <MenuItem value="administrator">Administrator</MenuItem>
+                      <MenuItem value="student">Student</MenuItem>
+                      <MenuItem value="teacher">Teacher</MenuItem>
+                      <MenuItem value="staff">Staff</MenuItem>
+                    </Select>
+                  </FormControl>
                 </TableCell>
-                <TableCell>{account.role}</TableCell>
                 <TableCell>{account?.createdBy || 'Unknown'}</TableCell>
                 <TableCell>
                   {new Date(account.createdAt).toLocaleDateString()}
@@ -409,7 +430,7 @@ const ManageUsers = () => {
                     Reset
                   </Button>
                 </TableCell>
-                <TableCell>
+                {/* <TableCell>
                   {account.hasAvatar ? (
                     <Button onClick={() => handleRemoveAvatar(account._id)}>
                       Remove Avatar
@@ -417,12 +438,28 @@ const ManageUsers = () => {
                   ) : (
                     'No'
                   )}
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <MuiAlert
+          onClose={handleSnackbarClose}
+          // severity={snackbar.severity}
+          elevation={6}
+          variant="filled"
+        >
+          {snackbar.message}
+        </MuiAlert>
+      </Snackbar>
     </div>
   );
 };

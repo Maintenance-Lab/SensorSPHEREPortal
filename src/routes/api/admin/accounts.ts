@@ -10,7 +10,7 @@ const AdminAccountRouter = Router();
 
 AdminAccountRouter.get("/", async (req, res) => {
   try {
-    if (!await isAdmin(req, res)) return;
+    if (!(await isAdmin(req, res))) return;
 
     const accounts = await getAllAccounts();
     const responseAccounts = accounts.map((account: any) => {
@@ -35,14 +35,13 @@ AdminAccountRouter.post("/create", async (req, res) => {
     if (!account) return;
 
     const { name, email, role, password } = req.body;
-    if (!name || !email || !role || password) return res.status(400);
+    if (!name || !email || !role || !password) return res.json({ success: false, error: "Missing fields" });
 
-    // TODO: Create random password, mail it to user
     const hashedPassword = await hash(password);
     const newAccount = await createAccount({ name, email, role, password: hashedPassword, createdBy: account._id });
 
     const resposeAccount = createAccountResponse(newAccount);
-    if (!resposeAccount) return res.status(500);
+    if (!resposeAccount) return res.json({ success: false, error: "Error creating account" });
     resposeAccount["createdBy"] = account.name || "System";
 
     return res.json({ success: true, error: null, account: resposeAccount });

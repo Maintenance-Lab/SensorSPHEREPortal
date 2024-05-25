@@ -12,6 +12,9 @@ import {
 import { NavLink as RouterLink } from 'react-router-dom';
 import { SidebarContext } from 'src/contexts/SidebarContext';
 
+import HomeIcon from '@mui/icons-material/Home';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import DesignServicesTwoToneIcon from '@mui/icons-material/DesignServicesTwoTone';
 import BrightnessLowTwoToneIcon from '@mui/icons-material/BrightnessLowTwoTone';
 import MmsTwoToneIcon from '@mui/icons-material/MmsTwoTone';
@@ -213,15 +216,15 @@ function SidebarMenu() {
         <List component="div">
           <SubMenuWrapper>
             <List component="div">
-              <ListItem component="div">
+            <ListItem component="div">
                 <Button
                   disableRipple
                   component={RouterLink}
                   onClick={closeSidebar}
-                  to="/projects"
-                  startIcon={<DesignServicesTwoToneIcon />}
+                  to="/home"
+                  startIcon={<HomeIcon />}
                 >
-                  Projects
+                  Home
                 </Button>
               </ListItem>
               <ListItem component="div">
@@ -241,72 +244,86 @@ function SidebarMenu() {
 
         {adminMenu}
 
-        {/* Original samples we can use and look at */}
+        <List
+          component="div"
+          subheader={
+            <ListSubheader component="div" disableSticky>
+              Projects
+            </ListSubheader>
+          }
+        >
+          <SubMenuWrapper>
+            <List component="div">
+            <ListItem component="div">
+                <Button
+                  disableRipple
+                  component={RouterLink}
+                  onClick={closeSidebar}
+                  to="/projects"
+                  startIcon={<DesignServicesTwoToneIcon />}
+                >
+                  All Projects
+                </Button>
+              </ListItem>
+            </List>
+          </SubMenuWrapper>
+        </List>
 
         <List
           component="div"
           subheader={
             <ListSubheader component="div" disableSticky>
-              Dashboards
+              Devices
             </ListSubheader>
           }
         >
           <SubMenuWrapper>
             <List component="div">
-              <ListItem component="div">
+            <ListItem component="div">
                 <Button
                   disableRipple
                   component={RouterLink}
                   onClick={closeSidebar}
-                  to="/dashboards/crypto"
-                  startIcon={<BrightnessLowTwoToneIcon />}
+                  to="/devices"
+                  startIcon={<FormatListBulletedIcon />}
                 >
-                  Cryptocurrency
-                </Button>
-              </ListItem>
-              <ListItem component="div">
-                <Button
-                  disableRipple
-                  component={RouterLink}
-                  onClick={closeSidebar}
-                  to="/dashboards/messenger"
-                  startIcon={<MmsTwoToneIcon />}
-                >
-                  Messenger
+                  All Devices
                 </Button>
               </ListItem>
             </List>
           </SubMenuWrapper>
         </List>
+
         <List
           component="div"
           subheader={
             <ListSubheader component="div" disableSticky>
-              Management
+              Sessions
             </ListSubheader>
           }
         >
           <SubMenuWrapper>
             <List component="div">
-              <ListItem component="div">
+            <ListItem component="div">
                 <Button
                   disableRipple
                   component={RouterLink}
                   onClick={closeSidebar}
-                  to="/management/transactions"
-                  startIcon={<TableChartTwoToneIcon />}
+                  to="/sessions"
+                  startIcon={<LibraryBooksIcon />}
                 >
-                  Transactions List
+                  All Sessions
                 </Button>
               </ListItem>
             </List>
           </SubMenuWrapper>
         </List>
+
         <List
           component="div"
           subheader={
             <ListSubheader component="div" disableSticky>
-              Accounts
+              Account
             </ListSubheader>
           }
         >
@@ -337,11 +354,61 @@ function SidebarMenu() {
             </List>
           </SubMenuWrapper>
         </List>
+
+        {/* Original samples we can use and look at */}
+
         <List
           component="div"
           subheader={
             <ListSubheader component="div" disableSticky>
-              Components
+              Template – Dashboards & Apps
+            </ListSubheader>
+          }
+        >
+          <SubMenuWrapper>
+            <List component="div">
+              <ListItem component="div">
+                <Button
+                  disableRipple
+                  component={RouterLink}
+                  onClick={closeSidebar}
+                  to="/dashboards/crypto"
+                  startIcon={<BrightnessLowTwoToneIcon />}
+                >
+                  Cryptocurrency
+                </Button>
+              </ListItem>
+              <ListItem component="div">
+                <Button
+                  disableRipple
+                  component={RouterLink}
+                  onClick={closeSidebar}
+                  to="/dashboards/messenger"
+                  startIcon={<MmsTwoToneIcon />}
+                >
+                  Messenger
+                </Button>
+              </ListItem>
+              <ListItem component="div">
+                <Button
+                  disableRipple
+                  component={RouterLink}
+                  onClick={closeSidebar}
+                  to="/management/transactions"
+                  startIcon={<TableChartTwoToneIcon />}
+                >
+                  Transactions List
+                </Button>
+              </ListItem>
+            </List>
+          </SubMenuWrapper>
+        </List>
+        
+        <List
+          component="div"
+          subheader={
+            <ListSubheader component="div" disableSticky>
+              Template – Components
             </ListSubheader>
           }
         >

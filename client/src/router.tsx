@@ -23,13 +23,31 @@ const Login = Loader(lazy(() => import('src/content/pages/login/Login')));
 
 const Overview = Loader(lazy(() => import('src/content/overview')));
 
-// Dashboards
+// Admin
 
-const Crypto = Loader(lazy(() => import('src/content/dashboards/Crypto')));
 const ManageUsers = Loader(lazy(() => import('src/content/pages/admin/users/')));
 
-// Applications
+// Projects
 
+const Projects = Loader(lazy(() => import('src/content/pages/projects/')));
+
+// Devices
+
+const Devices = Loader(lazy(() => import('src/content/pages/devices/')));
+
+// Sessions
+
+const Sessions = Loader(lazy(() => import('src/content/pages/sessions/')));
+
+// Account
+
+const UserSettings = Loader(
+  lazy(() => import('src/content/pages/account/settings'))
+);
+
+// Template – Dashboards & Apps
+
+const Crypto = Loader(lazy(() => import('src/content/dashboards/Crypto')));
 const Messenger = Loader(
   lazy(() => import('src/content/applications/Messenger'))
 );
@@ -39,11 +57,8 @@ const Transactions = Loader(
 const UserProfile = Loader(
   lazy(() => import('src/content/applications/Users/profile'))
 );
-const UserSettings = Loader(
-  lazy(() => import('src/content/pages/account/settings'))
-);
 
-// Components
+// Template – Components
 
 const Buttons = Loader(
   lazy(() => import('src/content/pages/Components/Buttons'))
@@ -155,6 +170,60 @@ const routes: RouteObject[] = [
       {
         path: '*',
         element: <Status404 />
+      }
+    ]
+  },
+  {
+    path: 'projects',
+    element: <SidebarLayout />,
+    children: [
+      {
+        path: '',
+        element: <Navigate to="overview" replace />
+      },
+      {
+        path: 'overview',
+        element: (
+          <ProtectedRoute>
+            <Projects />
+          </ProtectedRoute>
+        ),
+      }
+    ]
+  },
+  {
+    path: 'devices',
+    element: <SidebarLayout />,
+    children: [
+      {
+        path: '',
+        element: <Navigate to="overview" replace />
+      },
+      {
+        path: 'overview',
+        element: (
+          <ProtectedRoute>
+            <Devices />
+          </ProtectedRoute>
+        ),
+      }
+    ]
+  },
+  {
+    path: 'sessions',
+    element: <SidebarLayout />,
+    children: [
+      {
+        path: '',
+        element: <Navigate to="overview" replace />
+      },
+      {
+        path: 'overview',
+        element: (
+          <ProtectedRoute>
+            <Sessions />
+          </ProtectedRoute>
+        ),
       }
     ]
   },

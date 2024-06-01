@@ -66,7 +66,7 @@ const Projects = () => {
     setSortedProjects(projectsPlaceholder);
   }, []);
 
-  const [currentTab, setTab] = useState('1');
+  const [currentTab, setTab] = useState('0');
 
   const handleChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
     setTab(newCurrentTab);

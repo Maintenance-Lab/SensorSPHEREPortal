@@ -18,6 +18,7 @@ const Loader = (Component) => (props) =>
 // Base
 
 const Login = Loader(lazy(() => import('src/content/pages/login/Login')));
+const Home = Loader(lazy(() => import('src/content/pages/home/')));
 
 // Pages
 
@@ -170,6 +171,16 @@ const routes: RouteObject[] = [
       {
         path: '*',
         element: <Status404 />
+      }
+    ]
+  },
+  {
+    path: 'home',
+    element: <SidebarLayout />,
+    children: [
+      {
+        path: '',
+        element: <Home />
       }
     ]
   },

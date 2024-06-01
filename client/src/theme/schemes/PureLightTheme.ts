@@ -568,9 +568,6 @@ export const PureLightTheme = createTheme({
       }
     },
     MuiButton: {
-      defaultProps: {
-        disableRipple: true
-      },
       styleOverrides: {
         root: {
           fontWeight: 'bold',
@@ -1116,27 +1113,9 @@ export const PureLightTheme = createTheme({
       }
     },
     MuiTypography: {
-      defaultProps: {
-        variantMapping: {
-          h1: 'h1',
-          h2: 'h2',
-          h3: 'div',
-          h4: 'div',
-          h5: 'div',
-          h6: 'div',
-          subtitle1: 'div',
-          subtitle2: 'div',
-          body1: 'div',
-          body2: 'div'
-        }
-      },
       styleOverrides: {
         gutterBottom: {
           marginBottom: 4
-        },
-        paragraph: {
-          fontSize: 17,
-          lineHeight: 1.7
         }
       }
     }
@@ -1149,56 +1128,36 @@ export const PureLightTheme = createTheme({
       '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
     h1: {
       fontWeight: 700,
-      fontSize: 35
+      fontSize: '2rem'
     },
     h2: {
       fontWeight: 700,
-      fontSize: 30
+      fontSize: '1.75rem'
     },
     h3: {
       fontWeight: 700,
-      fontSize: 25,
-      lineHeight: 1.4,
-      color: colors.alpha.black[100]
+      fontSize: '1.5rem'
     },
     h4: {
       fontWeight: 700,
-      fontSize: 16
+      fontSize: '1.25rem'
     },
     h5: {
       fontWeight: 700,
-      fontSize: 14
+      fontSize: '1rem'
     },
     h6: {
-      fontSize: 15
-    },
-    body1: {
-      fontSize: 14
-    },
-    body2: {
-      fontSize: 14
-    },
-    button: {
-      fontWeight: 600
+      fontSize: '1rem'
     },
     caption: {
-      fontSize: 13,
       textTransform: 'uppercase',
-      color: colors.alpha.black[50]
+      color: colors.alpha.black[70]
     },
     subtitle1: {
-      fontSize: 14,
       color: colors.alpha.black[70]
     },
     subtitle2: {
-      fontWeight: 400,
-      fontSize: 15,
       color: colors.alpha.black[70]
-    },
-    overline: {
-      fontSize: 13,
-      fontWeight: 700,
-      textTransform: 'uppercase'
     }
   },
   shadows: [

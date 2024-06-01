@@ -35,11 +35,11 @@ import MuiAlert from '@mui/material/Alert';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 
 // const useStyles = makeStyles((theme: Theme) => ({
-  
+
 // }));
 
 const Projects = () => {
-//   const classes = useStyles();
+  //   const classes = useStyles();
 
   const [sortedProjects, setSortedProjects] = useState([]);
 
@@ -78,19 +78,19 @@ const Projects = () => {
         <title>All Projects</title>
       </Helmet>
       <PageTitleWrapper>
-          <Typography variant="h1">All Projects</Typography>
+        <Typography variant="h1">All Projects</Typography>
       </PageTitleWrapper>
       <Stack direction="row" spacing={2} sx={{ height: '100%' }}>
-          <Tabs
-            orientation="vertical"
-            value={currentTab}
-            onChange={handleChange}
-            sx={{ height: '100%' }}
-          >
-            <Tab value="0" label="Recents" sx={{ whiteSpace: 'nowrap', alignItems: 'start' }} />
-            <Tab value="1" label="My Projects" sx={{ whiteSpace: 'nowrap', alignItems: 'start' }} />
-            <Tab value="2" label="Shared With Me" sx={{ whiteSpace: 'nowrap', alignItems: 'start' }} />
-          </Tabs>
+        <Tabs
+          orientation="vertical"
+          value={currentTab}
+          onChange={handleChange}
+          sx={{ height: '100%' }}
+        >
+          <Tab value="0" label="Recents" sx={{ whiteSpace: 'nowrap', alignItems: 'start' }} />
+          <Tab value="1" label="My Projects" sx={{ whiteSpace: 'nowrap', alignItems: 'start' }} />
+          <Tab value="2" label="Shared With Me" sx={{ whiteSpace: 'nowrap', alignItems: 'start' }} />
+        </Tabs>
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
@@ -101,13 +101,13 @@ const Projects = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-                {sortedProjects.map((project, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{project.name}</TableCell>
-                    <TableCell>{project.people}</TableCell>
-                    <TableCell>{project.status}</TableCell>
-                  </TableRow>
-                ))}
+              {sortedProjects.map((project, index) => (
+                <TableRow key={index}>
+                  <TableCell>{project.name}</TableCell>
+                  <TableCell>{project.people}</TableCell>
+                  <TableCell>{project.status}</TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>

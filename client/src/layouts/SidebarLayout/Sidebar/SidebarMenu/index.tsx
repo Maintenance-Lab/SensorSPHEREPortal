@@ -151,9 +151,9 @@ const SubMenuWrapper = styled(Box)(
                 background: ${theme.colors.alpha.trueWhite[100]};
                 opacity: 0;
                 transition: ${theme.transitions.create([
-                  'transform',
-                  'opacity'
-                ])};
+    'transform',
+    'opacity'
+  ])};
                 width: 6px;
                 height: 6px;
                 transform: scale(0);
@@ -216,7 +216,7 @@ function SidebarMenu() {
         <List component="div">
           <SubMenuWrapper>
             <List component="div">
-            <ListItem component="div">
+              <ListItem component="div">
                 <Button
                   disableRipple
                   component={RouterLink}
@@ -254,7 +254,7 @@ function SidebarMenu() {
         >
           <SubMenuWrapper>
             <List component="div">
-            <ListItem component="div">
+              <ListItem component="div">
                 <Button
                   disableRipple
                   component={RouterLink}
@@ -279,7 +279,7 @@ function SidebarMenu() {
         >
           <SubMenuWrapper>
             <List component="div">
-            <ListItem component="div">
+              <ListItem component="div">
                 <Button
                   disableRipple
                   component={RouterLink}
@@ -304,7 +304,7 @@ function SidebarMenu() {
         >
           <SubMenuWrapper>
             <List component="div">
-            <ListItem component="div">
+              <ListItem component="div">
                 <Button
                   disableRipple
                   component={RouterLink}
@@ -403,7 +403,7 @@ function SidebarMenu() {
             </List>
           </SubMenuWrapper>
         </List>
-        
+
         <List
           component="div"
           subheader={

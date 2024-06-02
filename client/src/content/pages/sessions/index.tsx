@@ -32,31 +32,62 @@ import MuiAlert from '@mui/material/Alert';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import AddIcon from '@mui/icons-material/Add';
 
-// const useStyles = makeStyles((theme: Theme) => ({
-  
-// }));
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+
+const SessionStatus = ({ status, project }) => {
+  let statusColor = '';
+  let statusLabel = '';
+
+  switch (status) {
+    case 'finished':
+      statusColor = 'success.main';
+      statusLabel = 'Finished Collecting Data';
+      break;
+    case 'collecting':
+      statusColor = 'primary.main';
+      statusLabel = 'Collecting Data';
+      break;
+    case 'notStarted':
+      statusColor = 'gray';
+      statusLabel = 'Not Started';
+      break;
+    default:
+      statusColor = '';
+      statusLabel = 'Unknown';
+  }
+
+  return (
+    <Stack direction="row" spacing={1} sx={{ color: statusColor }}>
+      {status === 'finished' && (<CheckCircleIcon />)}
+      {status === 'collecting' && (<MoreHorizIcon />)}
+      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+        {statusLabel}
+      </Typography>
+    </Stack>
+  );
+};
 
 const Sessions = () => {
-//   const classes = useStyles();
 
-const [sortedSessions, setSortedSessions] = useState([]);
+  const [sortedSessions, setSortedSessions] = useState([]);
 
-  // Placeholder data for 3 devices
+  // Placeholder data for 3 sessions
   const sessionsPlaceholder = [
     {
-      name: 'Session 1',
+      name: 'Test Collection',
       project: 'Project 1',
-      status: 'Active'
+      status: 'finished'
     },
     {
-      name: 'Session 2',
-      project: 'Project 2',
-      status: 'Active'
+      name: 'Session #2',
+      project: 'Building Temperature Research',
+      status: 'collecting'
     },
     {
-      name: 'Session 3',
-      project: 'Project 3',
-      status: 'Active'
+      name: 'Tester Session',
+      project: '',
+      status: 'notStarted'
     }
   ];
 
@@ -69,10 +100,10 @@ const [sortedSessions, setSortedSessions] = useState([]);
       <Helmet>
         <title>All Sessions</title>
       </Helmet>
-       <PageTitleWrapper>
-            <Typography variant="h1">All Sessions</Typography>
-       </PageTitleWrapper>
-       <Container>
+      <PageTitleWrapper>
+        <Typography variant="h1">All Sessions</Typography>
+      </PageTitleWrapper>
+      <Container>
         <Stack direction="column" spacing={2}>
           <Stack direction="row" spacing={2}>
             <Button variant="outlined" color="primary">
@@ -81,8 +112,8 @@ const [sortedSessions, setSortedSessions] = useState([]);
             </Button>
             <TextField id="outlined-basic" label="Search" variant="outlined" />
           </Stack>
-          <TableContainer>
-            <Table aria-label="simple table">
+          <TableContainer component={Paper}>
+            <Table>
               <TableHead>
                 <TableRow>
                   <TableCell>Name</TableCell>
@@ -94,8 +125,10 @@ const [sortedSessions, setSortedSessions] = useState([]);
                 {sortedSessions.map((session, index) => (
                   <TableRow key={index}>
                     <TableCell>{session.name}</TableCell>
-                    <TableCell>{session.project}</TableCell>
-                    <TableCell>{session.status}</TableCell>
+                    <TableCell>{session.project ? session.project : '-'}</TableCell>
+                    <TableCell>
+                      <SessionStatus status={session.status} project={session.project} />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

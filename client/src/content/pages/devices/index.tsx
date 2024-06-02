@@ -30,10 +30,58 @@ import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
 // const useStyles = makeStyles((theme: Theme) => ({
   
 // }));
+
+const DeviceStatus = ({ status, project, session }) => {
+  let statusColor = '';
+  let statusLabel = '';
+
+  switch (status) {
+    case 'takenFinished':
+      statusColor = 'success.main';
+      statusLabel = 'Finished Collecting Data';
+      break;
+    case 'takenCollecting':
+      statusColor = 'primary.main';
+      statusLabel = 'Collecting Data';
+      break;
+    case 'takenInactive':
+      statusColor = '';
+      statusLabel = 'Inactive';
+      break;
+    case 'unavailable':
+      statusColor = 'gray';
+      statusLabel = 'Unavailable';
+      break;
+    default:
+      statusColor = '';
+      statusLabel = 'Available';
+  }
+
+  return (
+    <Stack spacing={1} sx={{ color: statusColor }}>
+      <Stack direction="row" spacing={1}>
+        {status === 'takenFinished' && (<CheckCircleIcon />)}
+        {status === 'takenCollecting' && (<MoreHorizIcon />)}
+        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+          {statusLabel}
+        </Typography>
+        {(status === 'takenCollecting' || status === 'takenFinished' || status === 'takenInactive') && (
+          <Typography variant="body1">{session}</Typography>
+        )}
+      </Stack>
+      {status !== 'available' && status !== 'unavailable' && (
+        <Typography variant="body2">{project}</Typography>
+      )}
+      
+    </Stack>
+  );
+};
 
 const Devices = () => {
   // const classes = useStyles();
@@ -44,24 +92,48 @@ const Devices = () => {
   const devicesPlaceholder = [
     {
       name: 'Device 1',
+      type: 'M5Stack Core2',
       macAddress: '00:00:00:00:00:01',
       battery: '100',
-      project: 'Project 1',
-      status: 'Active'
+      project: '',
+      session: '',
+      status: 'available'
     },
     {
       name: 'Device 2',
+      type: 'M5Stack Core2',
       macAddress: '00:00:00:00:00:02',
       battery: '100',
       project: 'Project 2',
-      status: 'Active'
+      session: 'Test collection',
+      status: 'takenFinished'
     },
     {
       name: 'Device 3',
+      type: 'M5Stack Core2',
       macAddress: '00:00:00:00:00:03',
       battery: '100',
-      project: 'Project 3',
-      status: 'Active'
+      project: 'Building Temperature Research',
+      session: 'Session #2',
+      status: 'takenCollecting'
+    },
+    {
+      name: 'Device 4',
+      type: 'M5Stack Core2',
+      macAddress: '00:00:00:00:00:04',
+      battery: '100',
+      project: 'Project 4',
+      session: '',
+      status: 'takenInactive'
+    },
+    {
+      name: 'Device 5',
+      type: 'M5Stack Core2',
+      macAddress: '00:00:00:00:00:05',
+      battery: '100',
+      project: '',
+      session: '',
+      status: 'unavailable'
     }
   ];
 
@@ -90,14 +162,14 @@ const Devices = () => {
             </Button>
             <TextField id="outlined-basic" label="Search" variant="outlined" />
           </Stack>
-          <TableContainer>
+          <TableContainer component={Paper}>
             <Table aria-label="simple table">
               <TableHead>
                 <TableRow>
                   <TableCell>Name</TableCell>
+                  <TableCell>Type</TableCell>
                   <TableCell>MAC Address</TableCell>
                   <TableCell>Battery</TableCell>
-                  <TableCell>Project</TableCell>
                   <TableCell>Status</TableCell>
                 </TableRow>
               </TableHead>
@@ -105,14 +177,16 @@ const Devices = () => {
                 {sortedDevices.map((device, index) => (
                   <TableRow key={index}>
                     <TableCell>{device.name}</TableCell>
+                    <TableCell>{device.type}</TableCell>
                     <TableCell>{device.macAddress}</TableCell>
                     <TableCell>
                       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                         <BatteryFullIcon /> {device.battery}%
                       </Stack>
                     </TableCell>
-                    <TableCell>{device.project}</TableCell>
-                    <TableCell>{device.status}</TableCell>
+                    <TableCell>
+                      <DeviceStatus status={device.status} project={device.project} session={device.session}/>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

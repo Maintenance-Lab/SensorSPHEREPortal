@@ -85,7 +85,7 @@ const Sessions = () => {
       status: 'collecting'
     },
     {
-      name: 'Tester Session',
+      name: 'Standalone Session',
       project: '',
       status: 'notStarted'
     }

@@ -104,7 +104,7 @@ const Devices = () => {
       type: 'M5Stack Core2',
       macAddress: '00:00:00:00:00:02',
       battery: '100',
-      project: 'Project 2',
+      project: 'Project 1',
       session: 'Test collection',
       status: 'takenFinished'
     },
@@ -122,7 +122,7 @@ const Devices = () => {
       type: 'M5Stack Core2',
       macAddress: '00:00:00:00:00:04',
       battery: '100',
-      project: 'Project 4',
+      project: 'Project 3',
       session: '',
       status: 'takenInactive'
     },

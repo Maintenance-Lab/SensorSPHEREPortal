@@ -33,10 +33,46 @@ import { Theme } from '@mui/material/styles';
 import { Helmet } from 'react-helmet-async';
 import MuiAlert from '@mui/material/Alert';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
-// const useStyles = makeStyles((theme: Theme) => ({
+const ProjectStatus = ({ status, session }) => {
+  let statusColor = '';
+  let statusLabel = '';
 
-// }));
+  switch (status) {
+    case 'finished':
+      statusColor = 'success.main';
+      statusLabel = 'Finished Collecting Data';
+      break;
+    case 'collecting':
+      statusColor = 'primary.main';
+      statusLabel = 'Collecting Data';
+      break;
+    case 'inactive':
+      statusColor = 'gray';
+      statusLabel = 'No Activity';
+      break;
+    default:
+      statusColor = '';
+      statusLabel = 'Unknown';
+  }
+
+  return (
+    <Stack spacing={1} sx={{ color: statusColor }}>
+      <Stack direction="row" spacing={1}>
+        {status === 'finished' && (<CheckCircleIcon />)}
+        {status === 'collecting' && (<MoreHorizIcon />)}
+        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+          {statusLabel}
+        </Typography>
+        {session && (
+          <Typography variant="body1">{session}</Typography>
+        )}
+      </Stack>
+    </Stack>
+  );
+};
 
 const Projects = () => {
   //   const classes = useStyles();
@@ -46,19 +82,22 @@ const Projects = () => {
   // Placeholder data for 3 projects
   const projectsPlaceholder = [
     {
-      name: 'Project 1',
+      name: 'Building Temperature Research',
       people: 'John Doe',
-      status: 'Unknown'
+      session: 'Session #2',
+      status: 'collecting'
     },
     {
-      name: 'Project 2',
+      name: 'Project 1',
       people: 'Jane Doe',
-      status: 'Unknown'
+      session: 'Test Collection',
+      status: 'finished'
     },
     {
       name: 'Project 3',
       people: 'John Doe, Jane Doe',
-      status: 'Unknown'
+      session: '',
+      status: 'inactive'
     }
   ];
 
@@ -105,7 +144,9 @@ const Projects = () => {
                 <TableRow key={index}>
                   <TableCell>{project.name}</TableCell>
                   <TableCell>{project.people}</TableCell>
-                  <TableCell>{project.status}</TableCell>
+                  <TableCell>
+                    <ProjectStatus status={project.status} session={project.session} />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

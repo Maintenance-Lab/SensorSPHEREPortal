@@ -39,6 +39,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
+import PlaylistAddOutlinedIcon from '@mui/icons-material/PlaylistAddOutlined';
 
 const DeviceStatus = ({ status, project }) => {
   let statusColor = '';
@@ -63,21 +65,81 @@ const DeviceStatus = ({ status, project }) => {
       break;
     default:
       statusColor = '';
-      statusLabel = 'Available';
+      statusLabel = 'Unknown';
   }
 
   return (
     <Stack spacing={1} sx={{ color: statusColor }}>
-      <Stack direction="row" spacing={1}>
+      <Stack direction="row" spacing={1} alignItems="center">
         {status === 'takenFinished' && (<CheckCircleIcon />)}
         {status === 'takenCollecting' && (<MoreHorizIcon />)}
-        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+        <Typography variant="inherit" sx={{ fontWeight: 600 }}>
           {statusLabel}
         </Typography>
       </Stack>
     </Stack>
   );
 };
+
+const sensorsPlaceholder = [
+  {
+    id: 1,
+    name: 'Air Quality Sensor',
+    type: 'ABC123',
+    outputs: ['co2', 'pm2.5']
+  },
+  {
+    id: 2,
+    name: 'Temperature Sensor',
+    type: 'DEF456',
+    outputs: ['temperature']
+  }
+]
+
+const sensorColumns: GridColDef[] = [
+  { field: 'id', headerName: '#' },
+  { field: 'name', headerName: 'Name' },
+  { field: 'type', headerName: 'Type' },
+  { field: 'outputs', headerName: 'Outputs' },
+];
+
+const sensorRows: GridRowsProp = sensorsPlaceholder.map((sensor) => ({
+  id: sensor.id,
+  name: sensor.name,
+  type: sensor.type,
+  outputs: sensor.outputs.join(', '),
+}));
+
+const sessionsPlaceholder = [
+  {
+    id: 1,
+    name: 'Session #1',
+    status: 'takenFinished'
+  },
+  {
+    id: 2,
+    name: 'Session #2',
+    status: 'takenCollecting'
+  }
+];
+
+const sessionColumns: GridColDef[] = [
+  { field: 'id', headerName: '#' },
+  { field: 'name', headerName: 'Name' },
+  {
+    field: 'status',
+    headerName: 'Status',
+    renderCell: (params) => (
+      <DeviceStatus status={params.value} project="" />
+    )
+  }
+];
+
+const sessionRows: GridRowsProp = sessionsPlaceholder.map((session) => ({
+  id: session.id,
+  name: session.name,
+  status: session.status
+}));
 
 const DeviceDetail = () => {
 
@@ -97,29 +159,67 @@ const DeviceDetail = () => {
         <title>{devicePlaceholder.name}</title>
       </Helmet>
       <PageTitleWrapper>
-        <Stack spacing={1}>
+        <Stack spacing={2}>
           <Typography variant="h1">
             {devicePlaceholder.name}
           </Typography>
-          <Stack direction="row" spacing={1}>
+          <Stack
+            direction="row"
+            spacing={1}
+            divider={<Divider orientation="vertical" flexItem />}
+          >
             <Typography variant="body1">{devicePlaceholder.type}</Typography>
-            <Divider orientation="vertical" flexItem />
             <Typography variant="body1">{devicePlaceholder.macAddress}</Typography>
-            <Divider orientation="vertical" flexItem />
             <Stack direction="row">
               <BatteryFullIcon />
               <Typography variant="body1">{devicePlaceholder.battery}%</Typography>
             </Stack>
-            <Divider orientation="vertical" flexItem />
             <DeviceStatus status={devicePlaceholder.status} project={devicePlaceholder.project} />
+          </Stack>
+          <Stack direction="row" spacing={2}>
+            <Button variant="outlined" color="primary" size="small" startIcon={<AddIcon />}>
+              Create New Session
+            </Button>
+            <Button variant="outlined" color="primary" size="small" startIcon={<PlaylistAddOutlinedIcon />}>
+              Add To Project
+            </Button>
+            <TextField id="outlined-basic" label="Search" variant="outlined" size="small" />
           </Stack>
         </Stack>
       </PageTitleWrapper>
       <Container>
-        <Typography variant="h2">Status (Placeholder)</Typography>
-        <Typography variant="h2">Sensors</Typography>
-        <Typography variant="h2">Sessions</Typography>
+        <Stack spacing={2}>
+          {/* <Typography variant="h2">Status (Placeholder)</Typography> */}
+          <Typography variant="h2" sx={{ pt: 2 }}>Sensors</Typography>
+          <Paper>
+            <DataGrid
+              rows={sensorRows}
+              columns={sensorColumns}
+              initialState={{
+                pagination: { paginationModel: { pageSize: 25 } },
+              }}
+              density="compact"
+              autosizeOnMount
+            />
+          </Paper>
+          <Typography variant="h2" sx={{ pt: 2 }}>Sessions</Typography>
+          <Paper>
+            <DataGrid
+              rows={sessionRows}
+              columns={sessionColumns}
+              initialState={{
+                pagination: { paginationModel: { pageSize: 25 } },
+                sorting: {
+                  sortModel: [{ field: 'id', sort: 'desc' }],
+                },
+              }}
+              density="compact"
+              autosizeOnMount
+            />
+          </Paper>
+        </Stack>
       </Container>
+
     </div>
   );
 };

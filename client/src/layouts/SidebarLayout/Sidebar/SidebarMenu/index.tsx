@@ -259,7 +259,7 @@ function SidebarMenu() {
                   disableRipple
                   component={RouterLink}
                   onClick={closeSidebar}
-                  to="/projects"
+                  to="/projects/overview"
                   startIcon={<DesignServicesTwoToneIcon />}
                 >
                   All Projects
@@ -284,7 +284,7 @@ function SidebarMenu() {
                   disableRipple
                   component={RouterLink}
                   onClick={closeSidebar}
-                  to="/devices"
+                  to="/devices/overview"
                   startIcon={<FormatListBulletedIcon />}
                 >
                   All Devices
@@ -320,7 +320,7 @@ function SidebarMenu() {
                   disableRipple
                   component={RouterLink}
                   onClick={closeSidebar}
-                  to="/sessions"
+                  to="/sessions/overview"
                   startIcon={<LibraryBooksIcon />}
                 >
                   All Sessions

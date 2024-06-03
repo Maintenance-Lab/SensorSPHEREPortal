@@ -290,6 +290,17 @@ function SidebarMenu() {
                   All Devices
                 </Button>
               </ListItem>
+              <ListItem component="div">
+                <Button
+                  disableRipple
+                  component={RouterLink}
+                  onClick={closeSidebar}
+                  to="/devices/detail"
+                  startIcon={<FormatListBulletedIcon />}
+                >
+                  Device Detail Page
+                </Button>
+              </ListItem>
             </List>
           </SubMenuWrapper>
         </List>

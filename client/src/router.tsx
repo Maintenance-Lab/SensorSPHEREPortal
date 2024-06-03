@@ -37,6 +37,7 @@ const Projects = Loader(lazy(() => import('src/content/pages/projects/')));
 // Devices
 
 const Devices = Loader(lazy(() => import('src/content/pages/devices/')));
+const DeviceDetail = Loader(lazy(() => import('src/content/pages/deviceDetail/')));
 
 // Sessions
 
@@ -189,6 +190,14 @@ const routes: RouteObject[] = [
         element: (
           <ProtectedRoute>
             <Devices />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'detail',
+        element: (
+          <ProtectedRoute>
+            <DeviceDetail />
           </ProtectedRoute>
         )
       }

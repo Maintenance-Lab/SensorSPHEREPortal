@@ -26,7 +26,9 @@ const Overview = Loader(lazy(() => import('src/content/overview')));
 
 // Admin
 
-const ManageUsers = Loader(lazy(() => import('src/content/pages/admin/users/')));
+const ManageUsers = Loader(
+  lazy(() => import('src/content/pages/admin/users/'))
+);
 
 // Projects
 
@@ -142,45 +144,17 @@ const routes: RouteObject[] = [
         ]
       },
 
-      // Template Pages
       {
-        path: 'status',
+        path: 'home',
+        element: <SidebarLayout />,
         children: [
           {
             path: '',
-            element: <Navigate to="404" replace />
-          },
-          {
-            path: '404',
-            element: <Status404 />
-          },
-          {
-            path: '500',
-            element: <Status500 />
-          },
-          {
-            path: 'maintenance',
-            element: <StatusMaintenance />
-          },
-          {
-            path: 'coming-soon',
-            element: <StatusComingSoon />
-          }
-        ]
-      },
-      {
-        path: '*',
-        element: <Status404 />
-      }
-    ]
-  },
-  {
-    path: 'home',
-    element: <SidebarLayout />,
-    children: [
-      {
-        path: '',
-        element: <Home />
+            element: (
+              <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        )
       }
     ]
   },
@@ -198,7 +172,7 @@ const routes: RouteObject[] = [
           <ProtectedRoute>
             <Projects />
           </ProtectedRoute>
-        ),
+        )
       }
     ]
   },
@@ -216,7 +190,7 @@ const routes: RouteObject[] = [
           <ProtectedRoute>
             <Devices />
           </ProtectedRoute>
-        ),
+        )
       }
     ]
   },
@@ -234,10 +208,53 @@ const routes: RouteObject[] = [
           <ProtectedRoute>
             <Sessions />
           </ProtectedRoute>
-        ),
+        )
       }
     ]
   },
+
+
+
+
+
+
+
+
+
+
+  
+  // Template Pages
+  {
+    path: 'status',
+    children: [
+      {
+        path: '',
+        element: <Navigate to="404" replace />
+      },
+      {
+        path: '404',
+        element: <Status404 />
+      },
+      {
+        path: '500',
+        element: <Status500 />
+      },
+      {
+        path: 'maintenance',
+        element: <StatusMaintenance />
+      },
+      {
+        path: 'coming-soon',
+        element: <StatusComingSoon />
+      }
+    ]
+  },
+  {
+    path: '*',
+    element: <Status404 />
+  }
+]
+},
   {
     path: 'dashboards',
     element: <SidebarLayout />,

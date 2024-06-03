@@ -1,8 +1,8 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { IS_PROD, JWT_ACCESS_SECRET, JWT_EXPIRESIN } from "../../config.js";
-import { getAccountByNameOrEmail } from "../../services/Account.js";
-import { verify } from "@node-rs/argon2";
+import { createAccount, getAccountByNameOrEmail } from "../../services/Account.js";
+import { verify, hash } from "@node-rs/argon2";
 import { createLoginSession } from "../../services/LoginSession.js";
 
 const router = Router();
@@ -10,6 +10,8 @@ const router = Router();
 router.post("/", async (req, res) => {
   console.log("login route", req.body);
   const { username, password } = req.body;
+
+  // await createAccount({ name: "admin", email: "admin@admin.com", password: await hash("admin"), role: "administrator" })
 
   try {
     const account = await getAccountByNameOrEmail(username);

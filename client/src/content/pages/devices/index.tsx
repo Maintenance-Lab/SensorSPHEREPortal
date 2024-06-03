@@ -22,7 +22,14 @@ import {
   DialogTitle,
   Typography,
   Snackbar,
-  Container
+  Container,
+  Modal,
+  Box,
+  Grid,
+  Autocomplete,
+  styled,
+  Popper,
+  Divider
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
@@ -34,7 +41,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
 // const useStyles = makeStyles((theme: Theme) => ({
-  
+
 // }));
 
 const DeviceStatus = ({ status, project, session }) => {
@@ -78,17 +85,21 @@ const DeviceStatus = ({ status, project, session }) => {
       {status !== 'available' && status !== 'unavailable' && (
         <Typography variant="body2">{project}</Typography>
       )}
-      
     </Stack>
   );
 };
 
 const Devices = () => {
   // const classes = useStyles();
-  
+
   const [sortedDevices, setSortedDevices] = useState([]);
 
-  // Placeholder data for 3 devices
+  const [overlayFindDevice, setOverlayFindDevice] = useState(false);
+
+  const handleOpenFindDevice = () => setOverlayFindDevice(true);
+  const handleCloseFindDevice = () => setOverlayFindDevice(false);
+
+  // Placeholder data for 5 devices
   const devicesPlaceholder = [
     {
       name: 'Device 1',
@@ -141,6 +152,8 @@ const Devices = () => {
     setSortedDevices(devicesPlaceholder);
   }, []);
 
+
+
   return (
     <div>
       <Helmet>
@@ -152,10 +165,51 @@ const Devices = () => {
       <Container>
         <Stack direction="column" spacing={2}>
           <Stack direction="row" spacing={2}>
-            <Button variant="outlined" color="primary">
+            <Button variant="outlined" color="primary" onClick={handleOpenFindDevice}>
               <SearchIcon />
               Find Device
             </Button>
+            <Dialog
+              open={overlayFindDevice}
+              onClose={handleCloseFindDevice}
+              maxWidth="md"
+              fullWidth
+            >
+              <DialogTitle id="modal-modal-title">Find Device</DialogTitle>
+              <DialogContent>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <Typography variant="h5" >
+                      Tap <span style={{ color: '#3267A6' }}>Automatic</span> on the screen of the device.
+                    </Typography>
+                    <Typography variant="body1">
+                      The device will show up in the list below.
+                    </Typography>
+                    <Divider sx={{ my: 1 }} />
+                    <Stack direction="row" spacing={1}>
+                      <MoreHorizIcon />
+                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                        Searching For Devices
+                      </Typography>
+                    </Stack>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="h5">
+                      Find by MAC Address
+                    </Typography>
+                    <Typography variant="body1">
+                      The MAC address is displayed on the screen of the device.
+                    </Typography>
+                    <Divider sx={{ my: 1 }} />
+                    <Autocomplete
+                      id="combo-box-demo"
+                      options={devicesPlaceholder.map((device) => device.macAddress)}
+                      renderInput={(params) => <TextField {...params} label="MAC Address" />}
+                    />
+                  </Grid>
+                </Grid>
+              </DialogContent>
+            </Dialog>
             <Button variant="outlined" color="primary">
               <AddIcon />
               Add To Project
@@ -185,7 +239,11 @@ const Devices = () => {
                       </Stack>
                     </TableCell>
                     <TableCell>
-                      <DeviceStatus status={device.status} project={device.project} session={device.session}/>
+                      <DeviceStatus
+                        status={device.status}
+                        project={device.project}
+                        session={device.session}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

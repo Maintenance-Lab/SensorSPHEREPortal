@@ -41,6 +41,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
 import PlaylistAddOutlinedIcon from '@mui/icons-material/PlaylistAddOutlined';
+import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 
 const DeviceStatus = ({ status, project }) => {
   let statusColor = '';
@@ -81,33 +83,48 @@ const DeviceStatus = ({ status, project }) => {
   );
 };
 
-const sensorsPlaceholder = [
+const devicesPlaceholder = [
   {
-    id: 1,
-    name: 'Air Quality Sensor',
-    type: 'ABC123',
-    outputs: ['co2', 'pm2.5']
+    id: 3,
+    name: 'Device 3',
+    type: 'M5Stack Core2',
+    macAddress: '00:00:00:00:00:03',
+    battery: '100',
+    project: 'Building Temperature Research',
+    session: 'Session #2',
+    status: 'takenCollecting'
   },
-  {
-    id: 2,
-    name: 'Temperature Sensor',
-    type: 'DEF456',
-    outputs: ['temperature']
-  }
 ]
 
-const sensorColumns: GridColDef[] = [
+const deviceColumns: GridColDef[] = [
   { field: 'id', headerName: '#' },
   { field: 'name', headerName: 'Name' },
   { field: 'type', headerName: 'Type' },
-  { field: 'outputs', headerName: 'Outputs' },
+  { field: 'macAddress', headerName: 'MAC Address' },
+  { field: 'battery', headerName: 'Battery', renderCell: (params) => (
+    <Stack direction="row" alignItems="center">
+      <BatteryFullIcon />
+      <Typography variant="inherit">{params.value}%</Typography>
+    </Stack>
+  ) },
+  {
+    field: 'status',
+    headerName: 'Status',
+    renderCell: (params) => (
+      <DeviceStatus status={params.value} project="" />
+    )
+  }
 ];
 
-const sensorRows: GridRowsProp = sensorsPlaceholder.map((sensor) => ({
-  id: sensor.id,
-  name: sensor.name,
-  type: sensor.type,
-  outputs: sensor.outputs.join(', '),
+const deviceRows: GridRowsProp = devicesPlaceholder.map((device) => ({
+  id: device.id,
+  name: device.name,
+  type: device.type,
+  macAddress: device.macAddress,
+  battery: device.battery,
+  project: device.project,
+  session: device.session,
+  status: device.status
 }));
 
 const sessionsPlaceholder = [
@@ -141,59 +158,48 @@ const sessionRows: GridRowsProp = sessionsPlaceholder.map((session) => ({
   status: session.status
 }));
 
-const DeviceDetail = () => {
+const ProjectDetail = () => {
 
-  // Placeholder data for device
-  const devicePlaceholder = {
-    name: 'Device 3',
-    type: 'M5Stack Core2',
-    macAddress: '00:00:00:00:00:03',
-    battery: '100',
-    project: 'Building Temperature Research',
-    status: 'takenCollecting'
+  // Placeholder data for project
+  const projectPlaceholder = {
+    name: 'Building Temperature Research',
+    description: 'Researching the temperature of buildings on campus. Part of thesis project.'
   }
 
   return (
     <div>
       <Helmet>
-        <title>{devicePlaceholder.name}</title>
+        <title>{projectPlaceholder.name}</title>
       </Helmet>
       <PageTitleWrapper>
         <Stack spacing={2}>
           <Typography variant="h1">
-            {devicePlaceholder.name}
+            {projectPlaceholder.name}
           </Typography>
-          <Stack
-            direction="row"
-            spacing={1}
-            divider={<Divider orientation="vertical" flexItem />}
-          >
-            <Typography variant="body1">{devicePlaceholder.type}</Typography>
-            <Typography variant="body1">{devicePlaceholder.macAddress}</Typography>
-            <Stack direction="row">
-              <BatteryFullIcon />
-              <Typography variant="body1">{devicePlaceholder.battery}%</Typography>
-            </Stack>
-            <DeviceStatus status={devicePlaceholder.status} project={devicePlaceholder.project} />
-          </Stack>
+          <Typography variant="body1">
+            {projectPlaceholder.description}
+          </Typography>
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" color="primary" size="small" startIcon={<AddIcon />}>
-              Create New Session
+            <Button variant="outlined" color="primary" size="small" startIcon={<AccountTreeOutlinedIcon />}>
+              Add Devices
             </Button>
             <Button variant="outlined" color="primary" size="small" startIcon={<PlaylistAddOutlinedIcon />}>
-              Add To Project
+              Create New Session
+            </Button>
+            {/* Delete button */}
+            <Button variant="outlined" color="primary" size="small" startIcon={<DeleteOutlineOutlinedIcon />}>
+              Delete Project
             </Button>
           </Stack>
         </Stack>
       </PageTitleWrapper>
       <Container>
         <Stack spacing={2}>
-          {/* <Typography variant="h2">Status (Placeholder)</Typography> */}
-          <Typography variant="h2" sx={{ pt: 2 }}>Sensors</Typography>
+          <Typography variant="h2" sx={{ pt: 2 }}>Devices</Typography>
           <Paper>
             <DataGrid
-              rows={sensorRows}
-              columns={sensorColumns}
+              rows={deviceRows}
+              columns={deviceColumns}
               initialState={{
                 pagination: { paginationModel: { pageSize: 25 } },
               }}
@@ -223,4 +229,4 @@ const DeviceDetail = () => {
   );
 };
 
-export default DeviceDetail;
+export default ProjectDetail;

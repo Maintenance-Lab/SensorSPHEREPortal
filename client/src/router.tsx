@@ -33,6 +33,7 @@ const ManageUsers = Loader(
 // Projects
 
 const Projects = Loader(lazy(() => import('src/content/pages/projects/')));
+const ProjectDetail = Loader(lazy(() => import('src/content/pages/projectDetail/')));
 
 // Devices
 
@@ -172,6 +173,14 @@ const routes: RouteObject[] = [
         element: (
           <ProtectedRoute>
             <Projects />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'detail',
+        element: (
+          <ProtectedRoute>
+            <ProjectDetail />
           </ProtectedRoute>
         )
       }

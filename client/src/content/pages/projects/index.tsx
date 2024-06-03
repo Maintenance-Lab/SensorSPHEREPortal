@@ -119,40 +119,42 @@ const Projects = () => {
       <PageTitleWrapper>
         <Typography variant="h1">All Projects</Typography>
       </PageTitleWrapper>
-      <Stack direction="row" spacing={2} sx={{ height: '100%' }}>
-        <Tabs
-          orientation="vertical"
-          value={currentTab}
-          onChange={handleChange}
-          sx={{ height: '100%' }}
-        >
-          <Tab value="0" label="Recents" sx={{ whiteSpace: 'nowrap', alignItems: 'start' }} />
-          <Tab value="1" label="My Projects" sx={{ whiteSpace: 'nowrap', alignItems: 'start' }} />
-          <Tab value="2" label="Shared With Me" sx={{ whiteSpace: 'nowrap', alignItems: 'start' }} />
-        </Tabs>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>People</TableCell>
-                <TableCell>Status</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {sortedProjects.map((project, index) => (
-                <TableRow key={index}>
-                  <TableCell>{project.name}</TableCell>
-                  <TableCell>{project.people}</TableCell>
-                  <TableCell>
-                    <ProjectStatus status={project.status} session={project.session} />
-                  </TableCell>
+      <Container>
+        <Stack direction="row" spacing={2} sx={{ height: '100%' }}>
+          <Tabs
+            orientation="vertical"
+            value={currentTab}
+            onChange={handleChange}
+            sx={{ flex: '0 0 auto' }}
+          >
+            <Tab value="0" label="Recents" sx={{ alignItems: 'start' }} />
+            <Tab value="1" label="My Projects" sx={{ alignItems: 'start' }} />
+            <Tab value="2" label="Shared With Me" sx={{ alignItems: 'start' }} />
+          </Tabs>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell>People</TableCell>
+                  <TableCell>Status</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Stack>
+              </TableHead>
+              <TableBody>
+                {sortedProjects.map((project, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{project.name}</TableCell>
+                    <TableCell>{project.people}</TableCell>
+                    <TableCell>
+                      <ProjectStatus status={project.status} session={project.session} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Stack>
+      </Container>
     </div>
   );
 };

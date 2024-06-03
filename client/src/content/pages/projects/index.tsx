@@ -119,13 +119,14 @@ const Projects = () => {
       <PageTitleWrapper>
         <Typography variant="h1">All Projects</Typography>
       </PageTitleWrapper>
-      <Container>
-        <Stack direction="row" spacing={2} sx={{ height: '100%' }}>
+      <Container maxWidth="lg">
+        <Stack direction="row" spacing={2} sx={{ height: '100%', paddingInline: 4 }}>
           <Tabs
             orientation="vertical"
             value={currentTab}
             onChange={handleChange}
             sx={{ flex: '0 0 auto' }}
+            
           >
             <Tab value="0" label="Recents" sx={{ alignItems: 'start' }} />
             <Tab value="1" label="My Projects" sx={{ alignItems: 'start' }} />

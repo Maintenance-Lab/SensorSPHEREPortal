@@ -821,6 +821,7 @@ export const PureLightTheme = createTheme({
           // borderRadius: 6,
           // transition: 'color .2s',
           textTransform: 'capitalize',
+          fontSize: '1rem',
 
           // '&.MuiButtonBase-root': {
           //   minWidth: 'auto',
@@ -828,10 +829,12 @@ export const PureLightTheme = createTheme({
           //   paddingRight: 20,
           //   marginRight: 4
           // },
-          // '&.Mui-selected, &.Mui-selected:hover': {
-          //   color: colors.alpha.white[100],
-          //   zIndex: 5
-          // },
+          '&.Mui-selected, &.Mui-selected:hover': {
+            fontWeight: 'bold',
+            
+            // color: colors.alpha.white[100],
+            // zIndex: 5
+          },
           // '&:hover': {
           //   color: colors.alpha.black[100]
           // }

@@ -195,7 +195,7 @@ const ProjectDetail = () => {
       </PageTitleWrapper>
       <Container>
         <Stack spacing={2}>
-          <Typography variant="h2" sx={{ pt: 2 }}>Devices</Typography>
+          <Typography variant="h2" sx={{ paddingInline: 4 }}>Devices</Typography>
           <Paper>
             <DataGrid
               rows={deviceRows}
@@ -207,7 +207,7 @@ const ProjectDetail = () => {
               autosizeOnMount
             />
           </Paper>
-          <Typography variant="h2" sx={{ pt: 2 }}>Sessions</Typography>
+          <Typography variant="h2" sx={{ pt: 2, paddingInline: 4 }}>Sessions</Typography>
           <Paper>
             <DataGrid
               rows={sessionRows}

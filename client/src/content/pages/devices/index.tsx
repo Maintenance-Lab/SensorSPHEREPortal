@@ -39,6 +39,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
+import { id } from 'date-fns/locale';
 
 // const useStyles = makeStyles((theme: Theme) => ({
 
@@ -71,88 +73,114 @@ const DeviceStatus = ({ status, project, session }) => {
   }
 
   return (
-    <Stack spacing={1} sx={{ color: statusColor }}>
-      <Stack direction="row" spacing={1}>
-        {status === 'takenFinished' && (<CheckCircleIcon />)}
-        {status === 'takenCollecting' && (<MoreHorizIcon />)}
-        <Typography variant="body1" sx={{ fontWeight: 600 }}>
-          {statusLabel}
-        </Typography>
-        {(status === 'takenCollecting' || status === 'takenFinished' || status === 'takenInactive') && (
-          <Typography variant="body1">{session}</Typography>
-        )}
-      </Stack>
-      {status !== 'available' && status !== 'unavailable' && (
-        <Typography variant="body2">{project}</Typography>
+    <Stack direction="row" spacing={1} sx={{ color: statusColor }} alignItems="center">
+      {status === 'takenFinished' && (<CheckCircleIcon fontSize="small" />)}
+      {status === 'takenCollecting' && (<MoreHorizIcon fontSize="small" />)}
+      <Typography variant="inherit" sx={{ fontWeight: 600 }}>
+        {statusLabel}
+      </Typography>
+      {/* {session && (
+        <Typography variant="inherit">{session}</Typography>
+      )} */}
+      
+      {project && (
+        <Typography variant="inherit">{project}</Typography>
       )}
     </Stack>
   );
 };
 
+const devicesPlaceholder = [
+  {
+    id: 1,
+    name: 'Device 1',
+    type: 'M5Stack Core2',
+    macAddress: '00:00:00:00:00:01',
+    battery: '100',
+    project: '',
+    session: '',
+    status: 'available'
+  },
+  {
+    id: 2,
+    name: 'Device 2',
+    type: 'M5Stack Core2',
+    macAddress: '00:00:00:00:00:02',
+    battery: '100',
+    project: 'Project 1',
+    session: 'Test collection',
+    status: 'takenFinished'
+  },
+  {
+    id: 3,
+    name: 'Device 3',
+    type: 'M5Stack Core2',
+    macAddress: '00:00:00:00:00:03',
+    battery: '100',
+    project: 'Building Temperature Research',
+    session: 'Session #2',
+    status: 'takenCollecting'
+  },
+  {
+    id: 4,
+    name: 'Device 4',
+    type: 'M5Stack Core2',
+    macAddress: '00:00:00:00:00:04',
+    battery: '100',
+    project: 'Project 3',
+    session: '',
+    status: 'takenInactive'
+  },
+  {
+    id: 5,
+    name: 'Device 5',
+    type: 'M5Stack Core2',
+    macAddress: '00:00:00:00:00:05',
+    battery: '100',
+    project: '',
+    session: '',
+    status: 'unavailable'
+  }
+];
+
+const devicesColumns: GridColDef[] = [
+  { field: 'id', headerName: '#' },
+  { field: 'name', headerName: 'Name' },
+  { field: 'type', headerName: 'Type' },
+  { field: 'macAddress', headerName: 'MAC Address' },
+  {
+    field: 'battery', headerName: 'Battery', renderCell: (params) => (
+      <Stack direction="row" alignItems="center">
+        <BatteryFullIcon fontSize="small" />
+        <Typography variant="inherit">{params.value}%</Typography>
+      </Stack>
+    )
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    renderCell: (params) => (
+      <DeviceStatus status={params.value} project={params.row.project} session={params.row.session} />
+    )
+  }
+];
+
+const devicesRows: GridRowsProp = devicesPlaceholder.map((device) => ({
+  id: device.id,
+  name: device.name,
+  type: device.type,
+  macAddress: device.macAddress,
+  battery: device.battery,
+  status: device.status,
+  project: device.project,
+  session: device.session,
+}));
+
 const Devices = () => {
-  // const classes = useStyles();
-
-  const [sortedDevices, setSortedDevices] = useState([]);
-
   const [overlayFindDevice, setOverlayFindDevice] = useState(false);
 
   const handleOpenFindDevice = () => setOverlayFindDevice(true);
   const handleCloseFindDevice = () => setOverlayFindDevice(false);
-
-  // Placeholder data for 5 devices
-  const devicesPlaceholder = [
-    {
-      name: 'Device 1',
-      type: 'M5Stack Core2',
-      macAddress: '00:00:00:00:00:01',
-      battery: '100',
-      project: '',
-      session: '',
-      status: 'available'
-    },
-    {
-      name: 'Device 2',
-      type: 'M5Stack Core2',
-      macAddress: '00:00:00:00:00:02',
-      battery: '100',
-      project: 'Project 1',
-      session: 'Test collection',
-      status: 'takenFinished'
-    },
-    {
-      name: 'Device 3',
-      type: 'M5Stack Core2',
-      macAddress: '00:00:00:00:00:03',
-      battery: '100',
-      project: 'Building Temperature Research',
-      session: 'Session #2',
-      status: 'takenCollecting'
-    },
-    {
-      name: 'Device 4',
-      type: 'M5Stack Core2',
-      macAddress: '00:00:00:00:00:04',
-      battery: '100',
-      project: 'Project 3',
-      session: '',
-      status: 'takenInactive'
-    },
-    {
-      name: 'Device 5',
-      type: 'M5Stack Core2',
-      macAddress: '00:00:00:00:00:05',
-      battery: '100',
-      project: '',
-      session: '',
-      status: 'unavailable'
-    }
-  ];
-
-  useEffect(() => {
-    setSortedDevices(devicesPlaceholder);
-  }, []);
-
-
 
   return (
     <div>
@@ -215,42 +243,18 @@ const Devices = () => {
         </Stack>
       </PageTitleWrapper>
       <Container>
-        <Box sx={{paddingInline: 4}}>
-          <TableContainer component={Paper}>
-            <Table aria-label="simple table">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Type</TableCell>
-                  <TableCell>MAC Address</TableCell>
-                  <TableCell>Battery</TableCell>
-                  <TableCell>Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {sortedDevices.map((device, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{device.name}</TableCell>
-                    <TableCell>{device.type}</TableCell>
-                    <TableCell>{device.macAddress}</TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                        <BatteryFullIcon /> {device.battery}%
-                      </Stack>
-                    </TableCell>
-                    <TableCell>
-                      <DeviceStatus
-                        status={device.status}
-                        project={device.project}
-                        session={device.session}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
+          <Paper>
+            <DataGrid
+              rows={devicesRows}
+              columns={devicesColumns}
+              density="compact"
+              autosizeOnMount
+              autosizeOptions={{
+                includeOutliers: true
+              }}
+              autoHeight
+            />
+          </Paper>
       </Container>
     </div>
   );

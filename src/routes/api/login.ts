@@ -43,7 +43,7 @@ router.post("/", async (req, res) => {
         secure: IS_PROD,
         maxAge: JWT_EXPIRESIN * 1000,
       })
-      .json({ success: true, location: "/dashboards", error: null });
+      .json({ success: true, location: "/home", error: null });
   } catch (error) {
     if (!IS_PROD) console.error("Error logging in", error);
     return res.json({ success: false, location: null, error: "Error logging in, please try again later" });

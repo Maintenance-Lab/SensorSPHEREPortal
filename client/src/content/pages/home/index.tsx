@@ -48,37 +48,37 @@ const Home = () => {
         <Typography variant="h1">Home</Typography>
       </PageTitleWrapper>
       <Container>
-        <Typography variant="h2">Pinned</Typography>
-        <Grid container spacing={2} sx={{ py: 2 }}>
-          <Grid item xs={4}>
-            <Card>
-              <CardContent>
-                <Typography variant="h4">Project</Typography>
-                <Typography variant="h3">Name Of Project</Typography>
-                <Typography variant="body1">Current Status</Typography>
-              </CardContent>
-            </Card>
+          <Typography variant="h2">Pinned</Typography>
+          <Grid container spacing={2} sx={{ py: 2 }}>
+            <Grid item xs={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h4">Project</Typography>
+                  <Typography variant="h3">Name Of Project</Typography>
+                  <Typography variant="body1">Current Status</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h4">Device</Typography>
+                  <Typography variant="h3">Name Of Device</Typography>
+                  <Typography variant="body1">Current Status</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={4}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h4">Session</Typography>
+                  <Typography variant="h3">Name Of Session</Typography>
+                  <Typography variant="body1">Current Status</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
           </Grid>
-          <Grid item xs={4}>
-            <Card>
-              <CardContent>
-                <Typography variant="h4">Device</Typography>
-                <Typography variant="h3">Name Of Device</Typography>
-                <Typography variant="body1">Current Status</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={4}>
-            <Card>
-              <CardContent>
-                <Typography variant="h4">Session</Typography>
-                <Typography variant="h3">Name Of Session</Typography>
-                <Typography variant="body1">Current Status</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-        <Typography variant="h2">Latest Activity</Typography>
+          <Typography variant="h2">Latest Activity</Typography>
       </Container>
     </div>
   );

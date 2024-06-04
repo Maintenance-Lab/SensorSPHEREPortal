@@ -189,7 +189,7 @@ const DeviceDetail = () => {
       <Container>
         <Stack spacing={2}>
           {/* <Typography variant="h2">Status (Placeholder)</Typography> */}
-          <Typography variant="h2" sx={{ paddingInline: 4 }}>Sensors</Typography>
+          <Typography variant="h2">Sensors</Typography>
           <Paper>
             <DataGrid
               rows={sensorRows}
@@ -201,7 +201,7 @@ const DeviceDetail = () => {
               autosizeOnMount
             />
           </Paper>
-          <Typography variant="h2" sx={{ pt: 2, paddingInline: 4 }}>Sessions</Typography>
+          <Typography variant="h2" sx={{ pt: 2 }}>Sessions</Typography>
           <Paper>
             <DataGrid
               rows={sessionRows}

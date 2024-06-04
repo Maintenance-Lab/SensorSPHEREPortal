@@ -120,7 +120,7 @@ const Projects = () => {
         <Typography variant="h1">All Projects</Typography>
       </PageTitleWrapper>
       <Container maxWidth="lg">
-        <Stack direction="row" spacing={2} sx={{ height: '100%', paddingInline: 4 }}>
+        <Stack direction="row" spacing={2} sx={{ height: '100%' }}>
           <Tabs
             orientation="vertical"
             value={currentTab}

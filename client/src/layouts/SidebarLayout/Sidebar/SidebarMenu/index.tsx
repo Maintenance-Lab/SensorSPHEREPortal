@@ -341,11 +341,13 @@ function SidebarMenu() {
           </SubMenuWrapper>
         </List>
 
+        {/* Original samples we can use and look at */}
+
         <List
           component="div"
           subheader={
             <ListSubheader component="div" disableSticky>
-              Account
+              Template – Dashboards & Apps
             </ListSubheader>
           }
         >
@@ -362,33 +364,6 @@ function SidebarMenu() {
                   User Profile
                 </Button>
               </ListItem>
-              <ListItem component="div">
-                <Button
-                  disableRipple
-                  component={RouterLink}
-                  onClick={closeSidebar}
-                  to="/management/profile/settings"
-                  startIcon={<DisplaySettingsTwoToneIcon />}
-                >
-                  Account Settings
-                </Button>
-              </ListItem>
-            </List>
-          </SubMenuWrapper>
-        </List>
-
-        {/* Original samples we can use and look at */}
-
-        <List
-          component="div"
-          subheader={
-            <ListSubheader component="div" disableSticky>
-              Template – Dashboards & Apps
-            </ListSubheader>
-          }
-        >
-          <SubMenuWrapper>
-            <List component="div">
               <ListItem component="div">
                 <Button
                   disableRipple

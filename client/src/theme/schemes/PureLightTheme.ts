@@ -313,15 +313,15 @@ export const PureLightTheme = createTheme({
     },
     tonalOffset: 0.5
   },
-  breakpoints: {
-    values: {
-      xs: 0,
-      sm: 600,
-      md: 960,
-      lg: 1280,
-      xl: 1840
-    }
-  },
+  // breakpoints: {
+  //   values: {
+  //     xs: 0,
+  //     sm: 600,
+  //     md: 960,
+  //     lg: 1280,
+  //     xl: 1840
+  //   }
+  // },
   components: {
     MuiBackdrop: {
       styleOverrides: {

@@ -2,11 +2,11 @@ import { FC, ReactNode } from 'react';
 import PropTypes from 'prop-types';
 import { Box, Container, styled } from '@mui/material';
 
-const PageTitle = styled(Box)(
-  ({ theme }) => `
-        padding: ${theme.spacing(4)};
-`
-);
+// const PageTitle = styled(Box)(
+//   ({ theme }) => `
+//         padding: ${theme.spacing(4)};
+// `
+// );
 
 interface PageTitleWrapperProps {
   children?: ReactNode;
@@ -14,9 +14,13 @@ interface PageTitleWrapperProps {
 
 const PageTitleWrapper: FC<PageTitleWrapperProps> = ({ children }) => {
   return (
-    <PageTitle className="MuiPageTitle-wrapper">
-      <Container maxWidth="lg">{children}</Container>
-    </PageTitle>
+    <Box className="MuiPageTitle-wrapper" sx={{ paddingY: 3 }}>
+      <Container maxWidth="lg">
+
+          {children}
+
+      </Container>
+    </Box>
   );
 };
 

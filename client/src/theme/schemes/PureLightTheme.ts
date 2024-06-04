@@ -6,7 +6,7 @@ const themeColors = {
   secondary: '#5C7698',
   success: '#2A8C2A',
   warning: '#FFA319',
-  error: '#FF1943',
+  error: '#D73B5A',
   info: '#33C2FF',
   black: '#223354',
   white: '#ffffff',
@@ -595,25 +595,25 @@ export const PureLightTheme = createTheme({
             color: colors.alpha.black[100]
           }
         },
-        sizeSmall: {
-          padding: '6px 16px',
-          lineHeight: 1.5
-        },
-        sizeMedium: {
-          padding: '8px 20px'
-        },
-        sizeLarge: {
-          padding: '11px 24px'
-        },
-        textSizeSmall: {
-          padding: '7px 12px'
-        },
-        textSizeMedium: {
-          padding: '9px 16px'
-        },
-        textSizeLarge: {
-          padding: '12px 16px'
-        }
+        // sizeSmall: {
+        //   padding: '6px 16px',
+        //   lineHeight: 1.5
+        // },
+        // sizeMedium: {
+        //   padding: '8px 20px'
+        // },
+        // sizeLarge: {
+        //   padding: '11px 24px'
+        // },
+        // textSizeSmall: {
+        //   padding: '7px 12px'
+        // },
+        // textSizeMedium: {
+        //   padding: '9px 16px'
+        // },
+        // textSizeLarge: {
+        //   padding: '12px 16px'
+        // }
       }
     },
     MuiButtonBase: {

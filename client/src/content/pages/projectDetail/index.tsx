@@ -9,8 +9,11 @@ import {
   FormControl,
   InputLabel,
   Table,
+  Link,
   TableBody,
   TableCell,
+  Card,
+  CardContent,
   TableContainer,
   TableHead,
   TableRow,
@@ -43,6 +46,14 @@ import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
 import PlaylistAddOutlinedIcon from '@mui/icons-material/PlaylistAddOutlined';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import FaceIcon from '@mui/icons-material/Face';
+import { Face } from '@mui/icons-material';
+import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 
 const DeviceStatus = ({ status, project }) => {
   let statusColor = '';
@@ -101,12 +112,14 @@ const deviceColumns: GridColDef[] = [
   { field: 'name', headerName: 'Name' },
   { field: 'type', headerName: 'Type' },
   { field: 'macAddress', headerName: 'MAC Address' },
-  { field: 'battery', headerName: 'Battery', renderCell: (params) => (
-    <Stack direction="row" alignItems="center">
-      <BatteryFullIcon />
-      <Typography variant="inherit">{params.value}%</Typography>
-    </Stack>
-  ) },
+  {
+    field: 'battery', headerName: 'Battery', renderCell: (params) => (
+      <Stack direction="row" alignItems="center">
+        <BatteryFullIcon />
+        <Typography variant="inherit">{params.value}%</Typography>
+      </Stack>
+    )
+  },
   {
     field: 'status',
     headerName: 'Status',
@@ -163,32 +176,97 @@ const ProjectDetail = () => {
   // Placeholder data for project
   const projectPlaceholder = {
     name: 'Building Temperature Research',
-    description: 'Researching the temperature of buildings on campus. Part of thesis project.'
+    description: 'Researching the temperature of buildings on campus. Part of thesis project.',
+    status: 'collecting'
   }
+
+  const [projectName, setProjectName] = useState(projectPlaceholder.name);
+  const [isEditingName, setIsEditingName] = useState(false);
 
   return (
     <div>
       <Helmet>
-        <title>{projectPlaceholder.name}</title>
+        <title>{projectName}</title>
       </Helmet>
       <PageTitleWrapper>
-        <Stack spacing={2}>
-          <Typography variant="h1">
-            {projectPlaceholder.name}
-          </Typography>
+        <Stack spacing={1} >
+          {isEditingName ? (
+            <Box>
+              <TextField
+                id="project-name"
+                value={projectName}
+                variant="outlined"
+                color="primary"
+                focused
+                size="small"
+                autoFocus
+                onChange={(event) => setProjectName(event.target.value)}
+                onBlur={() => setIsEditingName(false)}
+                sx={{
+                  marginTop: -1,
+                  marginLeft: -1,
+                  width: '100%'
+                }}
+                inputProps={{
+                  maxLength: 50,
+                  sx: {
+                    fontSize: '2rem',
+                    fontWeight: 700,
+                    lineHeight: 1.167
+                  },
+                  onFocus: (event) => {
+                    event.target.select();
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    setIsEditingName(false);
+                  }
+                }}
+              />
+              <Stack direction="row" spacing={1} sx={{ paddingTop: 1 }}>
+                <Button variant="contained" color="primary" size="small" onClick={() => setIsEditingName(false)}>
+                  Done
+                </Button>
+              </Stack>
+            </Box>
+          ) : (
+            <Typography
+              variant="h1"
+              onClick={() => setIsEditingName(true)}
+              sx={{
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                  outline: '2px solid rgba(0, 0, 0, 0.2)',
+                  borderRadius: '8px',
+                  padding: 1,
+                  margin: -1
+                }
+              }}>
+              {projectName}
+            </Typography>
+          )}
+          <Stack direction="row" spacing={1} divider={<Divider orientation="vertical" flexItem />} alignItems='center'>
+            <Stack direction="row" spacing={1} alignItems='center'>
+              <FaceIcon />
+              <Typography variant="body1">John Doe</Typography>
+            </Stack>
+            <Stack direction="row" spacing={1} alignItems='center'>
+              <Link underline="always">SharePoint</Link>
+              <Link underline="always">JIRA</Link>
+              <Link color="gray">+ Add Link</Link>
+            </Stack>
+          </Stack>
           <Typography variant="body1">
             {projectPlaceholder.description}
           </Typography>
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" color="primary" size="small" startIcon={<AccountTreeOutlinedIcon />}>
-              Add Devices
-            </Button>
-            <Button variant="outlined" color="primary" size="small" startIcon={<PlaylistAddOutlinedIcon />}>
-              Create New Session
+            <Button variant="outlined" color="primary" size="medium" startIcon={<GroupAddOutlinedIcon />}>
+              Invite People...
             </Button>
             {/* Delete button */}
-            <Button variant="outlined" color="primary" size="small" startIcon={<DeleteOutlineOutlinedIcon />}>
-              Delete Project
+            <Button variant="outlined" color="primary" size="medium" startIcon={<EditOutlinedIcon />}>
+              Edit Project...
             </Button>
           </Stack>
         </Stack>
@@ -196,6 +274,12 @@ const ProjectDetail = () => {
       <Container>
         <Stack spacing={2}>
           <Typography variant="h2">Devices</Typography>
+          <Stack direction="row" spacing={1}>
+            <Button variant="outlined" color="primary" size="medium" startIcon={<AddIcon />}>
+              Add Devices...
+            </Button>
+            <TextField label="Search Devices" variant="outlined" size="small" />
+          </Stack>
           <Paper>
             <DataGrid
               rows={deviceRows}
@@ -208,6 +292,12 @@ const ProjectDetail = () => {
             />
           </Paper>
           <Typography variant="h2" sx={{ pt: 2 }}>Sessions</Typography>
+          <Stack direction="row" spacing={1}>
+            <Button variant="outlined" color="primary" size="medium" startIcon={<AddIcon />}>
+              Create New Session...
+            </Button>
+            <TextField label="Search Sessions" variant="outlined" size="small" />
+          </Stack>
           <Paper>
             <DataGrid
               rows={sessionRows}

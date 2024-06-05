@@ -1,40 +1,22 @@
 import { useState, useEffect } from 'react';
 import {
-  AppBar,
   Box,
   Container,
-  Toolbar,
   Button,
   TextField,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
-  Switch,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Tab,
   Tabs,
   Typography,
-  Snackbar,
   Stack
 } from '@mui/material';
-import { makeStyles } from '@mui/styles';
-import { Theme } from '@mui/material/styles';
 import { Helmet } from 'react-helmet-async';
-import MuiAlert from '@mui/material/Alert';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import AddIcon from '@mui/icons-material/Add';
+import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
+import { Link } from 'react-router-dom';
 
 const ProjectStatus = ({ status, session }) => {
   let statusColor = '';
@@ -74,42 +56,66 @@ const ProjectStatus = ({ status, session }) => {
   );
 };
 
+const fetchAllProjects = async () => {
+  const res = await fetch('/api/projects/all', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
+
+  if (!res.ok) {
+    console.error('Failed to fetch data');
+    return [];
+  }
+  const data = await res.json();
+  return data;
+}
+
 const Projects = () => {
   //   const classes = useStyles();
 
   const [sortedProjects, setSortedProjects] = useState([]);
-
-  // Placeholder data for 3 projects
-  const projectsPlaceholder = [
-    {
-      name: 'Building Temperature Research',
-      people: 'John Doe',
-      session: 'Session #2',
-      status: 'collecting'
-    },
-    {
-      name: 'Project 1',
-      people: 'Jane Doe',
-      session: 'Test Collection',
-      status: 'finished'
-    },
-    {
-      name: 'Project 3',
-      people: 'John Doe, Jane Doe',
-      session: '',
-      status: 'inactive'
-    }
-  ];
-
-  useEffect(() => {
-    setSortedProjects(projectsPlaceholder);
-  }, []);
-
   const [currentTab, setTab] = useState('0');
 
   const handleChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
     setTab(newCurrentTab);
   };
+
+  const createProject = async () => {
+    //Default values
+    const response = await fetch('/api/projects/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      },
+      body: JSON.stringify({})
+    });
+  };
+
+  const projectsColumns: GridColDef[] = [
+    // { field: 'id', headerName: '#' },
+    {
+      field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
+        <Link to={`/projects/detail/${params.id}`}>{params.value}</Link>
+      )
+    },
+    { field: 'lastActive', headerName: 'Last Activity', flex: 1 },
+  ];
+
+  const projectsRows: GridRowsProp = sortedProjects.map((project) => ({
+    id: project._id,
+    name: project.name,
+    lastActive: project.lastActive,
+  }));
+
+  useEffect(() => {
+    fetchAllProjects().then((projects) => {
+      setSortedProjects(projects);
+    })
+  }, []);
 
   return (
     <div>
@@ -117,7 +123,15 @@ const Projects = () => {
         <title>All Projects</title>
       </Helmet>
       <PageTitleWrapper>
-        <Typography variant="h1">All Projects</Typography>
+        <Stack spacing={2}>
+          <Typography variant="h1">All Projects</Typography>
+          <Stack direction="row" spacing={2}>
+            <Button variant="contained" color="primary" onClick={createProject} startIcon={<AddIcon />}>
+              Create Project
+            </Button>
+            <TextField id="outlined-basic" label="Search" variant="outlined" size="small" />
+          </Stack>
+        </Stack>
       </PageTitleWrapper>
       <Container maxWidth="lg">
         <Stack direction="row" spacing={2} sx={{ height: '100%' }}>
@@ -126,34 +140,23 @@ const Projects = () => {
             value={currentTab}
             onChange={handleChange}
             sx={{ flex: '0 0 auto' }}
-            
+
           >
             <Tab value="0" label="Recents" sx={{ alignItems: 'start' }} />
             <Tab value="1" label="My Projects" sx={{ alignItems: 'start' }} />
             <Tab value="2" label="Shared With Me" sx={{ alignItems: 'start' }} />
           </Tabs>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>People</TableCell>
-                  <TableCell>Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {sortedProjects.map((project, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{project.name}</TableCell>
-                    <TableCell>{project.people}</TableCell>
-                    <TableCell>
-                      <ProjectStatus status={project.status} session={project.session} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <Paper sx={{ width: "100%" }}>
+            <DataGrid
+              rows={projectsRows}
+              columns={projectsColumns}
+              density="compact"
+              autosizeOnMount
+              autosizeOptions={{
+                includeOutliers: true
+              }}
+            />
+          </Paper>
         </Stack>
       </Container>
     </div>

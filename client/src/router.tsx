@@ -178,7 +178,7 @@ const routes: RouteObject[] = [
         )
       },
       {
-        path: 'detail',
+        path: 'detail/:projectId',
         element: (
           <ProtectedRoute>
             <ProjectDetail />

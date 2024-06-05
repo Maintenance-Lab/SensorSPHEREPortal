@@ -10,6 +10,7 @@ export interface ProjectModel {
   createdBy?: string | AccountModel;
   createdAt?: Date;
   sensorUnits?: string[];
+  lastActive?: Date;
 }
 
 const ProjectSchema = new mongoose.Schema({
@@ -19,6 +20,7 @@ const ProjectSchema = new mongoose.Schema({
   createdBy: { type: ObjectId, ref: "Account" },
   createdAt: { type: Date, default: Date.now },
   sensorUnits: { type: [String], default: [] },
+  lastActive: { type: Date, default: Date.now },
 });
 
 export default mongoose.models.Project || mongoose.model("Project", ProjectSchema);

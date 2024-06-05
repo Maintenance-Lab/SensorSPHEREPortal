@@ -1,59 +1,26 @@
 import { useState, useEffect } from 'react';
 import {
-  AppBar,
-  Toolbar,
   Button,
   TextField,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Table,
   Link,
-  TableBody,
-  TableCell,
-  Card,
-  CardContent,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
-  Switch,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Typography,
-  Snackbar,
   Container,
-  Modal,
   Box,
-  Grid,
-  Autocomplete,
-  styled,
-  Popper,
   Divider
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
-import SearchIcon from '@mui/icons-material/Search';
+import { useParams } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
-import PlaylistAddOutlinedIcon from '@mui/icons-material/PlaylistAddOutlined';
-import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
-import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import FaceIcon from '@mui/icons-material/Face';
-import { Face } from '@mui/icons-material';
 import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import Accordion from '@mui/material/Accordion';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import AccordionSummary from '@mui/material/AccordionSummary';
 
 const DeviceStatus = ({ status, project }) => {
   let statusColor = '';
@@ -180,8 +147,32 @@ const ProjectDetail = () => {
     status: 'collecting'
   }
 
-  const [projectName, setProjectName] = useState(projectPlaceholder.name);
+  const { projectId } = useParams();
+  const [projectName, setProjectName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
+
+  const fetchProject = async () => {
+    const res = await fetch('/api/projects/id/' + projectId, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      }
+    });
+
+    if (!res.ok) {
+      console.error('Failed to fetch data');
+      return [];
+    }
+    const data = await res.json();
+    return data;
+  }
+
+  useEffect(() => {
+    fetchProject().then((project) => {
+      setProjectName(project.name);
+    });
+  });
 
   return (
     <div>
@@ -194,13 +185,13 @@ const ProjectDetail = () => {
             <Box>
               <TextField
                 id="project-name"
-                value={projectName}
+                defaultValue={projectName}
                 variant="outlined"
                 color="primary"
                 focused
                 size="small"
                 autoFocus
-                onChange={(event) => setProjectName(event.target.value)}
+                // onChange={(event) => setProjectName(event.target.value)}
                 onBlur={() => setIsEditingName(false)}
                 sx={{
                   marginTop: -1,
@@ -214,14 +205,10 @@ const ProjectDetail = () => {
                     fontWeight: 700,
                     lineHeight: 1.167
                   },
-                  onFocus: (event) => {
-                    event.target.select();
-                  }
+                  onFocus: (event) => { event.target.select(); }
                 }}
                 onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    setIsEditingName(false);
-                  }
+                  if (event.key === 'Enter') { setIsEditingName(false); }
                 }}
               />
               <Stack direction="row" spacing={1} sx={{ paddingTop: 1 }}>
@@ -284,14 +271,10 @@ const ProjectDetail = () => {
             <DataGrid
               rows={deviceRows}
               columns={deviceColumns}
-              initialState={{
-                pagination: { paginationModel: { pageSize: 25 } },
-              }}
+              initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
               density="compact"
               autosizeOnMount
-              autosizeOptions={{
-                includeOutliers: true
-              }}
+              autosizeOptions={{ includeOutliers: true }}
             />
           </Paper>
           <Typography variant="h2" sx={{ pt: 2 }}>Sessions</Typography>
@@ -313,14 +296,11 @@ const ProjectDetail = () => {
               }}
               density="compact"
               autosizeOnMount
-              autosizeOptions={{
-                includeOutliers: true
-              }}
+              autosizeOptions={{ includeOutliers: true }}
             />
           </Paper>
         </Stack>
       </Container>
-
     </div>
   );
 };

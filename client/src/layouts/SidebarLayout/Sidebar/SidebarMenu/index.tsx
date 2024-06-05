@@ -265,17 +265,6 @@ function SidebarMenu() {
                   All Projects
                 </Button>
               </ListItem>
-              <ListItem component="div">
-                <Button
-                  disableRipple
-                  component={RouterLink}
-                  onClick={closeSidebar}
-                  to="/projects/detail"
-                  startIcon={<DesignServicesTwoToneIcon />}
-                >
-                  Project Detail Page
-                </Button>
-              </ListItem>
             </List>
           </SubMenuWrapper>
         </List>

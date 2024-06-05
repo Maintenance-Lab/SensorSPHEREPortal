@@ -337,6 +337,17 @@ function SidebarMenu() {
                   All Sessions
                 </Button>
               </ListItem>
+              <ListItem component="div">
+                <Button
+                  disableRipple
+                  component={RouterLink}
+                  onClick={closeSidebar}
+                  to="/sessions/detail"
+                  startIcon={<LibraryBooksIcon />}
+                >
+                  Session Detail Page
+                </Button>
+              </ListItem>
             </List>
           </SubMenuWrapper>
         </List>

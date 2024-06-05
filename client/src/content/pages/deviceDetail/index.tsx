@@ -15,6 +15,7 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Chip,
   Switch,
   Dialog,
   DialogActions,
@@ -41,6 +42,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
 import PlaylistAddOutlinedIcon from '@mui/icons-material/PlaylistAddOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 
 const DeviceStatus = ({ status, project }) => {
   let statusColor = '';
@@ -84,30 +86,54 @@ const DeviceStatus = ({ status, project }) => {
 const sensorsPlaceholder = [
   {
     id: 1,
-    name: 'Air Quality Sensor',
-    type: 'ABC123',
-    outputs: ['co2', 'pm2.5']
+    name: 'ENV3',
+    outputs: {
+      t: '123456789',
+      hu: '30.31323334',
+      te: '24.69420'
+    }
   },
   {
     id: 2,
-    name: 'Temperature Sensor',
-    type: 'DEF456',
-    outputs: ['temperature']
+    name: 'IMU',
+    outputs: {
+      accX: '0.123456789',
+      accY: '0.31323334',
+      accZ: '0.69420',
+      gyroX: '0.123456789',
+      gyroY: '0.31323334',
+      gyroZ: '0.69420',
+      temp: '24.69420'
+    }
   }
 ]
 
 const sensorColumns: GridColDef[] = [
-  { field: 'id', headerName: '#' },
   { field: 'name', headerName: 'Name' },
-  { field: 'type', headerName: 'Type' },
-  { field: 'outputs', headerName: 'Outputs' },
+  {
+    field: 'outputs',
+    headerName: 'Outputs',
+    renderCell: (params) => (
+      <TableContainer >
+        <Table size="small">
+          <TableBody>
+            {Object.keys(params.value).map((key) => (
+              <TableRow key={key}>
+                <TableCell sx={{ fontWeight: '600' }}>{key}</TableCell>
+                <TableCell>{params.value[key]}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    )
+  },
 ];
 
 const sensorRows: GridRowsProp = sensorsPlaceholder.map((sensor) => ({
   id: sensor.id,
   name: sensor.name,
-  type: sensor.type,
-  outputs: sensor.outputs.join(', '),
+  outputs: sensor.outputs,
 }));
 
 const sessionsPlaceholder = [
@@ -124,7 +150,6 @@ const sessionsPlaceholder = [
 ];
 
 const sessionColumns: GridColDef[] = [
-  { field: 'id', headerName: '#' },
   { field: 'name', headerName: 'Name' },
   {
     field: 'status',
@@ -159,13 +184,18 @@ const DeviceDetail = () => {
         <title>{devicePlaceholder.name}</title>
       </Helmet>
       <PageTitleWrapper>
-        <Stack spacing={2}>
-          <Typography variant="h1">
-            {devicePlaceholder.name}
-          </Typography>
+        <Stack spacing={1}>
+          <Stack direction="row" spacing={2}>
+            <Typography variant="h1">
+              {devicePlaceholder.name}
+            </Typography>
+            <Button variant="text" color="secondary" size="medium" startIcon={<EditOutlinedIcon />}>
+              Add Label
+            </Button>
+          </Stack>
           <Stack
             direction="row"
-            spacing={2}
+            spacing={1}
             divider={<Divider orientation="vertical" flexItem />}
           >
             <Typography variant="body1">{devicePlaceholder.type}</Typography>
@@ -177,10 +207,7 @@ const DeviceDetail = () => {
             <DeviceStatus status={devicePlaceholder.status} project={devicePlaceholder.project} />
           </Stack>
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" color="primary" size="small" startIcon={<AddIcon />}>
-              Create New Session
-            </Button>
-            <Button variant="outlined" color="primary" size="small" startIcon={<PlaylistAddOutlinedIcon />}>
+            <Button variant="outlined" color="primary" size="medium" startIcon={<PlaylistAddOutlinedIcon />}>
               Add To Project
             </Button>
           </Stack>
@@ -199,21 +226,34 @@ const DeviceDetail = () => {
               }}
               density="compact"
               autosizeOnMount
+              autosizeOptions={{
+                includeOutliers: true
+              }}
+              getRowHeight={() => 'auto'}
+              sx={{
+                '&.MuiDataGrid-root .MuiDataGrid-cell': { py: 1 }
+              }}
             />
           </Paper>
           <Typography variant="h2" sx={{ pt: 2 }}>Sessions</Typography>
+          <Stack direction="row" spacing={1}>
+            <Button variant="outlined" color="primary" size="medium" startIcon={<AddIcon />}>
+              Create New Session
+            </Button>
+            <TextField id="outlined-basic" label="Search" variant="outlined" size="small" />
+          </Stack>
           <Paper>
             <DataGrid
               rows={sessionRows}
               columns={sessionColumns}
               initialState={{
                 pagination: { paginationModel: { pageSize: 25 } },
-                sorting: {
-                  sortModel: [{ field: 'id', sort: 'desc' }],
-                },
               }}
               density="compact"
               autosizeOnMount
+              autosizeOptions={{
+                includeOutliers: true
+              }}
             />
           </Paper>
         </Stack>

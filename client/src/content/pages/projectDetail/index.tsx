@@ -289,6 +289,9 @@ const ProjectDetail = () => {
               }}
               density="compact"
               autosizeOnMount
+              autosizeOptions={{
+                includeOutliers: true
+              }}
             />
           </Paper>
           <Typography variant="h2" sx={{ pt: 2 }}>Sessions</Typography>
@@ -310,6 +313,9 @@ const ProjectDetail = () => {
               }}
               density="compact"
               autosizeOnMount
+              autosizeOptions={{
+                includeOutliers: true
+              }}
             />
           </Paper>
         </Stack>

@@ -93,6 +93,10 @@ const Projects = () => {
       },
       body: JSON.stringify({})
     });
+
+    fetchAllProjects().then((projects) => {
+      setSortedProjects(projects);
+    })
   };
 
   const projectsColumns: GridColDef[] = [

@@ -8,7 +8,8 @@ import {
   createProject,
   createProjects,
   updateProject,
-  getArchivedProjectsByAccount
+  getArchivedProjectsByOwner,
+  getActiveProjectsByOwner
 } from "../../services/Projects.js";
 import { getSession } from "../../utils.js";
 
@@ -26,17 +27,17 @@ router.get("/all", async (_, res) => {
   return res.json(results);
 });
 
-router.get("/id/:id", async (req, res) => {
-  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-  const { id } = req.params;
-  const doc = await getProjectById(id);
-  return res.json(doc);
-});
+router.get("/active", async (req, res) => {
+  const response = await getSession(req, res);
+  if (!response) return;
 
-router.get("/account/:accountId", async (req, res) => {
-  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-  const { accountId } = req.params;
-  const doc = await getProjectsByAccount(accountId);
+  const { account, sessions } = response;
+  if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
+
+  const { _id } = account;
+  if (!_id) return res.status(400).json({ message: "Account ID is required" });
+
+  const doc = await getActiveProjectsByOwner(_id);
   return res.json(doc);
 });
 
@@ -50,7 +51,21 @@ router.get("/archived", async (req, res) => {
   const { _id } = account;
   if (!_id) return res.status(400).json({ message: "Account ID is required" });
 
-  const doc = await getArchivedProjectsByAccount(_id);
+  const doc = await getArchivedProjectsByOwner(_id);
+  return res.json(doc);
+});
+
+router.get("/id/:id", async (req, res) => {
+  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
+  const { id } = req.params;
+  const doc = await getProjectById(id);
+  return res.json(doc);
+});
+
+router.get("/account/:accountId", async (req, res) => {
+  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
+  const { accountId } = req.params;
+  const doc = await getProjectsByAccount(accountId);
   return res.json(doc);
 });
 

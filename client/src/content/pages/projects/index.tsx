@@ -6,6 +6,7 @@ import {
   TextField,
   Paper,
   Tab,
+  Link,
   Tabs,
   Typography,
   Stack
@@ -15,8 +16,20 @@ import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import AddIcon from '@mui/icons-material/Add';
-import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
-import { Link } from 'react-router-dom';
+import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import {
+  DataGrid,
+  GridColDef,
+  GridRowsProp,
+  GridToolbar,
+  GridToolbarContainer,
+  GridToolbarColumnsButton,
+  GridToolbarFilterButton,
+  GridToolbarExport,
+  GridToolbarDensitySelector,
+  useGridApiContext
+} from '@mui/x-data-grid';
 
 const ProjectStatus = ({ status, session }) => {
   let statusColor = '';
@@ -56,8 +69,8 @@ const ProjectStatus = ({ status, session }) => {
   );
 };
 
-const fetchAllProjects = async () => {
-  const res = await fetch('/api/projects/all', {
+const fetchActiveProjects = async () => {
+  const res = await fetch('/api/projects/active', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -90,9 +103,54 @@ const fetchArchivedProjects = async () => {
   return data;
 }
 
-const Projects = () => {
-  //   const classes = useStyles();
+function CustomToolbar() {
+  const apiRef = useGridApiContext();
 
+  const selectedRows = apiRef.current.getSelectedRows();
+  const activeSelection = selectedRows.size > 0;
+
+  return (
+    <GridToolbarContainer sx={{ padding: 1 }}>
+      <TextField
+        id="outlined-basic"
+        label="Search"
+        variant="outlined"
+        size="small"
+      />
+      <Button
+        variant="outlined"
+        size="medium"
+        startIcon={<ArchiveOutlinedIcon />}
+        disabled={!activeSelection}
+      >
+        Archive
+      </Button>
+      <Button
+        variant="outlined"
+        size="medium"
+        color="error"
+        startIcon={<DeleteOutlineOutlinedIcon />}
+        disabled={!activeSelection}
+      >
+        Delete
+      </Button>
+      {/* <GridToolbarColumnsButton />
+      <GridToolbarFilterButton />
+      <GridToolbarDensitySelector
+        slotProps={{ tooltip: { title: 'Change density' } }}
+      />
+      <Box sx={{ flexGrow: 1 }} />
+      <GridToolbarExport
+        slotProps={{
+          tooltip: { title: 'Export data' },
+          button: { variant: 'outlined' },
+        }}
+      /> */}
+    </GridToolbarContainer>
+  );
+}
+
+const Projects = () => {
   const [sortedProjects, setSortedProjects] = useState([]);
   const [currentTab, setTab] = useState('2');
 
@@ -101,7 +159,7 @@ const Projects = () => {
 
     switch (newCurrentTab) {
       case '2':
-        fetchAllProjects().then((projects) => {
+        fetchActiveProjects().then((projects) => {
           setSortedProjects(projects);
         });
         break;
@@ -111,7 +169,7 @@ const Projects = () => {
         });
         break;
       default:
-        fetchAllProjects().then((projects) => {
+        fetchActiveProjects().then((projects) => {
           setSortedProjects(projects);
         });
     }
@@ -126,11 +184,11 @@ const Projects = () => {
         credentials: 'include'
       },
       body: JSON.stringify({
-        
+
       })
     });
 
-    fetchAllProjects().then((projects) => {
+    fetchActiveProjects().then((projects) => {
       setSortedProjects(projects);
     })
   };
@@ -139,7 +197,7 @@ const Projects = () => {
     // { field: 'id', headerName: '#' },
     {
       field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
-        <Link to={`/projects/detail/${params.id}`}>{params.value}</Link>
+        <Link href={`/projects/detail/${params.id}`}>{params.value}</Link>
       )
     },
     { field: 'lastActive', headerName: 'Last Activity', flex: 1 },
@@ -152,7 +210,7 @@ const Projects = () => {
   }));
 
   useEffect(() => {
-    fetchAllProjects().then((projects) => {
+    fetchActiveProjects().then((projects) => {
       setSortedProjects(projects);
     });
   }, []);
@@ -169,7 +227,6 @@ const Projects = () => {
             <Button variant="contained" color="primary" onClick={createProject} startIcon={<AddIcon />}>
               Create Project
             </Button>
-            <TextField id="outlined-basic" label="Search" variant="outlined" size="small" />
           </Stack>
         </Stack>
       </PageTitleWrapper>
@@ -186,25 +243,32 @@ const Projects = () => {
             {/* <Tab value="3" label="Shared With Me" sx={{ alignItems: 'start' }} /> */}
             <Tab value="4" label="Archived" sx={{ alignItems: 'start' }} />
           </Tabs>
-          <Paper sx={{ width: "100%" }}>
-            <DataGrid
-              rows={projectsRows}
-              columns={projectsColumns}
-              density="compact"
-              autosizeOnMount
-              autosizeOptions={{ includeOutliers: true }}
-              initialState={{
-                columns: {
-                  columnVisibilityModel: {
-                    lastActive: false
+          <Stack sx={{ width: "100%", height: "100%" }}>
+
+            <Paper>
+              <DataGrid
+                rows={projectsRows}
+                columns={projectsColumns}
+                density="compact"
+                autosizeOnMount
+                autosizeOptions={{ includeOutliers: true }}
+                checkboxSelection={true}
+                initialState={{
+                  columns: {
+                    columnVisibilityModel: {
+                      lastActive: false
+                    },
                   },
-                },
-                sorting: {
-                  sortModel: [{ field: 'lastActive', sort: 'desc' }],
-                },
-              }}
-            />
-          </Paper>
+                  sorting: {
+                    sortModel: [{ field: 'lastActive', sort: 'desc' }],
+                  },
+                }}
+                slots={{
+                  toolbar: CustomToolbar,
+                }}
+              />
+            </Paper>
+          </Stack>
         </Stack>
       </Container>
     </div>

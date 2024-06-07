@@ -21,7 +21,14 @@ export const getProjectsByAccount = async (accountId: string) => {
   });
 };
 
-export const getArchivedProjectsByAccount = async (accountId: string) => {
+export const getActiveProjectsByOwner = async (accountId: string) => {
+  return new Promise(async (resolve) => {
+    const doc = await Project.find({ owner: accountId, archived: false });
+    return resolve(doc);
+  });
+}
+
+export const getArchivedProjectsByOwner = async (accountId: string) => {
   return new Promise(async (resolve) => {
     const doc = await Project.find({ owner: accountId, archived: true });
     return resolve(doc);

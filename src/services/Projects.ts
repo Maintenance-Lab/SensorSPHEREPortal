@@ -79,3 +79,10 @@ export const updateProject = async (id: string, item: Partial<ProjectModel>) => 
     return resolve(result);
   });
 };
+
+export const deleteProjects = async (id: Array<string>) => {
+  return new Promise(async (resolve) => {
+    const result = await Project.deleteMany({ _id: { $in: id } });
+    return resolve(result);
+  });
+};

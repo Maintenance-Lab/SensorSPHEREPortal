@@ -9,7 +9,8 @@ import {
   createProjects,
   updateProject,
   getArchivedProjectsByOwner,
-  getActiveProjectsByOwner
+  getActiveProjectsByOwner,
+  deleteProjects
 } from "../../services/Projects.js";
 import { getSession } from "../../utils.js";
 
@@ -106,6 +107,25 @@ router.put("/update/:id", async (req, res) => {
   const { id } = req.params;
   const { body } = req;
   const result = await updateProject(id, body);
+  return res.json(result);
+});
+
+router.put("/update-many", async (req, res) => {
+  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
+  const { body } = req;
+  const results = [];
+  for (const item of body) {
+    const { id } = item;
+    const result = await updateProject(id, item);
+    results.push(result);
+  }
+  return res.json(results);
+});
+
+router.post("/delete", async (req, res) => {
+  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
+  const { ids } = req.body;
+  const result = await deleteProjects(ids);
   return res.json(result);
 });
 

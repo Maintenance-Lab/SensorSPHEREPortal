@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -13,8 +13,6 @@ import {
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import AddIcon from '@mui/icons-material/Add';
 import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
@@ -30,44 +28,6 @@ import {
   GridToolbarDensitySelector,
   useGridApiContext
 } from '@mui/x-data-grid';
-
-const ProjectStatus = ({ status, session }) => {
-  let statusColor = '';
-  let statusLabel = '';
-
-  switch (status) {
-    case 'finished':
-      statusColor = 'success.main';
-      statusLabel = 'Finished Collecting Data';
-      break;
-    case 'collecting':
-      statusColor = 'primary.main';
-      statusLabel = 'Collecting Data';
-      break;
-    case 'inactive':
-      statusColor = 'gray';
-      statusLabel = 'No Activity';
-      break;
-    default:
-      statusColor = '';
-      statusLabel = 'Unknown';
-  }
-
-  return (
-    <Stack spacing={1} sx={{ color: statusColor }}>
-      <Stack direction="row" spacing={1}>
-        {status === 'finished' && (<CheckCircleIcon />)}
-        {status === 'collecting' && (<MoreHorizIcon />)}
-        <Typography variant="body1" sx={{ fontWeight: 600 }}>
-          {statusLabel}
-        </Typography>
-        {session && (
-          <Typography variant="body1">{session}</Typography>
-        )}
-      </Stack>
-    </Stack>
-  );
-};
 
 const fetchActiveProjects = async () => {
   const res = await fetch('/api/projects/active', {
@@ -103,25 +63,89 @@ const fetchArchivedProjects = async () => {
   return data;
 }
 
-function CustomToolbar() {
-  const apiRef = useGridApiContext();
+const createProject = async () => {
+  //Default values
+  const response = await fetch('/api/projects/create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({})
+  });
+};
 
-  const selectedRows = apiRef.current.getSelectedRows();
-  const activeSelection = selectedRows.size > 0;
+const deleteProjects = async (projectIds) => {
+  const response = await fetch('/api/projects/delete', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({
+      ids: projectIds
+    })
+  });
+};
+
+const archiveProjects = async (projectIds) => {
+  const response = await fetch('/api/projects/update-many', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify(
+      [
+        ...projectIds.map((id) => ({ id, archived: true }))
+      ]
+    )
+  });
+}
+
+function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetchData }) {
+  const activeSelection = selectedProjectIds.length > 0;
+
+  const handleCreateProject = useCallback(async () => {
+    try {
+      await createProject();
+      fetchData();
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+  const handleDeleteProjects = useCallback(async () => {
+    try {
+      await deleteProjects(selectedProjectIds);
+      fetchData();
+    } catch (error) {
+      console.error(error);
+    }
+  }, [selectedProjectIds]);
+
+  const handleArchiveProjects = useCallback(async () => {
+    try {
+      await archiveProjects(selectedProjectIds);
+      fetchData();
+    } catch (error) {
+      console.error(error);
+    }
+  }, [selectedProjectIds]);
 
   return (
     <GridToolbarContainer sx={{ padding: 1 }}>
-      <TextField
-        id="outlined-basic"
-        label="Search"
-        variant="outlined"
-        size="small"
-      />
+      <Stack direction="row" spacing={1}>
+      <Button variant="contained" color="primary" onClick={handleCreateProject} startIcon={<AddIcon />}>
+        Create Project
+      </Button>
+      <TextField id="outlined-basic" label="Search" variant="outlined" size="small" />
       <Button
         variant="outlined"
         size="medium"
         startIcon={<ArchiveOutlinedIcon />}
         disabled={!activeSelection}
+        onClick={handleArchiveProjects}
       >
         Archive
       </Button>
@@ -131,66 +155,42 @@ function CustomToolbar() {
         color="error"
         startIcon={<DeleteOutlineOutlinedIcon />}
         disabled={!activeSelection}
+        onClick={handleDeleteProjects}
       >
         Delete
       </Button>
-      {/* <GridToolbarColumnsButton />
-      <GridToolbarFilterButton />
-      <GridToolbarDensitySelector
-        slotProps={{ tooltip: { title: 'Change density' } }}
-      />
-      <Box sx={{ flexGrow: 1 }} />
-      <GridToolbarExport
-        slotProps={{
-          tooltip: { title: 'Export data' },
-          button: { variant: 'outlined' },
-        }}
-      /> */}
+      </Stack>
     </GridToolbarContainer>
   );
-}
+};
 
 const Projects = () => {
   const [sortedProjects, setSortedProjects] = useState([]);
+  const [selectedProjectIds, setSelectedProjectIds] = useState([]);
   const [currentTab, setTab] = useState('2');
 
   const handleTabChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
     setTab(newCurrentTab);
-
-    switch (newCurrentTab) {
-      case '2':
-        fetchActiveProjects().then((projects) => {
-          setSortedProjects(projects);
-        });
-        break;
-      case '4':
-        fetchArchivedProjects().then((projects) => {
-          setSortedProjects(projects);
-        });
-        break;
-      default:
-        fetchActiveProjects().then((projects) => {
-          setSortedProjects(projects);
-        });
-    }
   };
 
-  const createProject = async () => {
-    //Default values
-    const response = await fetch('/api/projects/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        credentials: 'include'
-      },
-      body: JSON.stringify({
-
-      })
-    });
-
-    fetchActiveProjects().then((projects) => {
+  const fetchData = async () => {
+    try {
+      let projects = [];
+      switch (currentTab) {
+        case '2':
+          projects = await fetchActiveProjects();
+          break;
+        case '4':
+          projects = await fetchArchivedProjects();
+          break;
+        default:
+          projects = await fetchActiveProjects();
+          break;
+      }
       setSortedProjects(projects);
-    })
+    } catch (error) {
+      console.error('Failed to fetch data', error);
+    }
   };
 
   const projectsColumns: GridColDef[] = [
@@ -210,10 +210,8 @@ const Projects = () => {
   }));
 
   useEffect(() => {
-    fetchActiveProjects().then((projects) => {
-      setSortedProjects(projects);
-    });
-  }, []);
+    fetchData();
+  }, [currentTab]);
 
   return (
     <div>
@@ -223,11 +221,6 @@ const Projects = () => {
       <PageTitleWrapper>
         <Stack spacing={2}>
           <Typography variant="h1">All Projects</Typography>
-          <Stack direction="row" spacing={2}>
-            <Button variant="contained" color="primary" onClick={createProject} startIcon={<AddIcon />}>
-              Create Project
-            </Button>
-          </Stack>
         </Stack>
       </PageTitleWrapper>
       <Container maxWidth="lg">
@@ -243,32 +236,34 @@ const Projects = () => {
             {/* <Tab value="3" label="Shared With Me" sx={{ alignItems: 'start' }} /> */}
             <Tab value="4" label="Archived" sx={{ alignItems: 'start' }} />
           </Tabs>
-          <Stack sx={{ width: "100%", height: "100%" }}>
-
-            <Paper>
-              <DataGrid
-                rows={projectsRows}
-                columns={projectsColumns}
-                density="compact"
-                autosizeOnMount
-                autosizeOptions={{ includeOutliers: true }}
-                checkboxSelection={true}
-                initialState={{
-                  columns: {
-                    columnVisibilityModel: {
-                      lastActive: false
-                    },
+          <Paper sx={{ width: "100%", height: "100%" }}>
+            <DataGrid
+              rows={projectsRows}
+              columns={projectsColumns}
+              density="compact"
+              autosizeOnMount
+              autosizeOptions={{ includeOutliers: true }}
+              checkboxSelection={true}
+              onRowSelectionModelChange={(newSelection) => setSelectedProjectIds(newSelection)}
+              initialState={{
+                columns: {
+                  columnVisibilityModel: {
+                    lastActive: false
                   },
-                  sorting: {
-                    sortModel: [{ field: 'lastActive', sort: 'desc' }],
-                  },
-                }}
-                slots={{
-                  toolbar: CustomToolbar,
-                }}
-              />
-            </Paper>
-          </Stack>
+                },
+                sorting: {
+                  sortModel: [{ field: 'lastActive', sort: 'desc' }],
+                },
+              }}
+              slots={{
+                toolbar: () => <CustomProjectsToolbar
+                  selectedProjectIds={selectedProjectIds}
+                  setSelectedProjectIds={setSelectedProjectIds}
+                  fetchData={fetchData}
+                />,
+              }}
+            />
+          </Paper>
         </Stack>
       </Container>
     </div>

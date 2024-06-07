@@ -73,14 +73,48 @@ const fetchAllProjects = async () => {
   return data;
 }
 
+const fetchArchivedProjects = async () => {
+  const res = await fetch('/api/projects/archived', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
+
+  if (!res.ok) {
+    console.error('Failed to fetch data');
+    return [];
+  }
+  const data = await res.json();
+  return data;
+}
+
 const Projects = () => {
   //   const classes = useStyles();
 
   const [sortedProjects, setSortedProjects] = useState([]);
-  const [currentTab, setTab] = useState('0');
+  const [currentTab, setTab] = useState('2');
 
-  const handleChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
+  const handleTabChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
     setTab(newCurrentTab);
+
+    switch (newCurrentTab) {
+      case '2':
+        fetchAllProjects().then((projects) => {
+          setSortedProjects(projects);
+        });
+        break;
+      case '4':
+        fetchArchivedProjects().then((projects) => {
+          setSortedProjects(projects);
+        });
+        break;
+      default:
+        fetchAllProjects().then((projects) => {
+          setSortedProjects(projects);
+        });
+    }
   };
 
   const createProject = async () => {
@@ -91,7 +125,9 @@ const Projects = () => {
         'Content-Type': 'application/json',
         credentials: 'include'
       },
-      body: JSON.stringify({})
+      body: JSON.stringify({
+        
+      })
     });
 
     fetchAllProjects().then((projects) => {
@@ -118,7 +154,7 @@ const Projects = () => {
   useEffect(() => {
     fetchAllProjects().then((projects) => {
       setSortedProjects(projects);
-    })
+    });
   }, []);
 
   return (
@@ -142,13 +178,13 @@ const Projects = () => {
           <Tabs
             orientation="vertical"
             value={currentTab}
-            onChange={handleChange}
+            onChange={handleTabChange}
             sx={{ flex: '0 0 auto' }}
-
           >
-            <Tab value="0" label="Recents" sx={{ alignItems: 'start' }} />
-            <Tab value="1" label="My Projects" sx={{ alignItems: 'start' }} />
-            <Tab value="2" label="Shared With Me" sx={{ alignItems: 'start' }} />
+            {/* <Tab value="1" label="Recents" sx={{ alignItems: 'start' }} /> */}
+            <Tab value="2" label="My Projects" sx={{ alignItems: 'start' }} />
+            {/* <Tab value="3" label="Shared With Me" sx={{ alignItems: 'start' }} /> */}
+            <Tab value="4" label="Archived" sx={{ alignItems: 'start' }} />
           </Tabs>
           <Paper sx={{ width: "100%" }}>
             <DataGrid
@@ -156,8 +192,16 @@ const Projects = () => {
               columns={projectsColumns}
               density="compact"
               autosizeOnMount
-              autosizeOptions={{
-                includeOutliers: true
+              autosizeOptions={{ includeOutliers: true }}
+              initialState={{
+                columns: {
+                  columnVisibilityModel: {
+                    lastActive: false
+                  },
+                },
+                sorting: {
+                  sortModel: [{ field: 'lastActive', sort: 'desc' }],
+                },
               }}
             />
           </Paper>

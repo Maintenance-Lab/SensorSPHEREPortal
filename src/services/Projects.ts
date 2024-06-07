@@ -16,10 +16,17 @@ export const getProjectById = async (id: string) => {
 
 export const getProjectsByAccount = async (accountId: string) => {
   return new Promise(async (resolve) => {
-    const doc = await Project.find({ createdBy: accountId });
+    const doc = await Project.find({ owner: accountId });
     return resolve(doc);
   });
 };
+
+export const getArchivedProjectsByAccount = async (accountId: string) => {
+  return new Promise(async (resolve) => {
+    const doc = await Project.find({ owner: accountId, archived: true });
+    return resolve(doc);
+  });
+}
 
 export const getProjectByName = async (name: string) => {
   return new Promise(async (resolve) => {

@@ -7,20 +7,22 @@ export interface ProjectModel {
   name: string;
   description: string;
   meta: object; // Extra info if needed
-  createdBy?: string | AccountModel;
+  owner?: string | AccountModel;
   createdAt?: Date;
   sensorUnits?: string[];
   lastActive?: Date;
+  archived?: boolean;
 }
 
 const ProjectSchema = new mongoose.Schema({
   name: { type: String, default: "Default Project Title" },
   description: { type: String, default: "Default Project Description" },
   meta: { type: Object, default: {} },
-  createdBy: { type: ObjectId, ref: "Account" },
+  owner: { type: ObjectId, ref: "Account" },
   createdAt: { type: Date, default: Date.now },
   sensorUnits: { type: [String], default: [] },
   lastActive: { type: Date, default: Date.now },
+  archived: { type: Boolean, default: false },
 });
 
 export default mongoose.models.Project || mongoose.model("Project", ProjectSchema);

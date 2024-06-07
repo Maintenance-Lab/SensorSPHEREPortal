@@ -8,7 +8,9 @@ import {
   createProject,
   createProjects,
   updateProject,
+  getArchivedProjectsByAccount
 } from "../../services/Projects.js";
+import { getSession } from "../../utils.js";
 
 const router = Router();
 
@@ -38,6 +40,20 @@ router.get("/account/:accountId", async (req, res) => {
   return res.json(doc);
 });
 
+router.get("/archived", async (req, res) => {
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account, sessions } = response;
+  if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
+
+  const { _id } = account;
+  if (!_id) return res.status(400).json({ message: "Account ID is required" });
+
+  const doc = await getArchivedProjectsByAccount(_id);
+  return res.json(doc);
+});
+
 router.get("/name/:name", async (req, res) => {
   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
   const { name } = req.params;
@@ -47,7 +63,18 @@ router.get("/name/:name", async (req, res) => {
 
 router.post("/create", async (req, res) => {
   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
+
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account, sessions } = response;
+  if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
+
+  const { _id } = account;
+  if (!_id) return res.status(400).json({ message: "Account ID is required" });
+
   const { body } = req;
+  body.owner = _id;
   const result = await createProject(body);
   return res.json(result);
 });

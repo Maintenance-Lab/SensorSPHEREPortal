@@ -72,7 +72,7 @@ const devicesPlaceholder = [
     session: 'Session #2',
     status: 'takenCollecting'
   },
-]
+];
 
 const deviceColumns: GridColDef[] = [
   { field: 'id', headerName: '#' },
@@ -138,6 +138,25 @@ const sessionRows: GridRowsProp = sessionsPlaceholder.map((session) => ({
   status: session.status
 }));
 
+const updateProject = async (projectId, name, description) => {
+  const res = await fetch('/api/projects/update/' + projectId, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({
+      name: name,
+      description: description
+    })
+  });
+
+  if (!res.ok) {
+    console.error('Failed to update project');
+    return;
+  }
+};
+
 const ProjectDetail = () => {
 
   // Placeholder data for project
@@ -149,7 +168,9 @@ const ProjectDetail = () => {
 
   const { projectId } = useParams();
   const [projectName, setProjectName] = useState('');
+  const [projectDescription, setProjectDescription] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
 
   const fetchProject = async () => {
     const res = await fetch('/api/projects/id/' + projectId, {
@@ -168,9 +189,20 @@ const ProjectDetail = () => {
     return data;
   }
 
+  const handleNameChange = (event) => {
+    updateProject(projectId, event.target.value, projectDescription);
+    setIsEditingName(false);
+  }
+
+  const handleDescriptionChange = (event) => {
+    updateProject(projectId, projectName, event.target.value);
+    setIsEditingDescription(false);
+  }
+
   useEffect(() => {
     fetchProject().then((project) => {
       setProjectName(project.name);
+      setProjectDescription(project.description);
     });
   });
 
@@ -181,41 +213,22 @@ const ProjectDetail = () => {
       </Helmet>
       <PageTitleWrapper>
         <Stack spacing={1} >
+          {/* Project Name */}
           {isEditingName ? (
             <Box>
               <TextField
-                id="project-name"
                 defaultValue={projectName}
                 variant="outlined"
-                color="primary"
-                focused
                 size="small"
                 autoFocus
-                // onChange={(event) => setProjectName(event.target.value)}
-                onBlur={() => setIsEditingName(false)}
-                sx={{
-                  marginTop: -1,
-                  marginLeft: -1,
-                  width: '100%'
-                }}
-                inputProps={{
-                  maxLength: 50,
-                  sx: {
-                    fontSize: '2rem',
-                    fontWeight: 700,
-                    lineHeight: 1.167
-                  },
-                  onFocus: (event) => { event.target.select(); }
-                }}
+                onBlur={handleNameChange}
+                onFocus={(event) => { event.target.select(); }}
+                sx={{ marginTop: -1, marginLeft: -1, width: '100%' }}
+                inputProps={{ sx: { fontSize: '2rem', fontWeight: 700, lineHeight: 1.167 }, }}
                 onKeyDown={(event) => {
-                  if (event.key === 'Enter') { setIsEditingName(false); }
+                  if (event.key === 'Enter') { handleNameChange(event); }
                 }}
               />
-              <Stack direction="row" spacing={1} sx={{ paddingTop: 1 }}>
-                <Button variant="contained" color="primary" size="small" onClick={() => setIsEditingName(false)}>
-                  Done
-                </Button>
-              </Stack>
             </Box>
           ) : (
             <Typography
@@ -229,31 +242,50 @@ const ProjectDetail = () => {
                   padding: 1,
                   margin: -1
                 }
-              }}>
+              }}
+            >
               {projectName}
             </Typography>
           )}
-          <Stack direction="row" spacing={1} divider={<Divider orientation="vertical" flexItem />} alignItems='center'>
-            <Stack direction="row" spacing={1} alignItems='center'>
-              <FaceIcon />
-              <Typography variant="body1">John Doe</Typography>
-            </Stack>
-            <Stack direction="row" spacing={1} alignItems='center'>
-              <Link underline="always">SharePoint</Link>
-              <Link underline="always">JIRA</Link>
-              <Link color="gray">+ Add Link</Link>
-            </Stack>
-          </Stack>
-          <Typography variant="body1">
-            {projectPlaceholder.description}
-          </Typography>
+          {/* Project Description */}
+          {isEditingDescription ? (
+            <Box>
+              <TextField
+                defaultValue={projectDescription}
+                variant="outlined"
+                size="small"
+                autoFocus
+                onBlur={handleDescriptionChange}
+                onFocus={(event) => { event.target.select(); }}
+                sx={{ marginLeft: -1, width: '100%' }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') { handleDescriptionChange(event); }
+                }}
+              />
+            </Box>
+          ) : (
+            <Typography
+              variant="body1"
+              onClick={() => setIsEditingDescription(true)}
+              sx={{
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                  outline: '2px solid rgba(0, 0, 0, 0.2)',
+                  borderRadius: '8px',
+                  paddingX: 1,
+                  marginX: -1
+                }
+              }}
+            >
+              {projectDescription}
+            </Typography>
+          )}
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" color="primary" size="medium" startIcon={<GroupAddOutlinedIcon />}>
-              Invite People...
+            <Button variant="outlined" color="primary" size="medium">
+              Archive
             </Button>
-            {/* Delete button */}
-            <Button variant="outlined" color="primary" size="medium" startIcon={<EditOutlinedIcon />}>
-              Edit Project...
+            <Button variant="outlined" color="primary" size="medium">
+              Delete
             </Button>
           </Stack>
         </Stack>

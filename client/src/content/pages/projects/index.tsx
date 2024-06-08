@@ -26,7 +26,9 @@ import {
   GridToolbarFilterButton,
   GridToolbarExport,
   GridToolbarDensitySelector,
-  useGridApiContext
+  useGridApiContext,
+  GridFilterModel,
+  GridToolbarQuickFilter
 } from '@mui/x-data-grid';
 
 const fetchActiveProjects = async () => {
@@ -136,29 +138,34 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
   return (
     <GridToolbarContainer sx={{ padding: 1 }}>
       <Stack direction="row" spacing={1}>
-      <Button variant="contained" color="primary" onClick={handleCreateProject} startIcon={<AddIcon />}>
-        Create Project
-      </Button>
-      <TextField id="outlined-basic" label="Search" variant="outlined" size="small" />
-      <Button
-        variant="outlined"
-        size="medium"
-        startIcon={<ArchiveOutlinedIcon />}
-        disabled={!activeSelection}
-        onClick={handleArchiveProjects}
-      >
-        Archive
-      </Button>
-      <Button
-        variant="outlined"
-        size="medium"
-        color="error"
-        startIcon={<DeleteOutlineOutlinedIcon />}
-        disabled={!activeSelection}
-        onClick={handleDeleteProjects}
-      >
-        Delete
-      </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleCreateProject}
+          startIcon={<AddIcon />}
+        >
+          Create Project
+        </Button>
+        <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
+        <Button
+          variant="outlined"
+          size="medium"
+          startIcon={<ArchiveOutlinedIcon />}
+          disabled={!activeSelection}
+          onClick={handleArchiveProjects}
+        >
+          Archive
+        </Button>
+        <Button
+          variant="outlined"
+          size="medium"
+          color="error"
+          startIcon={<DeleteOutlineOutlinedIcon />}
+          disabled={!activeSelection}
+          onClick={handleDeleteProjects}
+        >
+          Delete
+        </Button>
       </Stack>
     </GridToolbarContainer>
   );
@@ -197,7 +204,7 @@ const Projects = () => {
     // { field: 'id', headerName: '#' },
     {
       field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
-        <Link href={`/projects/detail/${params.id}`}>{params.value}</Link>
+        <Link href={`/projects/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
       )
     },
     { field: 'lastActive', headerName: 'Last Activity', flex: 1 },

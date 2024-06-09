@@ -1,35 +1,20 @@
 import { useState, useEffect } from 'react';
 import {
-  AppBar,
-  Toolbar,
   Button,
-  TextField,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
-  Switch,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Typography,
-  Snackbar,
   Container,
-  Modal,
-  Box,
-  Grid,
-  Autocomplete,
-  styled,
-  Popper,
-  Divider
+  Chip,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Divider,
+  TextField,
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
@@ -39,148 +24,197 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
-import { id } from 'date-fns/locale';
+import { DataGrid, GridColDef, GridRenderCellParams, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';
+import DevicesIcon from '@mui/icons-material/Devices';
+import QueueOutlinedIcon from '@mui/icons-material/QueueOutlined';
+import { set } from 'date-fns';
 
-// const useStyles = makeStyles((theme: Theme) => ({
+const fetchActiveProjects = async () => {
+  const res = await fetch('/api/projects/active', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
 
-// }));
-
-const DeviceStatus = ({ status, project, session }) => {
-  let statusColor = '';
-  let statusLabel = '';
-
-  switch (status) {
-    case 'takenFinished':
-      statusColor = 'success.main';
-      statusLabel = 'Finished Collecting Data';
-      break;
-    case 'takenCollecting':
-      statusColor = 'primary.main';
-      statusLabel = 'Collecting Data';
-      break;
-    case 'takenInactive':
-      statusColor = '';
-      statusLabel = 'Inactive';
-      break;
-    case 'unavailable':
-      statusColor = 'gray';
-      statusLabel = 'Unavailable';
-      break;
-    default:
-      statusColor = '';
-      statusLabel = 'Available';
+  if (!res.ok) {
+    console.error('Failed to fetch data');
+    return [];
   }
-
-  return (
-    <Stack direction="row" spacing={1} sx={{ color: statusColor }} alignItems="center">
-      {status === 'takenFinished' && (<CheckCircleIcon fontSize="small" />)}
-      {status === 'takenCollecting' && (<MoreHorizIcon fontSize="small" />)}
-      <Typography variant="inherit" sx={{ fontWeight: 600 }}>
-        {statusLabel}
-      </Typography>
-      {/* {session && (
-        <Typography variant="inherit">{session}</Typography>
-      )} */}
-      
-      {project && (
-        <Typography variant="inherit">{project}</Typography>
-      )}
-    </Stack>
-  );
-};
+  const data = await res.json();
+  return data;
+}
 
 const devicesPlaceholder = [
   {
-    id: 1,
-    name: 'Device 1',
-    type: 'M5Stack Core2',
-    macAddress: '00:00:00:00:00:01',
-    battery: '100',
+    id: 0,
+    type: 'This Device',
+    macAddress: '00:00:00:00:00:00',
+    battery: '',
     project: '',
-    session: '',
-    status: 'available'
+    sensors: [
+      { id: 1, name: 'microphone' },
+      { id: 2, name: 'camera' }
+    ]
+  },
+  {
+    id: 1,
+    type: 'M5Stack Core2',
+    macAddress: 'e4:72:05:0a:fc:66',
+    battery: '93',
+    project: '',
+    sensors: [
+      { id: 1, name: 'temperature' },
+      { id: 2, name: 'humidity' }
+    ]
   },
   {
     id: 2,
-    name: 'Device 2',
     type: 'M5Stack Core2',
-    macAddress: '00:00:00:00:00:02',
-    battery: '100',
+    macAddress: '94:b7:ab:57:d4:75',
+    battery: '91',
     project: 'Project 1',
-    session: 'Test collection',
-    status: 'takenFinished'
+    sensors: [
+      { id: 1, name: 'gyroX' },
+      { id: 2, name: 'gyroY' },
+      { id: 3, name: 'gyroZ' }
+    ]
   },
   {
     id: 3,
-    name: 'Device 3',
     type: 'M5Stack Core2',
-    macAddress: '00:00:00:00:00:03',
-    battery: '100',
+    macAddress: '5f:ec:07:db:01:6e',
+    battery: '',
     project: 'Building Temperature Research',
-    session: 'Session #2',
-    status: 'takenCollecting'
+    sensors: []
   },
   {
     id: 4,
-    name: 'Device 4',
     type: 'M5Stack Core2',
-    macAddress: '00:00:00:00:00:04',
-    battery: '100',
+    macAddress: '1e:e7:31:2e:df:7a',
+    battery: '',
     project: 'Project 3',
-    session: '',
-    status: 'takenInactive'
+    sensors: []
   },
   {
     id: 5,
-    name: 'Device 5',
     type: 'M5Stack Core2',
-    macAddress: '00:00:00:00:00:05',
-    battery: '100',
+    macAddress: '95:8e:53:46:7e:6e',
+    battery: '',
     project: '',
-    session: '',
-    status: 'unavailable'
+    sensors: []
   }
 ];
 
 const devicesColumns: GridColDef[] = [
-  { field: 'id', headerName: '#' },
-  { field: 'name', headerName: 'Name' },
-  { field: 'type', headerName: 'Type' },
-  { field: 'macAddress', headerName: 'MAC Address' },
+  // { field: 'id', headerName: '#' },
+  {
+    field: 'type', headerName: 'Type', renderCell: (params) => (
+      <Stack direction="row" alignItems="center" spacing={1}>
+        {params.value === 'This Device' && (
+          <DevicesIcon />
+        )}
+        <Typography variant="inherit">{params.value}</Typography>
+      </Stack>
+    )
+  },
+  { field: 'macAddress', headerName: 'MAC Address', valueFormatter: (value?: string) => value?.toUpperCase() },
   {
     field: 'battery', headerName: 'Battery', renderCell: (params) => (
-      <Stack direction="row" alignItems="center">
+      <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
         <BatteryFullIcon fontSize="small" />
-        <Typography variant="inherit">{params.value}%</Typography>
+        {params.value ? (
+          <Typography variant="inherit">{params.value}%</Typography>
+        ) : (
+          <Typography variant="inherit">?</Typography>
+        )}
       </Stack>
     )
   },
   {
-    field: 'status',
-    headerName: 'Status',
+    field: 'sensors',
+    headerName: 'Sensors',
     renderCell: (params) => (
-      <DeviceStatus status={params.value} project={params.row.project} session={params.row.session} />
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ height: "100%" }}>
+        {params.value.map((sensor: { id: number, name: string }) => (
+          <Chip key={sensor.id} label={sensor.name} size="small" />
+        ))}
+      </Stack>
     )
-  }
+  },
+  // {
+  //   field: 'project',
+  //   headerName: 'Project',
+  //   renderCell: (params) => (
+  //     <Typography variant="inherit">{params.value}</Typography>
+  //   )
+  // },
+  // {
+  //   field: 'status',
+  //   headerName: 'Status',
+  //   renderCell: (params) => (
+  //     <DeviceStatus status={params.value} project={params.row.project} session={params.row.session} />
+  //   )
+  // }
 ];
 
 const devicesRows: GridRowsProp = devicesPlaceholder.map((device) => ({
   id: device.id,
-  name: device.name,
   type: device.type,
   macAddress: device.macAddress,
   battery: device.battery,
-  status: device.status,
   project: device.project,
-  session: device.session,
+  sensors: device.sensors,
 }));
 
-const Devices = () => {
-  const [overlayFindDevice, setOverlayFindDevice] = useState(false);
+function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, handleOpenAddToProjects }) {
+  const activeSelection = selectedDeviceIds.length > 0;
 
-  const handleOpenFindDevice = () => setOverlayFindDevice(true);
-  const handleCloseFindDevice = () => setOverlayFindDevice(false);
+  return (
+    <GridToolbarContainer sx={{ padding: 1 }}>
+      <Stack direction="row" spacing={1}>
+        <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
+        <Button
+          variant="outlined"
+          size="medium"
+          startIcon={<QueueOutlinedIcon />}
+          disabled={!activeSelection}
+          onClick={handleOpenAddToProjects}
+        >
+          Add Devices To Project...
+        </Button>
+      </Stack>
+    </GridToolbarContainer>
+  );
+};
+
+const Devices = () => {
+  const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
+  const [openAddToProjects, setOpenAddToProjects] = useState(false);
+  const [activeProjects, setActiveProjects] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchText, setSearchText] = useState('');
+
+  const handleAddDevicesToProject = () => {
+    setOpenAddToProjects(false);
+  }
+
+  useEffect(() => {
+    fetchActiveProjects().then((data) => {
+      setActiveProjects(data);
+      setSearchResults(data);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (searchText) {
+      const results = activeProjects.filter((project) => project.name.toLowerCase().includes(searchText.toLowerCase()));
+      setSearchResults(results);
+    } else {
+      setSearchResults(activeProjects);
+    }
+  }, [searchText]);
 
   return (
     <div>
@@ -189,72 +223,63 @@ const Devices = () => {
       </Helmet>
       <PageTitleWrapper>
         <Typography variant="h1">All Devices</Typography>
-        <Stack direction="row" spacing={2} sx={{ paddingTop: 2 }}>
-          <Button variant="outlined" color="primary" onClick={handleOpenFindDevice} size="small">
-            <SearchIcon />
-            Find Device
-          </Button>
-          <Dialog
-            open={overlayFindDevice}
-            onClose={handleCloseFindDevice}
-            maxWidth="md"
-            fullWidth
-          >
-            <DialogTitle id="modal-modal-title">Find Device</DialogTitle>
-            <DialogContent>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Typography variant="h5" >
-                    Tap <span style={{ color: '#3267A6' }}>Automatic</span> on the screen of the device.
-                  </Typography>
-                  <Typography variant="body1">
-                    The device will show up in the list below.
-                  </Typography>
-                  <Divider sx={{ my: 1 }} />
-                  <Stack direction="row" spacing={1}>
-                    <MoreHorizIcon />
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      Searching For Devices
-                    </Typography>
-                  </Stack>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="h5">
-                    Find by MAC Address
-                  </Typography>
-                  <Typography variant="body1">
-                    The MAC address is displayed on the screen of the device.
-                  </Typography>
-                  <Divider sx={{ my: 1 }} />
-                  <Autocomplete
-                    id="combo-box-demo"
-                    options={devicesPlaceholder.map((device) => device.macAddress)}
-                    renderInput={(params) => <TextField {...params} label="MAC Address" />}
-                  />
-                </Grid>
-              </Grid>
-            </DialogContent>
-          </Dialog>
-          <Button variant="outlined" color="primary" size="small">
-            <AddIcon />
-            Add To Project
-          </Button>
-          <TextField id="outlined-basic" label="Search" variant="outlined" size="small" />
-        </Stack>
+        <Dialog open={openAddToProjects} onClose={() => setOpenAddToProjects(false)}>
+          <DialogTitle>Add Devices To Project</DialogTitle>
+          <DialogContent>
+            <Stack direction="row" spacing={1} sx={{ mt: 1, mb: 2 }}>
+              <Button startIcon={<AddIcon />} variant="outlined" size="medium" sx={{ flex: 1 }}>New Project</Button>
+              <TextField
+                label="Search Projects"
+                variant="outlined"
+                fullWidth
+                sx={{ flex: 2 }}
+                size="small"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+              />
+            </Stack>
+            <Typography variant="caption" fontWeight="700" sx={{ pl: 2 }}>{searchResults.length} projects</Typography>
+            <Divider sx={{ mt: 1 }} />
+            <List sx={{ width: "100%" }} disablePadding>
+              {searchResults.map((project) => (
+                <ListItem key={project._id} sx={{ py: 1 }} disablePadding divider={true}>
+                  <ListItemButton disableGutters sx={{ px: 2 }}>
+                    <ListItemText primary={project.name} secondary={project.description} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenAddToProjects(false)} color="secondary">Cancel</Button>
+          </DialogActions>
+        </Dialog>
       </PageTitleWrapper>
       <Container>
-          <Paper>
-            <DataGrid
-              rows={devicesRows}
-              columns={devicesColumns}
-              density="compact"
-              autosizeOnMount
-              autosizeOptions={{
-                includeOutliers: true
-              }}
-              autoHeight
-            />
-          </Paper>
+        <Paper>
+          <DataGrid
+            rows={devicesRows}
+            columns={devicesColumns}
+            density="compact"
+            autosizeOnMount
+            autosizeOptions={{ includeOutliers: true }}
+            autoHeight
+            checkboxSelection={true}
+            onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
+            slots={{
+              toolbar: () => <CustomDevicesToolbar
+                selectedDeviceIds={selectedDeviceIds}
+                setSelectedDeviceIds={setSelectedDeviceIds}
+                handleOpenAddToProjects={() => setOpenAddToProjects(true)}
+              />,
+            }}
+            sx={{
+              "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus": {
+                outline: "none",
+              },
+            }}
+          />
+        </Paper>
       </Container>
     </div>
   );

@@ -20,14 +20,7 @@ import {
   DataGrid,
   GridColDef,
   GridRowsProp,
-  GridToolbar,
   GridToolbarContainer,
-  GridToolbarColumnsButton,
-  GridToolbarFilterButton,
-  GridToolbarExport,
-  GridToolbarDensitySelector,
-  useGridApiContext,
-  GridFilterModel,
   GridToolbarQuickFilter
 } from '@mui/x-data-grid';
 
@@ -268,6 +261,11 @@ const Projects = () => {
                   setSelectedProjectIds={setSelectedProjectIds}
                   fetchData={fetchData}
                 />,
+              }}
+              sx={{
+                "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus": {
+                  outline: "none",
+                },
               }}
             />
           </Paper>

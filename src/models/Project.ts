@@ -12,6 +12,7 @@ export interface ProjectModel {
   sensorUnits?: string[];
   lastActive?: Date;
   archived?: boolean;
+  collaborators?: string[] | AccountModel[]; // Array of Account IDs
 }
 
 const ProjectSchema = new mongoose.Schema({
@@ -23,6 +24,7 @@ const ProjectSchema = new mongoose.Schema({
   sensorUnits: { type: [String], default: [] },
   lastActive: { type: Date, default: Date.now },
   archived: { type: Boolean, default: false },
+  collaborators: [{ type: ObjectId, ref: "Account" }],
 });
 
 export default mongoose.models.Project || mongoose.model("Project", ProjectSchema);

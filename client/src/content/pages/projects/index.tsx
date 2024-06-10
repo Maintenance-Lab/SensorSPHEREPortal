@@ -9,7 +9,11 @@ import {
   Link,
   Tabs,
   Typography,
-  Stack
+  Stack,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
@@ -58,16 +62,22 @@ const fetchArchivedProjects = async () => {
   return data;
 }
 
-const createProject = async () => {
-  //Default values
+const createProject = async (name, description) => {
   const response = await fetch('/api/projects/create', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       credentials: 'include'
     },
-    body: JSON.stringify({})
+    body: JSON.stringify({ name, description })
   });
+
+  if (!response.ok) {
+    throw new Error('Failed to create project');
+  }
+
+  const data = await response.json();
+  return data;
 };
 
 const deleteProjects = async (projectIds) => {
@@ -99,16 +109,29 @@ const archiveProjects = async (projectIds) => {
 }
 
 function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetchData }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(`Project ${new Date().toDateString()}`);
+  const [description, setDescription] = useState('');
+
   const activeSelection = selectedProjectIds.length > 0;
 
   const handleCreateProject = useCallback(async () => {
     try {
-      await createProject();
-      fetchData();
+      setOpen(true);
     } catch (error) {
       console.error(error);
     }
   }, []);
+
+  const handleSubmitCreateProject = useCallback(async () => {
+    try {
+      await createProject(name, description);
+      setOpen(false);
+      fetchData();
+    } catch (error) {
+      console.error(error);
+    }
+  }, [name, description]);
 
   const handleDeleteProjects = useCallback(async () => {
     try {
@@ -160,6 +183,32 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
           Delete
         </Button>
       </Stack>
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>Create New Project</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Project Name"
+            fullWidth
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label="Project Description"
+            fullWidth
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={handleSubmitCreateProject} variant="contained" color="primary">
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
     </GridToolbarContainer>
   );
 };
@@ -194,7 +243,6 @@ const Projects = () => {
   };
 
   const projectsColumns: GridColDef[] = [
-    // { field: 'id', headerName: '#' },
     {
       field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
         <Link href={`/projects/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
@@ -231,9 +279,7 @@ const Projects = () => {
             onChange={handleTabChange}
             sx={{ flex: '0 0 auto' }}
           >
-            {/* <Tab value="1" label="Recents" sx={{ alignItems: 'start' }} /> */}
             <Tab value="2" label="My Projects" sx={{ alignItems: 'start' }} />
-            {/* <Tab value="3" label="Shared With Me" sx={{ alignItems: 'start' }} /> */}
             <Tab value="4" label="Archived" sx={{ alignItems: 'start' }} />
           </Tabs>
           <Paper sx={{ width: "100%", height: "100%" }}>

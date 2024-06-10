@@ -45,6 +45,10 @@ function ManagementUserSettings() {
       setLoginSessions(data.sessions);
       setLoading(false);
     });
+
+    // if ?action=change is present in the URL, redirect to the security tab and open the password change dialog
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'change') setCurrentTab('security');
   }, []);
 
   const tabs = [

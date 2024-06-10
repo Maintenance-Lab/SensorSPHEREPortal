@@ -81,7 +81,7 @@ export const createAccounts = (items: Array<Partial<AccountModel>>) => {
   });
 };
 
-export const updateAccount = (id: string, item: Partial<AccountModel>) => {
+export const updateAccount = (id: string, item: Partial<AccountModel>): Promise<AccountModel> => {
   return new Promise(async (resolve, reject) => {
     try {
       if (!id) return reject(new Error("User Key not found"));

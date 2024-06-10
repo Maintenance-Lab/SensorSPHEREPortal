@@ -1,8 +1,10 @@
 import { Router } from "express";
-import { IS_PROD } from "../../../config.js";
+import { IS_PROD, JWT_ACCESS_SECRET, JWT_EXPIRESIN } from "../../../config.js";
 import { getAccountById, updateAccount } from "../../../services/Account.js";
 import { getSession } from "../../../utils.js";
 import { hash, verify } from "@node-rs/argon2";
+import jwt from "jsonwebtoken";
+import { createLoginSession } from "../../../services/LoginSession.js";
 
 const router = Router();
 
@@ -25,6 +27,8 @@ router.post("/password", async (req, res) => {
 
   let { newPass, currentPass } = req.body;
   if (!newPass || !currentPass) return res.status(400).json({ message: "Current and new password required" });
+  if (newPass === currentPass) return res.status(400).json({ message: "New password cannot be the same as the current password" });
+  if ()
 
   const { _id } = account;
   if (!_id) return res.status(400).json({ message: "Account ID is required" });
@@ -43,10 +47,26 @@ router.post("/password", async (req, res) => {
   console.log("newPass", newPass);
   newPass = await hash(newPass);
 
-  const updatedAccount = await updateAccount(_id, { password: newPass });
+  const updatedAccount = await updateAccount(_id, { password: newPass, hasChangedPassword: true });
   if (!updatedAccount) return res.status(500).json({ message: "Internal Server Error" });
 
-  return res.json({ message: "Password updated" });
+  const { name, role, hasAvatar, email, hasChangedPassword } = updatedAccount;
+
+  const token = jwt.sign({ _id, name, role, hasAvatar, email, hasChangedPassword }, JWT_ACCESS_SECRET, {
+    expiresIn: JWT_EXPIRESIN,
+  });
+
+  const userAgent = req.headers["user-agent"];
+  const ip: any = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+
+  await createLoginSession({ Account: _id, token, userAgent, ip });
+
+  return res
+    .cookie("token", token, {
+      secure: IS_PROD,
+      maxAge: JWT_EXPIRESIN * 1000,
+    })
+    .json({ message: "Password updated" });
 });
 
 //

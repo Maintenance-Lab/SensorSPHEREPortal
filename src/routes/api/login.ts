@@ -27,9 +27,9 @@ router.post("/", async (req, res) => {
     const isValid = await verify(account.password, password);
     if (!isValid) return res.json({ success: false, location: null, error: "Invalid login credentials" });
 
-    const { _id, name, role, hasAvatar, email } = account;
+    const { _id, name, role, hasAvatar, email, hasChangedPassword } = account;
 
-    const token = jwt.sign({ _id, name, role, hasAvatar, email }, JWT_ACCESS_SECRET, {
+    const token = jwt.sign({ _id, name, role, hasAvatar, email, hasChangedPassword }, JWT_ACCESS_SECRET, {
       expiresIn: JWT_EXPIRESIN,
     });
 

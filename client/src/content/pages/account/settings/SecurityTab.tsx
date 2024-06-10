@@ -155,6 +155,11 @@ function SecurityTab(props: SecurityTabProps) {
     );
   }, [sessions, page, rowsPerPage]);
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'change') handlePasswordDialogOpen();
+  }, []);
+
   const handleChangePage = (
     event: MouseEvent<HTMLButtonElement> | null,
     newPage: number

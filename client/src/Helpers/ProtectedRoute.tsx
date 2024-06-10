@@ -12,6 +12,8 @@ export const ProtectedRoute: any = ({ children }: ProtectedRouteProps) => {
 
   if (!user) return <Navigate to="/login" />;
 
+  if (!user?.hasChangedPassword && window.location.pathname !== "/account") return <Navigate to="/account?action=change" />;
+
   return children;
 };
 

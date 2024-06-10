@@ -39,3 +39,17 @@ export const handleMongoError = (error: any) => {
     return "An unexpected error occurred";
   }
 };
+
+export const isPasswordStrong = (password: string) => {
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasLength = password.length >= 8;
+  return hasSpecialChar && hasNumber && hasUpperCase && hasLowerCase && hasLength;
+};
+
+export const isEmail = (email: string) => {
+  const re = /\S+@\S+\.\S+/;
+  return re.test(email);
+};

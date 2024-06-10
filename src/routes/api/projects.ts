@@ -21,13 +21,6 @@ TODO:
 - Handle auth middleware and check for correct permissions
 */
 
-router.get("/all", async (_, res) => {
-  // remove when auth is implemented
-  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-  const results = await getAllProjects();
-  return res.json(results);
-});
-
 router.get("/active", async (req, res) => {
   const response = await getSession(req, res);
   if (!response) return;

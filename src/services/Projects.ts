@@ -7,7 +7,7 @@ export const getAllProjects = async () => {
   });
 };
 
-export const getProjectById = async (id: string) => {
+export const getProjectById = async (id: string): Promise<ProjectModel> => {
   return new Promise(async (resolve) => {
     const doc = await Project.findById(id);
     return resolve(doc);

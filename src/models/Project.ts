@@ -3,7 +3,7 @@ import { AccountModel } from "./Account";
 const { ObjectId } = Schema.Types;
 
 export interface ProjectModel {
-  _id?: string;
+  _id: string;
   name: string;
   description: string;
   meta: object; // Extra info if needed
@@ -24,7 +24,7 @@ const ProjectSchema = new mongoose.Schema({
   sensorUnits: { type: [String], default: [] },
   lastActive: { type: Date, default: Date.now },
   archived: { type: Boolean, default: false },
-  collaborators: [{ type: ObjectId, ref: "Account" }],
+  collaborators: { type: [{ type: ObjectId, ref: "Account" }], default: [] },
 });
 
 export default mongoose.models.Project || mongoose.model("Project", ProjectSchema);

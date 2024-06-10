@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 const { ObjectId } = Schema.Types;
 
 export interface AccountModel {
-  _id?: string;
+  _id: string;
   enabled: boolean;
   name: string;
   email: string;

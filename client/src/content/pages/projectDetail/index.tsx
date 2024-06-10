@@ -7,7 +7,13 @@ import {
   Typography,
   Container,
   Box,
-  Divider
+  Divider,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
@@ -157,20 +163,44 @@ const updateProject = async (projectId, name, description) => {
   }
 };
 
-const ProjectDetail = () => {
+const addCollaborator = async (projectId, email) => {
+  const res = await fetch('/api/project/collaborator/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({
+      projectId: projectId,
+      email: email
+    })
+  });
 
-  // Placeholder data for project
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.message || 'Failed to add collaborator');
+  }
+
+  return res.json();
+};
+
+const ProjectDetail = () => {
   const projectPlaceholder = {
     name: 'Building Temperature Research',
     description: 'Researching the temperature of buildings on campus. Part of thesis project.',
     status: 'collecting'
-  }
+  };
 
   const { projectId } = useParams();
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [collaboratorEmail, setCollaboratorEmail] = useState('');
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const fetchProject = async () => {
     const res = await fetch('/api/projects/id/' + projectId, {
@@ -187,24 +217,39 @@ const ProjectDetail = () => {
     }
     const data = await res.json();
     return data;
-  }
+  };
 
   const handleNameChange = (event) => {
     updateProject(projectId, event.target.value, projectDescription);
     setIsEditingName(false);
-  }
+  };
 
   const handleDescriptionChange = (event) => {
     updateProject(projectId, projectName, event.target.value);
     setIsEditingDescription(false);
-  }
+  };
+
+  const handleAddCollaborator = async () => {
+    try {
+      const { message } = await addCollaborator(projectId, collaboratorEmail);
+      setSnackbarMessage(message);
+      setSnackbarSeverity('success');
+    } catch (error) {
+      setSnackbarMessage(error.message);
+      setSnackbarSeverity('error');
+    } finally {
+      setSnackbarOpen(true);
+      setOpen(false);
+      setCollaboratorEmail('');
+    }
+  };
 
   useEffect(() => {
     fetchProject().then((project) => {
       setProjectName(project.name);
       setProjectDescription(project.description);
     });
-  });
+  }, []);
 
   return (
     <div>
@@ -213,7 +258,6 @@ const ProjectDetail = () => {
       </Helmet>
       <PageTitleWrapper>
         <Stack spacing={1} >
-          {/* Project Name */}
           {isEditingName ? (
             <Box>
               <TextField
@@ -247,7 +291,6 @@ const ProjectDetail = () => {
               {projectName}
             </Typography>
           )}
-          {/* Project Description */}
           {isEditingDescription ? (
             <Box>
               <TextField
@@ -265,7 +308,9 @@ const ProjectDetail = () => {
             </Box>
           ) : (
             <Typography
-              variant="body1"
+              variant
+
+="body1"
               onClick={() => setIsEditingDescription(true)}
               sx={{
                 '&:hover': {
@@ -286,6 +331,15 @@ const ProjectDetail = () => {
             </Button>
             <Button variant="outlined" color="primary" size="medium">
               Delete
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              size="medium"
+              startIcon={<GroupAddOutlinedIcon />}
+              onClick={() => setOpen(true)}
+            >
+              Add Collaborator
             </Button>
           </Stack>
         </Stack>
@@ -333,6 +387,35 @@ const ProjectDetail = () => {
           </Paper>
         </Stack>
       </Container>
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>Add Collaborator</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Collaborator Email"
+            fullWidth
+            value={collaboratorEmail}
+            onChange={(e) => setCollaboratorEmail(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={handleAddCollaborator} variant="contained" color="primary">
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

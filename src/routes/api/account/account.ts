@@ -28,7 +28,6 @@ router.post("/password", async (req, res) => {
   let { newPass, currentPass } = req.body;
   if (!newPass || !currentPass) return res.status(400).json({ message: "Current and new password required" });
   if (newPass === currentPass) return res.status(400).json({ message: "New password cannot be the same as the current password" });
-  if ()
 
   const { _id } = account;
   if (!_id) return res.status(400).json({ message: "Account ID is required" });
@@ -44,7 +43,6 @@ router.post("/password", async (req, res) => {
     return res.status(400).json({ message: "Invalid current password" });
   }
 
-  console.log("newPass", newPass);
   newPass = await hash(newPass);
 
   const updatedAccount = await updateAccount(_id, { password: newPass, hasChangedPassword: true });

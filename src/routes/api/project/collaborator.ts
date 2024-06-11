@@ -21,6 +21,8 @@ router.post("/add", async (req, res) => {
     const collaborator = await getAccountByEmail(email);
     if (!collaborator) return res.status(400).json({ message: "Collaborator not found" });
 
+    if (collaborator._id.toString() === account._id) return res.status(400).json({ message: "You can't add yourself as a collaborator" });
+
     const collaborators: any = project?.collaborators || [];
     if (collaborators.includes(collaborator._id))
       return res.status(400).json({ message: "Collaborator already added" });

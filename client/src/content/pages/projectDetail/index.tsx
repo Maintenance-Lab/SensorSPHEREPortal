@@ -23,7 +23,7 @@ import { useParams } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';
 import FaceIcon from '@mui/icons-material/Face';
 import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -184,6 +184,46 @@ const addCollaborator = async (projectId, email) => {
   return res.json();
 };
 
+function CustomProjectDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds }) {
+  const activeSelection = selectedDeviceIds.length > 0;
+
+  return (
+    <GridToolbarContainer sx={{ padding: 1 }}>
+      <Stack direction="row" spacing={1}>
+        <Button
+          variant="contained"
+          color="primary"
+          // onClick={handleCreateProject}
+          startIcon={<AddIcon />}
+        >
+          Add Devices...
+        </Button>
+        <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
+      </Stack>
+    </GridToolbarContainer>
+  );
+};
+
+function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds }) {
+  const activeSelection = selectedSessionIds.length > 0;
+
+  return (
+    <GridToolbarContainer sx={{ padding: 1 }}>
+      <Stack direction="row" spacing={1}>
+        <Button
+          variant="contained"
+          color="primary"
+          // onClick={handleCreateProject}
+          startIcon={<AddIcon />}
+        >
+          Create New Session...
+        </Button>
+        <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
+      </Stack>
+    </GridToolbarContainer>
+  );
+}
+
 const ProjectDetail = () => {
   const projectPlaceholder = {
     name: 'Building Temperature Research',
@@ -194,6 +234,8 @@ const ProjectDetail = () => {
   const { projectId } = useParams();
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
+  const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
+  const [selectedSessionIds, setSelectedSessionIds] = useState([]);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [open, setOpen] = useState(false);
@@ -344,14 +386,8 @@ const ProjectDetail = () => {
         </Stack>
       </PageTitleWrapper>
       <Container>
-        <Stack spacing={2}>
+        <Stack spacing={1}>
           <Typography variant="h2">Devices</Typography>
-          <Stack direction="row" spacing={1}>
-            <Button variant="outlined" color="primary" size="medium" startIcon={<AddIcon />}>
-              Add Devices...
-            </Button>
-            <TextField label="Search Devices" variant="outlined" size="small" />
-          </Stack>
           <Paper>
             <DataGrid
               rows={deviceRows}
@@ -360,15 +396,16 @@ const ProjectDetail = () => {
               density="compact"
               autosizeOnMount
               autosizeOptions={{ includeOutliers: true }}
+              onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
+              slots={{
+                toolbar: () => <CustomProjectDevicesToolbar
+                  selectedDeviceIds={selectedDeviceIds}
+                  setSelectedDeviceIds={setSelectedDeviceIds}
+                />,
+              }}
             />
           </Paper>
           <Typography variant="h2" sx={{ pt: 2 }}>Sessions</Typography>
-          <Stack direction="row" spacing={1}>
-            <Button variant="outlined" color="primary" size="medium" startIcon={<AddIcon />}>
-              Create New Session...
-            </Button>
-            <TextField label="Search Sessions" variant="outlined" size="small" />
-          </Stack>
           <Paper>
             <DataGrid
               rows={sessionRows}
@@ -382,6 +419,13 @@ const ProjectDetail = () => {
               density="compact"
               autosizeOnMount
               autosizeOptions={{ includeOutliers: true }}
+              onRowSelectionModelChange={(newSelection) => setSelectedSessionIds(newSelection)}
+              slots={{
+                toolbar: () => <CustomSessionsToolbar
+                  selectedSessionIds={selectedSessionIds}
+                  setSelectedSessionIds={setSelectedSessionIds}
+                />,
+              }}
             />
           </Paper>
         </Stack>

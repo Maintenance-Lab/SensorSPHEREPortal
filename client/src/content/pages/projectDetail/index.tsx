@@ -308,9 +308,7 @@ const ProjectDetail = () => {
             </Box>
           ) : (
             <Typography
-              variant
-
-="body1"
+              variant="body1"
               onClick={() => setIsEditingDescription(true)}
               sx={{
                 '&:hover': {
@@ -318,11 +316,12 @@ const ProjectDetail = () => {
                   outline: '2px solid rgba(0, 0, 0, 0.2)',
                   borderRadius: '8px',
                   paddingX: 1,
-                  marginX: -1
-                }
+                  marginX: -1,
+                },
+                color: projectDescription ? 'inherit' : 'gray'
               }}
             >
-              {projectDescription}
+              {projectDescription ? projectDescription : 'Add description...'}
             </Typography>
           )}
           <Stack direction="row" spacing={1}>

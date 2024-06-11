@@ -49,30 +49,28 @@ router.get("/archived", async (req, res) => {
   return res.json(doc);
 });
 
-router.get("/id/:id", async (req, res) => {
+router.get("/id/:id", async (req, res) => { // Fix auth
   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
   const { id } = req.params;
-  const doc = await getProjectById(id);
+  const doc = await getProjectById(id, true);
   return res.json(doc);
 });
 
-router.get("/account/:accountId", async (req, res) => {
-  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-  const { accountId } = req.params;
-  const doc = await getProjectsByAccount(accountId);
-  return res.json(doc);
-});
+// router.get("/account/:accountId", async (req, res) => {
+//   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
+//   const { accountId } = req.params;
+//   const doc = await getProjectsByAccount(accountId);
+//   return res.json(doc);
+// });
 
-router.get("/name/:name", async (req, res) => {
-  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-  const { name } = req.params;
-  const doc = await getProjectByName(name);
-  return res.json(doc);
-});
+// router.get("/name/:name", async (req, res) => {
+//   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
+//   const { name } = req.params;
+//   const doc = await getProjectByName(name);
+//   return res.json(doc);
+// });
 
 router.post("/create", async (req, res) => {
-  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-
   const response = await getSession(req, res);
   if (!response) return;
 
@@ -88,14 +86,14 @@ router.post("/create", async (req, res) => {
   return res.json(result);
 });
 
-router.post("/create-many", async (req, res) => {
-  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-  const { body } = req;
-  const results = await createProjects(body);
-  return res.json(results);
-});
+// router.post("/create-many", async (req, res) => {
+//   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
+//   const { body } = req;
+//   const results = await createProjects(body);
+//   return res.json(results);
+// });
 
-router.put("/update/:id", async (req, res) => {
+router.put("/update/:id", async (req, res) => { // Fix auth
   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
   const { id } = req.params;
   const { body } = req;
@@ -103,19 +101,19 @@ router.put("/update/:id", async (req, res) => {
   return res.json(result);
 });
 
-router.put("/update-many", async (req, res) => {
-  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-  const { body } = req;
-  const results = [];
-  for (const item of body) {
-    const { id } = item;
-    const result = await updateProject(id, item);
-    results.push(result);
-  }
-  return res.json(results);
-});
+// router.put("/update-many", async (req, res) => {
+//   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
+//   const { body } = req;
+//   const results = [];
+//   for (const item of body) {
+//     const { id } = item;
+//     const result = await updateProject(id, item);
+//     results.push(result);
+//   }
+//   return res.json(results);
+// });
 
-router.post("/delete", async (req, res) => {
+router.post("/delete", async (req, res) => { // Fix auth
   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
   const { ids } = req.body;
   const result = await deleteProjects(ids);

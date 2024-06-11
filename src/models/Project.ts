@@ -24,7 +24,7 @@ const ProjectSchema = new mongoose.Schema({
   sensorUnits: { type: [String], default: [] },
   lastActive: { type: Date, default: Date.now },
   archived: { type: Boolean, default: false },
-  collaborators: { type: [{ type: ObjectId, ref: "Account" }], default: [] },
+  collaborators: [{ type: ObjectId, ref: "Account", unique: true, default: []}],
 });
 
 export default mongoose.models.Project || mongoose.model("Project", ProjectSchema);

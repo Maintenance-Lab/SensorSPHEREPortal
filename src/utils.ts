@@ -26,6 +26,15 @@ export const createAccountResponse = (account: Partial<AccountModel>): Partial<A
   };
 };
 
+export const createBaseAccount = (account: Partial<AccountModel>): Partial<AccountModel> => {
+  console.log(account);
+  return {
+    _id: account._id,
+    name: account.name,
+    email: account.email,
+  };
+}
+
 export const isAdmin = async (req: Request, res: Response) => {
   const cookies = req.cookies || {};
 

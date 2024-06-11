@@ -1,4 +1,6 @@
+import { createBaseAccount } from "../utils.js";
 import Project, { ProjectModel } from "../models/Project.js";
+import { AccountModel } from "../models/Account.js";
 
 export const getAllProjects = async () => {
   return new Promise(async (resolve) => {
@@ -7,10 +9,19 @@ export const getAllProjects = async () => {
   });
 };
 
-export const getProjectById = async (id: string): Promise<ProjectModel> => {
-  return new Promise(async (resolve) => {
-    const doc = await Project.findById(id);
-    return resolve(doc);
+export const getProjectById = async (id: string, populate = false): Promise<ProjectModel> => {
+  return new Promise(async (resolve, reject) => {
+    const doc = await Project.findById(id).populate(populate ? "collaborators owner" : "");
+    if (!doc) return reject(new Error("Project not found"));
+    const returnDoc = doc.toObject();
+
+    if (populate) {
+      returnDoc.owner = createBaseAccount(doc.owner);
+      if (returnDoc.collaborators)
+        returnDoc.collaborators = returnDoc.collaborators.map((c: AccountModel) => createBaseAccount(c));
+    }
+
+    return resolve(returnDoc);
   });
 };
 
@@ -26,14 +37,14 @@ export const getActiveProjectsByOwner = async (accountId: string) => {
     const doc = await Project.find({ owner: accountId, archived: false });
     return resolve(doc);
   });
-}
+};
 
 export const getArchivedProjectsByOwner = async (accountId: string) => {
   return new Promise(async (resolve) => {
     const doc = await Project.find({ owner: accountId, archived: true });
     return resolve(doc);
   });
-}
+};
 
 export const getProjectByName = async (name: string) => {
   return new Promise(async (resolve) => {

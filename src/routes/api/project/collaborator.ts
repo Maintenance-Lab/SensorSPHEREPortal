@@ -14,14 +14,13 @@ router.post("/add", async (req, res) => {
     const { projectId, email } = req.body;
     if (!projectId || !email) return res.status(400).json({ message: "Project ID and email are required" });
     const project = await getProjectById(projectId);
+    console.log(await getProjectById(projectId, true))
 
     if (!project) return res.status(400).json({ message: "Project not found" });
     if (project.owner?.toString() !== account._id) return res.status(401).json({ message: "Unauthorized" });
 
     const collaborator = await getAccountByEmail(email);
     if (!collaborator) return res.status(400).json({ message: "Collaborator not found" });
-
-    if (collaborator._id.toString() === account._id) return res.status(400).json({ message: "You can't add yourself as a collaborator" });
 
     const collaborators: any = project?.collaborators || [];
     if (collaborators.includes(collaborator._id))

@@ -5,6 +5,7 @@ import { EventEmitter } from "events";
 import { createServer, Server } from "http";
 import express, { Express } from "express";
 import cookieparser from "cookie-parser";
+import { rateLimit } from 'express-rate-limit'
 
 import { PORT } from "../config.js";
 // import auth from "../middleware/auth.js";
@@ -39,6 +40,15 @@ class WebServer extends EventEmitter {
     this.app.use(express.json());
     this.app.use(cors());
     this.app.use(cookieparser());
+
+    // Rate limit
+    const limiter = rateLimit({
+      windowMs: 5 * 60 * 1000, // 15 minutes
+      limit: 500, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+      standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
+      legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+    })
+    this.app.use(limiter);
 
     this.app.use(routes);
 

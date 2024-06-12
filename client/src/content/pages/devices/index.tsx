@@ -46,6 +46,43 @@ const fetchActiveProjects = async () => {
   return data;
 }
 
+const updateProject = async (projectId: string, selectedSensorUnits) => {
+  console.log('Updating project', projectId, selectedSensorUnits);
+  const projectResponse = await fetch('/api/projects/id/' + projectId, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
+
+  if (!projectResponse.ok) {
+    console.error('Failed to fetch data');
+    return;
+  }
+
+  const projectData = await projectResponse.json();
+  const updatedSensorUnits = [...new Set([...projectData.sensorUnits, ...selectedSensorUnits])];
+
+  const updateResponse = await fetch('/api/projects/update/' + projectId, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({
+      sensorUnits: updatedSensorUnits
+    })
+  });
+
+  if (!updateResponse.ok) {
+    console.error('Failed to update project');
+    return;
+  }
+  const updateData = await updateResponse.json();
+  return updateData;
+}
+
 const devicesPlaceholder = [
   {
     id: 0,
@@ -196,8 +233,11 @@ const Devices = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [searchText, setSearchText] = useState('');
 
-  const handleAddDevicesToProject = () => {
+  const handleAddDevicesToProject = async (projectId) => {
+    const macAddresses = selectedDeviceIds.map((id) => devicesPlaceholder.find((device) => device.id === id).macAddress);
+    await updateProject(projectId, macAddresses);
     setOpenAddToProjects(false);
+    window.location.href = '/projects/detail/' + projectId;
   }
 
   useEffect(() => {
@@ -243,7 +283,11 @@ const Devices = () => {
             <List sx={{ width: "100%" }} disablePadding>
               {searchResults.map((project) => (
                 <ListItem key={project._id} sx={{ py: 1 }} disablePadding divider={true}>
-                  <ListItemButton disableGutters sx={{ px: 2 }}>
+                  <ListItemButton 
+                  disableGutters 
+                  sx={{ px: 2 }}
+                  onClick={() => handleAddDevicesToProject(project._id)}
+                  >
                     <ListItemText primary={project.name} secondary={project.description} />
                   </ListItemButton>
                 </ListItem>

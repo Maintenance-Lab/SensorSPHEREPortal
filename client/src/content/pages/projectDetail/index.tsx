@@ -27,7 +27,7 @@ import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQu
 import FaceIcon from '@mui/icons-material/Face';
 import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import { ArchiveOutlined, DeleteOutline, Inventory, UnarchiveOutlined } from '@mui/icons-material';
+import { ArchiveOutlined, DeleteOutline, Inventory, Remove, UnarchiveOutlined } from '@mui/icons-material';
 import { is } from 'date-fns/locale';
 
 const DeviceStatus = ({ status, project }) => {
@@ -69,51 +69,84 @@ const DeviceStatus = ({ status, project }) => {
   );
 };
 
-const devicesPlaceholder = [
-  {
-    id: 3,
-    name: 'Device 3',
-    type: 'M5Stack Core2',
-    macAddress: '00:00:00:00:00:03',
-    battery: '100',
-    project: 'Building Temperature Research',
-    session: 'Session #2',
-    status: 'takenCollecting'
+const devicesPlaceholder = {
+  '00:00:00:00:00:00': {
+    id: 0,
+    type: 'This Device',
+    macAddress: '00:00:00:00:00:00',
+    battery: '',
+    project: '',
+    sensors: [
+      { id: 1, name: 'microphone' },
+      { id: 2, name: 'camera' }
+    ]
   },
-];
+  'e4:72:05:0a:fc:66': {
+    id: 1,
+    type: 'M5Stack Core2',
+    macAddress: 'e4:72:05:0a:fc:66',
+    battery: '93',
+    project: '',
+    sensors: [
+      { id: 1, name: 'temperature' },
+      { id: 2, name: 'humidity' }
+    ]
+  },
+  '94:b7:ab:57:d4:75': {
+    id: 2,
+    type: 'M5Stack Core2',
+    macAddress: '94:b7:ab:57:d4:75',
+    battery: '91',
+    project: 'Project 1',
+    sensors: [
+      { id: 1, name: 'gyroX' },
+      { id: 2, name: 'gyroY' },
+      { id: 3, name: 'gyroZ' }
+    ]
+  },
+  '5f:ec:07:db:01:6e': {
+    id: 3,
+    type: 'M5Stack Core2',
+    macAddress: '5f:ec:07:db:01:6e',
+    battery: '',
+    project: 'Building Temperature Research',
+    sensors: []
+  },
+  '1e:e7:31:2e:df:7a': {
+    id: 4,
+    type: 'M5Stack Core2',
+    macAddress: '1e:e7:31:2e:df:7a',
+    battery: '',
+    project: 'Project 3',
+    sensors: []
+  },
+  '95:8e:53:46:7e:6e': {
+    id: 5,
+    type: 'M5Stack Core2',
+    macAddress: '95:8e:53:46:7e:6e',
+    battery: '',
+    project: '',
+    sensors: []
+  }
+};
 
 const deviceColumns: GridColDef[] = [
-  { field: 'id', headerName: '#' },
-  { field: 'name', headerName: 'Name' },
-  { field: 'type', headerName: 'Type' },
-  { field: 'macAddress', headerName: 'MAC Address' },
+  // { field: 'id', headerName: '#' },
+  { field: 'type', headerName: 'Type', flex: 2 },
+  { field: 'macAddress', headerName: 'MAC Address', flex: 2 },
   {
-    field: 'battery', headerName: 'Battery', renderCell: (params) => (
-      <Stack direction="row" alignItems="center">
-        <BatteryFullIcon />
-        <Typography variant="inherit">{params.value}%</Typography>
+    field: 'battery', headerName: 'Battery', flex: 1, renderCell: (params) => (
+      <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
+        <BatteryFullIcon fontSize="small" />
+        {params.value ? (
+          <Typography variant="inherit">{params.value}%</Typography>
+        ) : (
+          <Typography variant="inherit">?</Typography>
+        )}
       </Stack>
-    )
-  },
-  {
-    field: 'status',
-    headerName: 'Status',
-    renderCell: (params) => (
-      <DeviceStatus status={params.value} project="" />
     )
   }
 ];
-
-const deviceRows: GridRowsProp = devicesPlaceholder.map((device) => ({
-  id: device.id,
-  name: device.name,
-  type: device.type,
-  macAddress: device.macAddress,
-  battery: device.battery,
-  project: device.project,
-  session: device.session,
-  status: device.status
-}));
 
 const sessionsPlaceholder = [
   {
@@ -146,7 +179,7 @@ const sessionRows: GridRowsProp = sessionsPlaceholder.map((session) => ({
   status: session.status
 }));
 
-const updateProject = async (projectId, name: string, description: string, archived: boolean) => {
+const updateProject = async (projectId, name: string, description: string, archived: boolean, sensorUnits) => {
   const res = await fetch('/api/projects/update/' + projectId, {
     method: 'PUT',
     headers: {
@@ -156,7 +189,8 @@ const updateProject = async (projectId, name: string, description: string, archi
     body: JSON.stringify({
       name: name,
       description: description,
-      archived: archived
+      archived: archived,
+      sensorUnits: sensorUnits
     })
   });
 
@@ -205,8 +239,18 @@ const deleteProject = async (projectId) => {
   }
 }
 
-function CustomProjectDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds }) {
+function CustomprojectSensorUnitsToolbar({ selectedDeviceIds, setSelectedDeviceIds, projectId, projectName, projectDescription, projectSensorUnits, isArchived, fetchProject}) {
   const activeSelection = selectedDeviceIds.length > 0;
+
+  const handleRemoveDevices = async () => {
+    try {
+      await updateProject(projectId, projectName, projectDescription, isArchived, projectSensorUnits.filter((macAddress) => !selectedDeviceIds.includes(macAddress)));
+      fetchProject()
+    }
+    catch (error) {
+      console.error(error);
+    }
+  }
 
   return (
     <GridToolbarContainer sx={{ padding: 1 }}>
@@ -220,12 +264,21 @@ function CustomProjectDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds }
           Add Devices...
         </Button>
         <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
+        <Button
+          variant="outlined"
+          startIcon={<Remove />}
+          disabled={!activeSelection}
+          color="error"
+          onClick={handleRemoveDevices}
+        >
+          Remove Devices
+        </Button>
       </Stack>
     </GridToolbarContainer>
   );
 };
 
-function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds }) {
+function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionIds }) {
   const activeSelection = selectedSessionIds.length > 0;
 
   return (
@@ -249,6 +302,7 @@ const ProjectDetail = () => {
   const { projectId } = useParams();
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
+  const [projectSensorUnits, setProjectSensorUnits] = useState([]);
   const [isArchived, setIsArchived] = useState(false);
   const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
   const [selectedSessionIds, setSelectedSessionIds] = useState([]);
@@ -259,6 +313,15 @@ const ProjectDetail = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  const deviceRows: GridRowsProp = projectSensorUnits.map((macAddress) => ({
+    id: macAddress,
+    type: devicesPlaceholder[macAddress].type,
+    macAddress: macAddress,
+    battery: devicesPlaceholder[macAddress].battery,
+    project: devicesPlaceholder[macAddress].project,
+    sensors: devicesPlaceholder[macAddress].sensors,
+  }));
 
   const fetchProject = async () => {
     const res = await fetch('/api/projects/id/' + projectId, {
@@ -274,21 +337,25 @@ const ProjectDetail = () => {
       return [];
     }
     const data = await res.json();
-    return data;
+    setProjectName(data.name);
+    setProjectDescription(data.description);
+    console.log(data);
+    setProjectSensorUnits(data.sensorUnits);
+    setIsArchived(data.archived);
   };
 
   const handleNameChange = async (event) => {
-    updateProject(projectId, event.target.value, projectDescription, isArchived);
+    updateProject(projectId, event.target.value, projectDescription, isArchived, projectSensorUnits);
     setIsEditingName(false);
   };
 
   const handleDescriptionChange = async (event) => {
-    updateProject(projectId, projectName, event.target.value, isArchived);
+    updateProject(projectId, projectName, event.target.value, isArchived, projectSensorUnits);
     setIsEditingDescription(false);
   };
 
   const handleArchiveProject = async (archived: boolean) => {
-    updateProject(projectId, projectName, projectDescription, archived);
+    updateProject(projectId, projectName, projectDescription, archived, projectSensorUnits);
     setIsArchived(archived);
   };
 
@@ -313,11 +380,7 @@ const ProjectDetail = () => {
   };
 
   useEffect(() => {
-    fetchProject().then((project) => {
-      setProjectName(project.name);
-      setProjectDescription(project.description);
-      setIsArchived(project.archived);
-    });
+    fetchProject();
   }, []);
 
   return (
@@ -467,11 +530,23 @@ const ProjectDetail = () => {
               autosizeOnMount
               autosizeOptions={{ includeOutliers: true }}
               onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
+              checkboxSelection
               slots={{
-                toolbar: () => <CustomProjectDevicesToolbar
+                toolbar: () => <CustomprojectSensorUnitsToolbar
                   selectedDeviceIds={selectedDeviceIds}
                   setSelectedDeviceIds={setSelectedDeviceIds}
+                  projectId={projectId}
+                  projectName={projectName}
+                  projectDescription={projectDescription}
+                  projectSensorUnits={projectSensorUnits}
+                  isArchived={isArchived}
+                  fetchProject={fetchProject}
                 />,
+              }}
+              sx={{
+                "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus": {
+                  outline: "none",
+                },
               }}
             />
           </Paper>
@@ -491,7 +566,7 @@ const ProjectDetail = () => {
               autosizeOptions={{ includeOutliers: true }}
               onRowSelectionModelChange={(newSelection) => setSelectedSessionIds(newSelection)}
               slots={{
-                toolbar: () => <CustomSessionsToolbar
+                toolbar: () => <CustomProjectSessionsToolbar
                   selectedSessionIds={selectedSessionIds}
                   setSelectedSessionIds={setSelectedSessionIds}
                 />,

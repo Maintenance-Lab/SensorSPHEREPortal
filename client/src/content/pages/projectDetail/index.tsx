@@ -13,7 +13,8 @@ import {
   DialogContent,
   DialogTitle,
   Snackbar,
-  Alert
+  Alert,
+  Chip
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
@@ -27,7 +28,7 @@ import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQu
 import FaceIcon from '@mui/icons-material/Face';
 import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import { ArchiveOutlined, DeleteOutline, Inventory, Remove, UnarchiveOutlined } from '@mui/icons-material';
+import { Add, ArchiveOutlined, Cancel, DeleteOutline, Devices, Inventory, Remove, UnarchiveOutlined } from '@mui/icons-material';
 import { is } from 'date-fns/locale';
 
 const DeviceStatus = ({ status, project }) => {
@@ -132,7 +133,16 @@ const devicesPlaceholder = {
 
 const deviceColumns: GridColDef[] = [
   // { field: 'id', headerName: '#' },
-  { field: 'type', headerName: 'Type', flex: 2 },
+  {
+    field: 'type', headerName: 'Type', flex: 2, renderCell: (params) => (
+      <Stack direction="row" alignItems="center" spacing={1}>
+        {params.value === 'This Device' && (
+          <Devices />
+        )}
+        <Typography variant="inherit">{params.value}</Typography>
+      </Stack>
+    )
+  },
   { field: 'macAddress', headerName: 'MAC Address', flex: 2 },
   {
     field: 'battery', headerName: 'Battery', flex: 1, renderCell: (params) => (
@@ -145,7 +155,24 @@ const deviceColumns: GridColDef[] = [
         )}
       </Stack>
     )
-  }
+  },
+  {
+    field: 'sensors',
+    headerName: 'Sensors',
+    flex: 3,
+    renderCell: (params) => (
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ height: "100%" }}>
+        {params.value.map((sensor: { id: number, name: string }) => (
+          <Chip key={sensor.id} label={sensor.name} size="small" />
+        ))}
+        {params.value.length === 0 && (
+          <Typography variant="inherit" color="gray">
+            No sensors found
+          </Typography>
+        )}
+      </Stack>
+    )
+  },
 ];
 
 const sessionsPlaceholder = [
@@ -177,6 +204,48 @@ const sessionRows: GridRowsProp = sessionsPlaceholder.map((session) => ({
   id: session.id,
   name: session.name,
   status: session.status
+}));
+
+const addDevicesColumns: GridColDef[] = [
+  { field: 'type', headerName: 'Type', flex: 2 },
+  { field: 'macAddress', headerName: 'MAC Address', flex: 2 },
+  {
+    field: 'battery', headerName: 'Battery', flex: 1, renderCell: (params) => (
+      <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
+        <BatteryFullIcon fontSize="small" />
+        {params.value ? (
+          <Typography variant="inherit">{params.value}%</Typography>
+        ) : (
+          <Typography variant="inherit">?</Typography>
+        )}
+      </Stack>
+    )
+  },
+  {
+    field: 'sensors',
+    headerName: 'Sensors',
+    flex: 3,
+    renderCell: (params) => (
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ height: "100%" }}>
+        {params.value.map((sensor: { id: number, name: string }) => (
+          <Chip key={sensor.id} label={sensor.name} size="small" />
+        ))}
+        {params.value.length === 0 && (
+          <Typography variant="inherit" color="gray">
+            No sensors found
+          </Typography>
+        )}
+      </Stack>
+    )
+  },
+];
+
+const addDevicesRows: GridRowsProp = Object.keys(devicesPlaceholder).map((macAddress) => ({
+  id: macAddress,
+  type: devicesPlaceholder[macAddress].type,
+  macAddress: macAddress,
+  battery: devicesPlaceholder[macAddress].battery,
+  sensors: devicesPlaceholder[macAddress].sensors,
 }));
 
 const updateProject = async (projectId, name: string, description: string, archived: boolean, sensorUnits) => {
@@ -239,7 +308,7 @@ const deleteProject = async (projectId) => {
   }
 }
 
-function CustomprojectSensorUnitsToolbar({ selectedDeviceIds, setSelectedDeviceIds, projectId, projectName, projectDescription, projectSensorUnits, isArchived, fetchProject}) {
+function CustomProjectSensorUnitsToolbar({ selectedDeviceIds, projectId, projectName, projectDescription, projectSensorUnits, isArchived, fetchProject, handleOpenAddDevices }) {
   const activeSelection = selectedDeviceIds.length > 0;
 
   const handleRemoveDevices = async () => {
@@ -258,7 +327,7 @@ function CustomprojectSensorUnitsToolbar({ selectedDeviceIds, setSelectedDeviceI
         <Button
           variant="contained"
           color="primary"
-          // onClick={handleCreateProject}
+          onClick={handleOpenAddDevices}
           startIcon={<AddIcon />}
         >
           Add Devices...
@@ -287,11 +356,21 @@ function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionId
         <Button
           variant="contained"
           color="primary"
-          // onClick={handleCreateProject}
+          // onClick={handleCreateSession}
           startIcon={<AddIcon />}
         >
           Create New Session...
         </Button>
+        <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
+      </Stack>
+    </GridToolbarContainer>
+  );
+}
+
+function CustomAddDevicesToolbar() {
+  return (
+    <GridToolbarContainer sx={{ padding: 1 }}>
+      <Stack direction="row" spacing={1}>
         <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
       </Stack>
     </GridToolbarContainer>
@@ -308,6 +387,8 @@ const ProjectDetail = () => {
   const [selectedSessionIds, setSelectedSessionIds] = useState([]);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [openAddDevices, setOpenAddDevices] = useState(false);
+  const [selectedDeviceIdsFromAddDevices, setSelectedDeviceIdsFromAddDevices] = useState([]);
   const [open, setOpen] = useState(false);
   const [collaboratorEmail, setCollaboratorEmail] = useState('');
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -339,7 +420,7 @@ const ProjectDetail = () => {
     const data = await res.json();
     setProjectName(data.name);
     setProjectDescription(data.description);
-    console.log(data);
+    // console.log(data);
     setProjectSensorUnits(data.sensorUnits);
     setIsArchived(data.archived);
   };
@@ -379,6 +460,18 @@ const ProjectDetail = () => {
     }
   };
 
+  const handleAddDevicesToProject = async () => {
+    try {
+      const updatedSensorUnits = [...new Set([...projectSensorUnits, ...selectedDeviceIdsFromAddDevices])];
+      await updateProject(projectId, projectName, projectDescription, isArchived, updatedSensorUnits);
+      setOpenAddDevices(false);
+      fetchProject();
+    } catch (error) {
+      console.error(error);
+    }
+
+  }
+
   useEffect(() => {
     fetchProject();
   }, []);
@@ -388,6 +481,33 @@ const ProjectDetail = () => {
       <Helmet>
         <title>{projectName}</title>
       </Helmet>
+      <Dialog open={openAddDevices} onClose={() => setOpenAddDevices(false)} fullWidth maxWidth="lg">
+        <DialogTitle>Add Devices To {projectName}</DialogTitle>
+        <DialogContent>
+          <DataGrid
+            rows={addDevicesRows}
+            columns={addDevicesColumns}
+            density="compact"
+            autosizeOnMount
+            autosizeOptions={{ includeOutliers: true }}
+            autoHeight
+            checkboxSelection={true}
+            onRowSelectionModelChange={(newSelection) => setSelectedDeviceIdsFromAddDevices(newSelection)}
+            slots={{ toolbar: () => <CustomAddDevicesToolbar /> }}
+            sx={{
+              "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus": {
+                outline: "none",
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenAddDevices(false)} color="secondary" startIcon={<Cancel />}>Cancel</Button>
+          <Button onClick={handleAddDevicesToProject} variant="contained" color="primary" startIcon={<Add />}>
+            Add Devices
+          </Button>
+        </DialogActions>
+      </Dialog>
       <PageTitleWrapper>
         <Stack spacing={1} >
           {isEditingName ? (
@@ -532,15 +652,15 @@ const ProjectDetail = () => {
               onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
               checkboxSelection
               slots={{
-                toolbar: () => <CustomprojectSensorUnitsToolbar
+                toolbar: () => <CustomProjectSensorUnitsToolbar
                   selectedDeviceIds={selectedDeviceIds}
-                  setSelectedDeviceIds={setSelectedDeviceIds}
                   projectId={projectId}
                   projectName={projectName}
                   projectDescription={projectDescription}
                   projectSensorUnits={projectSensorUnits}
                   isArchived={isArchived}
                   fetchProject={fetchProject}
+                  handleOpenAddDevices={() => setOpenAddDevices(true)}
                 />,
               }}
               sx={{

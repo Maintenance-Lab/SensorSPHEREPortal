@@ -263,42 +263,42 @@ const Devices = () => {
       </Helmet>
       <PageTitleWrapper>
         <Typography variant="h1">All Devices</Typography>
-        <Dialog open={openAddToProjects} onClose={() => setOpenAddToProjects(false)}>
-          <DialogTitle>Add Devices To Project</DialogTitle>
-          <DialogContent>
-            <Stack direction="row" spacing={1} sx={{ mt: 1, mb: 2 }}>
-              <Button startIcon={<AddIcon />} variant="outlined" size="medium" sx={{ flex: 1 }}>New Project</Button>
-              <TextField
-                label="Search Projects"
-                variant="outlined"
-                fullWidth
-                sx={{ flex: 2 }}
-                size="small"
-                value={searchText}
-                onChange={(event) => setSearchText(event.target.value)}
-              />
-            </Stack>
-            <Typography variant="caption" fontWeight="700" sx={{ pl: 2 }}>{searchResults.length} projects</Typography>
-            <Divider sx={{ mt: 1 }} />
-            <List sx={{ width: "100%" }} disablePadding>
-              {searchResults.map((project) => (
-                <ListItem key={project._id} sx={{ py: 1 }} disablePadding divider={true}>
-                  <ListItemButton 
-                  disableGutters 
+      </PageTitleWrapper>
+      <Dialog open={openAddToProjects} onClose={() => setOpenAddToProjects(false)}>
+        <DialogTitle>Add Devices To Project</DialogTitle>
+        <DialogContent>
+          <Stack direction="row" spacing={1} sx={{ mt: 1, mb: 2 }}>
+            <Button startIcon={<AddIcon />} variant="outlined" size="medium" sx={{ flex: 1 }}>New Project</Button>
+            <TextField
+              label="Search Projects"
+              variant="outlined"
+              fullWidth
+              sx={{ flex: 2 }}
+              size="small"
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+            />
+          </Stack>
+          <Typography variant="caption" fontWeight="700" sx={{ pl: 2 }}>{searchResults.length} projects</Typography>
+          <Divider sx={{ mt: 1 }} />
+          <List sx={{ width: "100%" }} disablePadding>
+            {searchResults.map((project) => (
+              <ListItem key={project._id} sx={{ py: 1 }} disablePadding divider={true}>
+                <ListItemButton
+                  disableGutters
                   sx={{ px: 2 }}
                   onClick={() => handleAddDevicesToProject(project._id)}
-                  >
-                    <ListItemText primary={project.name} secondary={project.description} />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenAddToProjects(false)} color="secondary">Cancel</Button>
-          </DialogActions>
-        </Dialog>
-      </PageTitleWrapper>
+                >
+                  <ListItemText primary={project.name} secondary={project.description} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenAddToProjects(false)} color="secondary">Cancel</Button>
+        </DialogActions>
+      </Dialog>
       <Container>
         <Paper>
           <DataGrid

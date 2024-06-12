@@ -5,7 +5,7 @@ const themeColors = {
   primary: '#3267A6',
   secondary: '#5C7698',
   success: '#2A8C2A',
-  warning: '#FFA319',
+  warning: '#D48100',
   error: '#D73B5A',
   info: '#33C2FF',
   black: '#223354',

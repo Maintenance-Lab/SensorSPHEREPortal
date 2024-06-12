@@ -27,6 +27,8 @@ import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQu
 import FaceIcon from '@mui/icons-material/Face';
 import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import { ArchiveOutlined, DeleteOutline, Inventory, UnarchiveOutlined } from '@mui/icons-material';
+import { is } from 'date-fns/locale';
 
 const DeviceStatus = ({ status, project }) => {
   let statusColor = '';
@@ -144,7 +146,7 @@ const sessionRows: GridRowsProp = sessionsPlaceholder.map((session) => ({
   status: session.status
 }));
 
-const updateProject = async (projectId, name, description) => {
+const updateProject = async (projectId, name: string, description: string, archived: boolean) => {
   const res = await fetch('/api/projects/update/' + projectId, {
     method: 'PUT',
     headers: {
@@ -153,7 +155,8 @@ const updateProject = async (projectId, name, description) => {
     },
     body: JSON.stringify({
       name: name,
-      description: description
+      description: description,
+      archived: archived
     })
   });
 
@@ -183,6 +186,24 @@ const addCollaborator = async (projectId, email) => {
 
   return res.json();
 };
+
+const deleteProject = async (projectId) => {
+  const res = await fetch('/api/projects/delete', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({
+      ids: [projectId]
+    })
+  });
+
+  if (!res.ok) {
+    console.error('Failed to delete project');
+    return;
+  }
+}
 
 function CustomProjectDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds }) {
   const activeSelection = selectedDeviceIds.length > 0;
@@ -225,15 +246,10 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds }) {
 }
 
 const ProjectDetail = () => {
-  const projectPlaceholder = {
-    name: 'Building Temperature Research',
-    description: 'Researching the temperature of buildings on campus. Part of thesis project.',
-    status: 'collecting'
-  };
-
   const { projectId } = useParams();
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
+  const [isArchived, setIsArchived] = useState(false);
   const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
   const [selectedSessionIds, setSelectedSessionIds] = useState([]);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -261,14 +277,24 @@ const ProjectDetail = () => {
     return data;
   };
 
-  const handleNameChange = (event) => {
-    updateProject(projectId, event.target.value, projectDescription);
+  const handleNameChange = async (event) => {
+    updateProject(projectId, event.target.value, projectDescription, isArchived);
     setIsEditingName(false);
   };
 
-  const handleDescriptionChange = (event) => {
-    updateProject(projectId, projectName, event.target.value);
+  const handleDescriptionChange = async (event) => {
+    updateProject(projectId, projectName, event.target.value, isArchived);
     setIsEditingDescription(false);
+  };
+
+  const handleArchiveProject = async (archived: boolean) => {
+    updateProject(projectId, projectName, projectDescription, archived);
+    setIsArchived(archived);
+  };
+
+  const handleDeleteProject = async () => {
+    deleteProject(projectId);
+    window.location.href = '/projects';
   };
 
   const handleAddCollaborator = async () => {
@@ -290,6 +316,7 @@ const ProjectDetail = () => {
     fetchProject().then((project) => {
       setProjectName(project.name);
       setProjectDescription(project.description);
+      setIsArchived(project.archived);
     });
   }, []);
 
@@ -366,21 +393,64 @@ const ProjectDetail = () => {
               {projectDescription ? projectDescription : 'Add description...'}
             </Typography>
           )}
+          {isArchived &&
+            <Stack direction="row" spacing={2} sx={{
+              backgroundColor: "warning.main",
+              color: "white",
+              borderRadius: "8px",
+              padding: 1,
+              pl: 2,
+              alignItems: "center"
+            }}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Inventory />
+                <Typography variant="body1" fontWeight="bold">
+                  Archived
+                </Typography>
+              </Stack>
+            </Stack>
+          }
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" color="primary" size="medium">
-              Archive
-            </Button>
-            <Button variant="outlined" color="primary" size="medium">
-              Delete
-            </Button>
+            {!isArchived &&
+              <Button
+                variant="outlined"
+                startIcon={<GroupAddOutlinedIcon />}
+                onClick={() => setOpen(true)}
+              >
+                Add Collaborator
+              </Button>
+            }
+            {!isArchived &&
+              <Button
+                variant="outlined"
+                startIcon={<ArchiveOutlined />}
+                onClick={() => handleArchiveProject(true)}
+              >
+                Archive
+              </Button>
+            }
+            {isArchived &&
+              <Button
+                variant="outlined"
+                startIcon={<UnarchiveOutlined />}
+                onClick={() => handleArchiveProject(false)}
+              >
+                Unarchive
+              </Button>
+            }
             <Button
               variant="outlined"
-              color="primary"
-              size="medium"
-              startIcon={<GroupAddOutlinedIcon />}
-              onClick={() => setOpen(true)}
+              startIcon={<DeleteOutline />}
+              sx={{
+                '&:hover': {
+                  color: 'white',
+                  borderColor: 'error.main',
+                  backgroundColor: 'error.main'
+                }
+              }}
+              onClick={handleDeleteProject}
             >
-              Add Collaborator
+              Delete
             </Button>
           </Stack>
         </Stack>

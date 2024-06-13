@@ -1,0 +1,51 @@
+import { Router } from "express";
+import { IS_PROD } from "../../config.js";
+import {
+    getSessionById,
+    createSession,
+    updateSession,
+    getSessionsByProject,
+    getActiveSessionsByProject,
+    getArchivedSessionsByProject,
+} from "../../services/Sessions.js";
+
+const router = Router();
+
+router.get("/id/:id", async (req, res) => {
+    const { id } = req.params;
+    const doc = await getSessionById(id);
+    return res.json(doc);
+});
+
+router.get("/project/:projectId", async (req, res) => {
+    const { projectId } = req.params;
+    const doc = await getSessionsByProject(projectId);
+    return res.json(doc);
+});
+
+router.get("/project/active/:projectId", async (req, res) => {
+    const { projectId } = req.params;
+    const doc = await getActiveSessionsByProject(projectId);
+    return res.json(doc);
+});
+
+router.get("/project/archived/:projectId", async (req, res) => {
+    const { projectId } = req.params;
+    const doc = await getArchivedSessionsByProject(projectId);
+    return res.json(doc);
+});
+
+router.post("/create", async (req, res) => {
+    const { body } = req;
+    const doc = await createSession(body);
+    return res.json(doc);
+});
+
+router.post("/update/:id", async (req, res) => {
+    const { id } = req.params;
+    const { body } = req;
+    const doc = await updateSession(id, body);
+    return res.json(doc);
+});
+
+export default router;

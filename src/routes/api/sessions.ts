@@ -7,6 +7,7 @@ import {
     getSessionsByProject,
     getActiveSessionsByProject,
     getArchivedSessionsByProject,
+    deleteSession
 } from "../../services/Sessions.js";
 
 const router = Router();
@@ -45,6 +46,12 @@ router.post("/update/:id", async (req, res) => {
     const { id } = req.params;
     const { body } = req;
     const doc = await updateSession(id, body);
+    return res.json(doc);
+});
+
+router.delete("/delete/:id", async (req, res) => {
+    const { id } = req.params;
+    const doc = await deleteSession(id);
     return res.json(doc);
 });
 

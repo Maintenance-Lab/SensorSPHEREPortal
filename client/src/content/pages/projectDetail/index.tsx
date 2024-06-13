@@ -175,36 +175,11 @@ const deviceColumns: GridColDef[] = [
   },
 ];
 
-const sessionsPlaceholder = [
-  {
-    id: 1,
-    name: 'Session #1',
-    status: 'takenFinished'
-  },
-  {
-    id: 2,
-    name: 'Session #2',
-    status: 'takenCollecting'
-  }
-];
-
 const sessionColumns: GridColDef[] = [
-  { field: 'id', headerName: '#' },
-  { field: 'name', headerName: 'Name' },
-  {
-    field: 'status',
-    headerName: 'Status',
-    renderCell: (params) => (
-      <DeviceStatus status={params.value} project="" />
-    )
-  }
+  { field: 'name', headerName: 'Name', flex: 1 },
+  { field: 'status', headerName: 'Status', flex: 1 },
+  { field: 'lastActive', headerName: 'Last Active', flex: 1 }
 ];
-
-const sessionRows: GridRowsProp = sessionsPlaceholder.map((session) => ({
-  id: session.id,
-  name: session.name,
-  status: session.status
-}));
 
 const addDevicesColumns: GridColDef[] = [
   { field: 'type', headerName: 'Type', flex: 2 },
@@ -308,6 +283,60 @@ const deleteProject = async (projectId) => {
   }
 }
 
+const createSession = async (projectId, name, description, sensorUnits) => {
+  const res = await fetch('/api/sessions/create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({
+      project: projectId,
+      name: name,
+      description: description,
+      sensorUnits: sensorUnits
+    })
+  });
+
+  if (!res.ok) {
+    console.error('Failed to create session');
+    return;
+  }
+};
+
+const updateSession = async (sessionId, archived) => {
+  const res = await fetch('/api/sessions/update/' + sessionId, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({
+      archived: archived
+    })
+  });
+
+  if (!res.ok) {
+    console.error('Failed to update session');
+    return;
+  }
+};
+
+const deleteSession = async (sessionId) => {
+  const res = await fetch('/api/sessions/delete/' + sessionId, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
+
+  if (!res.ok) {
+    console.error('Failed to delete session');
+    return;
+  }
+};
+
 function CustomProjectSensorUnitsToolbar({ selectedDeviceIds, projectId, projectName, projectDescription, projectSensorUnits, isArchived, fetchProject, handleOpenAddDevices }) {
   const activeSelection = selectedDeviceIds.length > 0;
 
@@ -347,8 +376,42 @@ function CustomProjectSensorUnitsToolbar({ selectedDeviceIds, projectId, project
   );
 };
 
-function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionIds }) {
+function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, sensorUnits, projectId, fetchProject }) {
   const activeSelection = selectedSessionIds.length > 0;
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+
+  const handleSubmitCreateSession = async () => {
+    try {
+      await createSession(projectId, name, description, sensorUnits);
+      setOpen(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleArchiveSessions = async () => {
+    try {
+      for (const sessionId of selectedSessionIds) {
+        await updateSession(sessionId, true);
+      }
+      fetchProject();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleDeleteSessions = async () => {
+    try {
+      for (const sessionId of selectedSessionIds) {
+        await deleteSession(sessionId);
+      }
+      fetchProject();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <GridToolbarContainer sx={{ padding: 1 }}>
@@ -356,13 +419,58 @@ function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionId
         <Button
           variant="contained"
           color="primary"
-          // onClick={handleCreateSession}
+          onClick={() => setOpen(true)}
           startIcon={<AddIcon />}
         >
           Create New Session...
         </Button>
         <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
+        <Button
+          variant="outlined"
+          size="medium"
+          startIcon={<ArchiveOutlined />}
+          disabled={!activeSelection}
+          onClick={handleArchiveSessions}
+        >
+          Archive
+        </Button>
+        <Button
+          variant="outlined"
+          size="medium"
+          color="error"
+          startIcon={<DeleteOutline />}
+          disabled={!activeSelection}
+          onClick={handleDeleteSessions}
+        >
+          Delete
+        </Button>
       </Stack>
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>Create New Session</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Session Name"
+            fullWidth
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label="Session Description"
+            fullWidth
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={handleSubmitCreateSession} variant="contained" color="primary">
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
     </GridToolbarContainer>
   );
 }
@@ -382,6 +490,7 @@ const ProjectDetail = () => {
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [projectSensorUnits, setProjectSensorUnits] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [isArchived, setIsArchived] = useState(false);
   const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
   const [selectedSessionIds, setSelectedSessionIds] = useState([]);
@@ -404,6 +513,17 @@ const ProjectDetail = () => {
     sensors: devicesPlaceholder[macAddress].sensors,
   }));
 
+  const sessionRows: GridRowsProp = sessions.map((session) => ({
+    id: session._id,
+    name: session.name,
+    description: session.description,
+    created: session.createdAt,
+    sensorUnits: session.sensorUnits,
+    lastActive: session.lastActive,
+    archived: session.archived,
+    status: session.status,
+  }));
+
   const fetchProject = async () => {
     const res = await fetch('/api/projects/id/' + projectId, {
       method: 'GET',
@@ -417,12 +537,29 @@ const ProjectDetail = () => {
       console.error('Failed to fetch data');
       return [];
     }
+
     const data = await res.json();
     setProjectName(data.name);
     setProjectDescription(data.description);
-    // console.log(data);
     setProjectSensorUnits(data.sensorUnits);
     setIsArchived(data.archived);
+
+    const resSessions = await fetch('/api/sessions/project/' + projectId, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      }
+    });
+
+    if (!resSessions.ok) {
+      console.error('Failed to fetch data');
+      return [];
+    }
+
+    const dataSessions = await resSessions.json();
+    setSessions(dataSessions);
+    console.log(dataSessions);
   };
 
   const handleNameChange = async (event) => {
@@ -647,8 +784,6 @@ const ProjectDetail = () => {
               columns={deviceColumns}
               initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
               density="compact"
-              autosizeOnMount
-              autosizeOptions={{ includeOutliers: true }}
               onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
               checkboxSelection
               slots={{
@@ -682,14 +817,21 @@ const ProjectDetail = () => {
                 },
               }}
               density="compact"
-              autosizeOnMount
-              autosizeOptions={{ includeOutliers: true }}
+              checkboxSelection
               onRowSelectionModelChange={(newSelection) => setSelectedSessionIds(newSelection)}
               slots={{
                 toolbar: () => <CustomProjectSessionsToolbar
                   selectedSessionIds={selectedSessionIds}
                   setSelectedSessionIds={setSelectedSessionIds}
+                  sensorUnits={projectSensorUnits}
+                  projectId={projectId}
+                  fetchProject={fetchProject}
                 />,
+              }}
+              sx={{
+                "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus": {
+                  outline: "none",
+                },
               }}
             />
           </Paper>

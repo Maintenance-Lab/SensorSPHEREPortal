@@ -12,6 +12,7 @@ export interface SessionModel {
   sensorUnits?: string[];
   lastActive?: Date;
   archived?: boolean;
+  status: "inactive" | "active" | "paused" | "completed" | "error" | "scheduled";
 }
 
 const SessionSchema = new mongoose.Schema({
@@ -23,6 +24,11 @@ const SessionSchema = new mongoose.Schema({
   sensorUnits: { type: [String], default: [] },
   lastActive: { type: Date, default: Date.now },
   archived: { type: Boolean, default: false },
+  status: {
+    type: String,
+    enum: ["inactive", "active", "paused", "completed", "error", "scheduled"],
+    default: "inactive"
+  },
 });
 
 export default mongoose.models.Session || mongoose.model("Session", SessionSchema);

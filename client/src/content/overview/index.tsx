@@ -23,7 +23,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     display: 'flex',
     justifyContent: 'space-around',
     width: '50%',
-    marginTop: theme.spacing(1)
+    marginTop: theme.spacing(5)
   },
   actionButton: {
     width: '40%',
@@ -67,14 +67,25 @@ function Overview() {
       </Helmet>
       <Container maxWidth="lg" style={{ marginTop: 100 }} className="test">
         <Card className={classes.card} style={{ padding: 50 }}>
-          <img src="icon.png" className={classes.logo}></img>
-          <Typography variant="h1" component="h1" gutterBottom>
-            SensorSphere Portal
-          </Typography>
-          <Typography variant="subtitle1" gutterBottom>
-            Welcome to SensorSphere, your gateway to managing and observing your
-            sensory data.
-          </Typography>
+          <Box display="flex" alignItems="center">
+            <img
+              src="icon.png"
+              className={classes.logo}
+              style={{
+                borderRadius: '50%',
+                width: '200px',
+                marginRight: '50px',
+              }}
+            />
+            <Box>
+              <Typography variant="h1" component="h1" gutterBottom>
+                SensorSphere Portal
+              </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                Welcome to SensorSphere, your gateway to manage your projects
+              </Typography>
+            </Box>
+          </Box>
           <Box className={classes.buttonBox}>
             {loginButton}
             <Button

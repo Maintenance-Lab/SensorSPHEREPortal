@@ -42,7 +42,6 @@ const DeviceDetail = Loader(lazy(() => import('src/content/pages/deviceDetail/')
 
 // Sessions
 
-const Sessions = Loader(lazy(() => import('src/content/pages/sessions/')));
 const SessionDetail = Loader(lazy(() => import('src/content/pages/sessionDetail/')));
 
 // Account
@@ -218,19 +217,7 @@ const routes: RouteObject[] = [
     element: <SidebarLayout />,
     children: [
       {
-        path: '',
-        element: <Navigate to="overview" replace />
-      },
-      {
-        path: 'overview',
-        element: (
-          <ProtectedRoute>
-            <Sessions />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: 'detail',
+        path: 'detail/:sessionId',
         element: (
           <ProtectedRoute>
             <SessionDetail />

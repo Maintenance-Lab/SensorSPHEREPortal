@@ -60,45 +60,8 @@ import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import { DesignServicesOutlined } from '@mui/icons-material';
-
-// const DeviceStatus = ({ status, project }) => {
-//   let statusColor = '';
-//   let statusLabel = '';
-
-//   switch (status) {
-//     case 'takenFinished':
-//       statusColor = 'success.main';
-//       statusLabel = 'Finished Collecting Data';
-//       break;
-//     case 'takenCollecting':
-//       statusColor = 'primary.main';
-//       statusLabel = 'Collecting Data';
-//       break;
-//     case 'takenInactive':
-//       statusColor = '';
-//       statusLabel = 'Inactive';
-//       break;
-//     case 'unavailable':
-//       statusColor = 'gray';
-//       statusLabel = 'Unavailable';
-//       break;
-//     default:
-//       statusColor = '';
-//       statusLabel = 'Unknown';
-//   }
-
-//   return (
-//     <Stack spacing={1} sx={{ color: statusColor }}>
-//       <Stack direction="row" spacing={1} alignItems="center">
-//         {status === 'takenFinished' && (<CheckCircleIcon />)}
-//         {status === 'takenCollecting' && (<MoreHorizIcon />)}
-//         <Typography variant="inherit" sx={{ fontWeight: 600 }}>
-//           {statusLabel}
-//         </Typography>
-//       </Stack>
-//     </Stack>
-//   );
-// };
+import { useParams } from 'react-router-dom';
+import { set } from 'date-fns';
 
 const devicesPlaceholder = {
   id: 3,
@@ -109,81 +72,105 @@ const devicesPlaceholder = {
   status: 'collecting'
 }
 
-// const deviceColumns: GridColDef[] = [
-//   { field: 'id', headerName: '#' },
-//   { field: 'name', headerName: 'Name' },
-//   { field: 'type', headerName: 'Type' },
-//   { field: 'macAddress', headerName: 'MAC Address' },
-//   {
-//     field: 'battery', headerName: 'Battery', renderCell: (params) => (
-//       <Stack direction="row" alignItems="center">
-//         <BatteryFullIcon />
-//         <Typography variant="inherit">{params.value}%</Typography>
-//       </Stack>
-//     )
-//   },
-//   {
-//     field: 'status',
-//     headerName: 'Status',
-//     renderCell: (params) => (
-//       <DeviceStatus status={params.value} project="" />
-//     )
-//   }
-// ];
+const fetchProject = async (projectId) => {
+  const res = await fetch('/api/projects/id/' + projectId, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
 
-// const deviceRows: GridRowsProp = devicesPlaceholder.map((device) => ({
-//   id: device.id,
-//   name: device.name,
-//   type: device.type,
-//   macAddress: device.macAddress,
-//   battery: device.battery,
-//   project: device.project,
-//   session: device.session,
-//   status: device.status
-// }));
+  if (!res.ok) {
+    console.error('Failed to fetch data');
+    return [];
+  }
+  const data = await res.json();
+  return data;
+};
 
-// const sessionsPlaceholder = [
-//   {
-//     id: 1,
-//     name: 'Session #1',
-//     status: 'takenFinished'
-//   },
-//   {
-//     id: 2,
-//     name: 'Session #2',
-//     status: 'takenCollecting'
-//   }
-// ];
+const updateSession = async (sessionId, name, description, archived, sensorUnits) => {
+  const res = await fetch('/api/sessions/update/' + sessionId, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({ 
+      name: name, 
+      description: description, 
+      archived: archived, 
+      sensorUnits: sensorUnits })
+  });
 
-// const sessionColumns: GridColDef[] = [
-//   { field: 'id', headerName: '#' },
-//   { field: 'name', headerName: 'Name' },
-//   {
-//     field: 'status',
-//     headerName: 'Status',
-//     renderCell: (params) => (
-//       <DeviceStatus status={params.value} project="" />
-//     )
-//   }
-// ];
-
-// const sessionRows: GridRowsProp = sessionsPlaceholder.map((session) => ({
-//   id: session.id,
-//   name: session.name,
-//   status: session.status
-// }));
+  if (!res.ok) {
+    console.error('Failed to update session');
+    return;
+  }
+  const data = await res.json();
+  return data;
+};
 
 const SessionDetail = () => {
+  const { sessionId } = useParams();
+  const [sessionName, setSessionName] = useState('');
+  const [sessionDescription, setSessionDescription] = useState('');
+  const [projectId, setProjectId] = useState('');
+  const [projectName, setProjectName] = useState('');
+  const [isArchived, setIsArchived] = useState(false);
+  const [sessionSensorUnits, setSessionSensorUnits] = useState([]);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
 
-  // Placeholder data for session
-  const sessionPlaceholder = {
-    name: 'Session #2',
-    description: 'First collection with ENV3.',
-    status: 'collecting'
+  const fetchSession = async () => {
+    const response = await fetch(`/api/sessions/id/${sessionId}`, {
+      headers: { credentials: 'include' }
+    });
+
+    if (!response.ok) {
+      console.error('Failed to fetch data');
+      return [];
+    }
+
+    const data = await response.json();
+    setSessionName(data.name);
+    setSessionDescription(data.description);
+    setIsArchived(data.archived);
+    setSessionSensorUnits(data.sensorUnits);
+    setProjectId(data.project);
+    
+    const projectResponse = await fetch('/api/projects/id/' + data.project, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      }
+    });
+
+    if (!projectResponse.ok) {
+      console.error('Failed to fetch data');
+      return [];
+    }
+
+    const projectData = await projectResponse.json();
+    setProjectName(projectData.name);
   }
 
-  const [sessionName, setSessionName] = useState(sessionPlaceholder.name);
-  const [isEditingName, setIsEditingName] = useState(false);
+  const handleNameChange = async (event) => {
+    await updateSession(sessionId, event.target.value, sessionDescription, isArchived, sessionSensorUnits);
+    setIsEditingName(false);
+    fetchSession();
+  };
+
+  const handleDescriptionChange = async (event) => {
+    await updateSession(sessionId, sessionName, event.target.value, isArchived, sessionSensorUnits);
+    setIsEditingDescription(false);
+    fetchSession();
+  };
+
+  useEffect(() => {
+    fetchSession();
+  }, []);
 
   return (
     <div>
@@ -192,44 +179,21 @@ const SessionDetail = () => {
       </Helmet>
       <PageTitleWrapper>
         <Stack spacing={1} >
-          {isEditingName ? (
+        {isEditingName ? (
             <Box>
               <TextField
-                value={sessionName}
+                defaultValue={sessionName}
                 variant="outlined"
-                color="primary"
-                focused
                 size="small"
                 autoFocus
-                onChange={(event) => setSessionName(event.target.value)}
-                onBlur={() => setIsEditingName(false)}
-                sx={{
-                  marginTop: -1,
-                  marginLeft: -1,
-                  width: '100%'
-                }}
-                inputProps={{
-                  maxLength: 50,
-                  sx: {
-                    fontSize: '2rem',
-                    fontWeight: 700,
-                    lineHeight: 1.167
-                  },
-                  onFocus: (event) => {
-                    event.target.select();
-                  }
-                }}
+                onBlur={handleNameChange}
+                onFocus={(event) => { event.target.select(); }}
+                sx={{ marginTop: -1, marginLeft: -1, width: '100%' }}
+                inputProps={{ sx: { fontSize: '2rem', fontWeight: 700, lineHeight: 1.167 }, }}
                 onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    setIsEditingName(false);
-                  }
+                  if (event.key === 'Enter') { handleNameChange(event); }
                 }}
               />
-              <Stack direction="row" spacing={1} sx={{ paddingTop: 1 }}>
-                <Button variant="contained" color="primary" size="small" onClick={() => setIsEditingName(false)}>
-                  Done
-                </Button>
-              </Stack>
             </Box>
           ) : (
             <Typography
@@ -243,21 +207,52 @@ const SessionDetail = () => {
                   padding: 1,
                   margin: -1
                 }
-              }}>
+              }}
+            >
               {sessionName}
             </Typography>
           )}
           <Stack direction="row" spacing={1}>
-            <Link color="primary" underline="hover" variant="body1" href="../projects/detail">
+            <Link color="primary" underline="hover" variant="body1" href={"../../projects/detail/" + projectId}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <DesignServicesOutlined fontSize="small" />
-                <Typography variant="body1">Building Temperature Research</Typography>
+                <Typography variant="body1">{projectName}</Typography>
               </Stack>
             </Link>
           </Stack>
-          <Typography variant="body1">
-            {sessionPlaceholder.description}
-          </Typography>
+          {isEditingDescription ? (
+            <Box>
+              <TextField
+                defaultValue={sessionDescription}
+                variant="outlined"
+                size="small"
+                autoFocus
+                onBlur={handleDescriptionChange}
+                onFocus={(event) => { event.target.select(); }}
+                sx={{ marginLeft: -1, width: '100%' }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') { handleDescriptionChange(event); }
+                }}
+              />
+            </Box>
+          ) : (
+            <Typography
+              variant="body1"
+              onClick={() => setIsEditingDescription(true)}
+              sx={{
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                  outline: '2px solid rgba(0, 0, 0, 0.2)',
+                  borderRadius: '8px',
+                  paddingX: 1,
+                  marginX: -1,
+                },
+                color: sessionDescription ? 'inherit' : 'gray'
+              }}
+            >
+              {sessionDescription ? sessionDescription : 'Add description...'}
+            </Typography>
+          )}
           <Stack direction="row" spacing={1}>
             <Button variant="outlined" color="primary" startIcon={<DeleteOutlinedIcon />} disabled>
               Delete Session...

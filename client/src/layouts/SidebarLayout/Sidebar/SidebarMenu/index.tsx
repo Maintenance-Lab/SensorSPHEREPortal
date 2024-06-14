@@ -305,42 +305,6 @@ function SidebarMenu() {
           </SubMenuWrapper>
         </List>
 
-        <List
-          component="div"
-          subheader={
-            <ListSubheader component="div" disableSticky>
-              Sessions
-            </ListSubheader>
-          }
-        >
-          <SubMenuWrapper>
-            <List component="div">
-              <ListItem component="div">
-                <Button
-                  disableRipple
-                  component={RouterLink}
-                  onClick={closeSidebar}
-                  to="/sessions/overview"
-                  startIcon={<LibraryBooksIcon />}
-                >
-                  All Sessions
-                </Button>
-              </ListItem>
-              <ListItem component="div">
-                <Button
-                  disableRipple
-                  component={RouterLink}
-                  onClick={closeSidebar}
-                  to="/sessions/detail"
-                  startIcon={<LibraryBooksIcon />}
-                >
-                  Session Detail Page
-                </Button>
-              </ListItem>
-            </List>
-          </SubMenuWrapper>
-        </List>
-
         {/* Original samples we can use and look at */}
 
         <List

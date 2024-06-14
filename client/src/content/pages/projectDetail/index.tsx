@@ -176,7 +176,11 @@ const deviceColumns: GridColDef[] = [
 ];
 
 const sessionColumns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', flex: 1 },
+  {
+    field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
+      <Link href={`/sessions/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
+    )
+  },
   { field: 'status', headerName: 'Status', flex: 1 },
   { field: 'lastActive', headerName: 'Last Active', flex: 1 }
 ];
@@ -563,13 +567,15 @@ const ProjectDetail = () => {
   };
 
   const handleNameChange = async (event) => {
-    updateProject(projectId, event.target.value, projectDescription, isArchived, projectSensorUnits);
+    await updateProject(projectId, event.target.value, projectDescription, isArchived, projectSensorUnits);
     setIsEditingName(false);
+    fetchProject();
   };
 
   const handleDescriptionChange = async (event) => {
-    updateProject(projectId, projectName, event.target.value, isArchived, projectSensorUnits);
+    await updateProject(projectId, projectName, event.target.value, isArchived, projectSensorUnits);
     setIsEditingDescription(false);
+    fetchProject();
   };
 
   const handleArchiveProject = async (archived: boolean) => {
@@ -606,7 +612,6 @@ const ProjectDetail = () => {
     } catch (error) {
       console.error(error);
     }
-
   }
 
   useEffect(() => {

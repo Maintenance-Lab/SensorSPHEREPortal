@@ -42,7 +42,7 @@ router.post("/create", async (req, res) => {
     return res.json(doc);
 });
 
-router.post("/update/:id", async (req, res) => {
+router.put("/update/:id", async (req, res) => {
     const { id } = req.params;
     const { body } = req;
     const doc = await updateSession(id, body);

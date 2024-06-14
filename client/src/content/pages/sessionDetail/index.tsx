@@ -1,76 +1,149 @@
 import { useState, useEffect } from 'react';
 import {
-  AppBar,
-  Toolbar,
   Button,
   TextField,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Table,
   Link,
-  TableBody,
+  Typography,
+  Container,
+  Box,
+  Chip,
+  Paper,
   List,
   ListItem,
-  ListItemIcon,
-  TableCell,
-  Card,
-  CardContent,
+  ListItemButton,
   Checkbox,
-  Collapse,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Switch,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Typography,
-  Snackbar,
-  Container,
-  Modal,
-  Box,
-  Grid,
-  Autocomplete,
-  styled,
-  Popper,
-  Divider
+  Switch
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
-import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
-import PlaylistAddOutlinedIcon from '@mui/icons-material/PlaylistAddOutlined';
-import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
-import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
-import FaceIcon from '@mui/icons-material/Face';
-import { ArchiveOutlined, DeleteOutline, Face, Inventory, UnarchiveOutlined } from '@mui/icons-material';
-import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import Accordion from '@mui/material/Accordion';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import AccordionSummary from '@mui/material/AccordionSummary';
+import { ArchiveOutlined, DeleteOutline, Devices, Inventory, UnarchiveOutlined } from '@mui/icons-material';
 import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
-import { set } from 'date-fns';
 
 const devicesPlaceholder = {
-  id: 3,
-  name: 'Device 3',
-  type: 'M5Stack Core2',
-  macAddress: '00:00:00:00:00:03',
-  battery: '100',
-  status: 'collecting'
-}
+  '00:00:00:00:00:00': {
+    id: 0,
+    type: 'This Device',
+    macAddress: '00:00:00:00:00:00',
+    battery: '',
+    project: '',
+    sensors: [
+      { id: 1, name: 'microphone' },
+      { id: 2, name: 'camera' }
+    ]
+  },
+  'e4:72:05:0a:fc:66': {
+    id: 1,
+    type: 'M5Stack Core2',
+    macAddress: 'e4:72:05:0a:fc:66',
+    battery: '93',
+    project: '',
+    sensors: [
+      { id: 1, name: 'temperature' },
+      { id: 2, name: 'humidity' }
+    ]
+  },
+  '94:b7:ab:57:d4:75': {
+    id: 2,
+    type: 'M5Stack Core2',
+    macAddress: '94:b7:ab:57:d4:75',
+    battery: '91',
+    project: 'Project 1',
+    sensors: [
+      { id: 1, name: 'gyroX' },
+      { id: 2, name: 'gyroY' },
+      { id: 3, name: 'gyroZ' }
+    ]
+  },
+  '5f:ec:07:db:01:6e': {
+    id: 3,
+    type: 'M5Stack Core2',
+    macAddress: '5f:ec:07:db:01:6e',
+    battery: '',
+    project: 'Building Temperature Research',
+    sensors: []
+  },
+  '1e:e7:31:2e:df:7a': {
+    id: 4,
+    type: 'M5Stack Core2',
+    macAddress: '1e:e7:31:2e:df:7a',
+    battery: '',
+    project: 'Project 3',
+    sensors: []
+  },
+  '95:8e:53:46:7e:6e': {
+    id: 5,
+    type: 'M5Stack Core2',
+    macAddress: '95:8e:53:46:7e:6e',
+    battery: '',
+    project: '',
+    sensors: []
+  }
+};
+
+const deviceColumns: GridColDef[] = [
+  // { field: 'id', headerName: '#' },
+  {
+    field: 'type', headerName: 'Type', flex: 2, renderCell: (params) => (
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ py: 1 }}>
+        {params.value === 'This Device' && (
+          <Devices />
+        )}
+        <Typography variant="inherit">{params.value}</Typography>
+      </Stack>
+    )
+  },
+  {
+    field: 'macAddress', headerName: 'MAC Address', flex: 2, renderCell: (params) => (
+      <Typography variant="inherit" sx={{ py: 1 }}>{params.value}</Typography>
+    )
+  },
+  {
+    field: 'battery', headerName: 'Battery', flex: 2, renderCell: (params) => (
+      <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500', py: 1 } : { color: 'gray', py: 1 }}>
+        <BatteryFullIcon fontSize="small" />
+        {params.value ? (
+          <Typography variant="inherit">{params.value}%</Typography>
+        ) : (
+          <Typography variant="inherit">?</Typography>
+        )}
+      </Stack>
+    )
+  },
+  {
+    field: 'sensors',
+    headerName: 'Sensors',
+    flex: 6,
+    renderCell: (params) => (
+      <Box alignItems="center" sx={{ height: "100%" }}>
+        <List disablePadding sx={{ py: 0.5 }}>
+          {params.value.map((sensor: { id: number, name: string }) => (
+            <ListItem key={sensor.id} disableGutters disablePadding sx={{ py: 0.5 }}>
+              {/* <ListItemButton disableGutters sx={{ p: 0 }}> */}
+                {/* <Switch
+                  edge="start"
+                  checked=
+                  disableRipple
+                /> */}
+                <Chip label={sensor.name} size="small" />
+              {/* </ListItemButton> */}
+            </ListItem>
+          ))}
+        </List>
+        {
+          params.value.length === 0 && (
+            <Typography variant="inherit" color="gray">
+              No sensors found
+            </Typography>
+          )
+        }
+      </Box >
+    )
+  },
+];
 
 const updateSession = async (sessionId, name, description, archived, sensorUnits) => {
   const res = await fetch('/api/sessions/update/' + sessionId, {
@@ -79,11 +152,12 @@ const updateSession = async (sessionId, name, description, archived, sensorUnits
       'Content-Type': 'application/json',
       credentials: 'include'
     },
-    body: JSON.stringify({ 
-      name: name, 
-      description: description, 
-      archived: archived, 
-      sensorUnits: sensorUnits })
+    body: JSON.stringify({
+      name: name,
+      description: description,
+      archived: archived,
+      sensorUnits: sensorUnits
+    })
   });
 
   if (!res.ok) {
@@ -122,6 +196,15 @@ const SessionDetail = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
 
+  const deviceRows: GridRowsProp = sessionSensorUnits.map((macAddress) => ({
+    id: macAddress,
+    type: devicesPlaceholder[macAddress].type,
+    macAddress: macAddress,
+    battery: devicesPlaceholder[macAddress].battery,
+    project: devicesPlaceholder[macAddress].project,
+    sensors: devicesPlaceholder[macAddress].sensors,
+  }));
+
   const fetchSession = async () => {
     const response = await fetch(`/api/sessions/id/${sessionId}`, {
       headers: { credentials: 'include' }
@@ -138,7 +221,7 @@ const SessionDetail = () => {
     setIsArchived(data.archived);
     setSessionSensorUnits(data.sensorUnits);
     setProjectId(data.project);
-    
+
     const projectResponse = await fetch('/api/projects/id/' + data.project, {
       method: 'GET',
       headers: {
@@ -189,7 +272,7 @@ const SessionDetail = () => {
       </Helmet>
       <PageTitleWrapper>
         <Stack spacing={1} >
-        {isEditingName ? (
+          {isEditingName ? (
             <Box>
               <TextField
                 defaultValue={sessionName}
@@ -281,7 +364,7 @@ const SessionDetail = () => {
             </Stack>
           }
           <Stack direction="row" spacing={1}>
-          {!isArchived &&
+            {!isArchived &&
               <Button
                 variant="outlined"
                 startIcon={<ArchiveOutlined />}
@@ -318,59 +401,27 @@ const SessionDetail = () => {
       </PageTitleWrapper>
       <Container>
         <Stack spacing={2}>
-          <Typography variant="h2">Sensors</Typography>
-          <List component={Paper} dense>
-            <ListItem >
-              <ListItemIcon>
-                <Checkbox />
-              </ListItemIcon>
-              <Stack spacing={1}>
-                <Typography variant="h5">{devicesPlaceholder.name}</Typography>
-                <Stack direction="row" spacing={1} divider={<Divider orientation="vertical" flexItem />} alignItems='center'>
-                  <Typography variant="body2">{devicesPlaceholder.macAddress}</Typography>
-                  <Stack direction="row" alignItems="center">
-                    <BatteryFullIcon fontSize='small' />
-                    <Typography variant="body2">{devicesPlaceholder.battery}%</Typography>
-                  </Stack>
-                </Stack>
-              </Stack>
-            </ListItem>
-            <Collapse in={true} timeout="auto" unmountOnExit sx={{ pl: 6 }}>
-              <List disablePadding dense>
-                <ListItem >
-                  <ListItemIcon >
-                    <Checkbox />
-                  </ListItemIcon>
-                  <Typography variant="h6">ENV3</Typography>
-                </ListItem>
-              </List>
-              <Collapse in={true} timeout="auto" unmountOnExit sx={{ pl: 6 }}>
-                <List disablePadding dense>
-                  <ListItem >
-                    <ListItemIcon>
-                      <Checkbox />
-                    </ListItemIcon>
-                    <Typography variant="body1">t</Typography>
-                  </ListItem>
-                  <ListItem >
-                    <ListItemIcon>
-                      <Checkbox />
-                    </ListItemIcon>
-                    <Typography variant="body1">hu</Typography>
-                  </ListItem>
-                  <ListItem >
-                    <ListItemIcon>
-                      <Checkbox />
-                    </ListItemIcon>
-                    <Typography variant="body1">te</Typography>
-                  </ListItem>
-                </List>
-              </Collapse>
-            </Collapse>
-          </List>
+          <Typography variant="h2">Devices and Sensors</Typography>
+          <Paper>
+            <DataGrid
+              rows={deviceRows}
+              columns={deviceColumns}
+              density='compact'
+              autoHeight
+              getRowHeight={() => 'auto'}
+              disableRowSelectionOnClick
+              sx={{
+                "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {
+                  outline: "none !important",
+                },
+                "& .MuiDataGrid-row:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0)",
+                }
+              }}
+            />
+          </Paper>
         </Stack>
       </Container>
-
     </div>
   );
 };

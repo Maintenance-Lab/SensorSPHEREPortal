@@ -52,7 +52,7 @@ import PlaylistAddOutlinedIcon from '@mui/icons-material/PlaylistAddOutlined';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import FaceIcon from '@mui/icons-material/Face';
-import { Face } from '@mui/icons-material';
+import { ArchiveOutlined, DeleteOutline, Face, Inventory, UnarchiveOutlined } from '@mui/icons-material';
 import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
@@ -72,23 +72,6 @@ const devicesPlaceholder = {
   status: 'collecting'
 }
 
-const fetchProject = async (projectId) => {
-  const res = await fetch('/api/projects/id/' + projectId, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      credentials: 'include'
-    }
-  });
-
-  if (!res.ok) {
-    console.error('Failed to fetch data');
-    return [];
-  }
-  const data = await res.json();
-  return data;
-};
-
 const updateSession = async (sessionId, name, description, archived, sensorUnits) => {
   const res = await fetch('/api/sessions/update/' + sessionId, {
     method: 'PUT',
@@ -105,6 +88,23 @@ const updateSession = async (sessionId, name, description, archived, sensorUnits
 
   if (!res.ok) {
     console.error('Failed to update session');
+    return;
+  }
+  const data = await res.json();
+  return data;
+};
+
+const deleteSession = async (sessionId) => {
+  const res = await fetch('/api/sessions/delete/' + sessionId, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
+
+  if (!res.ok) {
+    console.error('Failed to delete session');
     return;
   }
   const data = await res.json();
@@ -166,6 +166,16 @@ const SessionDetail = () => {
     await updateSession(sessionId, sessionName, event.target.value, isArchived, sessionSensorUnits);
     setIsEditingDescription(false);
     fetchSession();
+  };
+
+  const handleArchiveSession = async (archive) => {
+    await updateSession(sessionId, sessionName, sessionDescription, archive, sessionSensorUnits);
+    fetchSession();
+  };
+
+  const handleDeleteSession = async () => {
+    await deleteSession(sessionId);
+    window.location.href = '/projects/detail/' + projectId;
   };
 
   useEffect(() => {
@@ -253,9 +263,55 @@ const SessionDetail = () => {
               {sessionDescription ? sessionDescription : 'Add description...'}
             </Typography>
           )}
+          {isArchived &&
+            <Stack direction="row" spacing={2} sx={{
+              backgroundColor: "warning.main",
+              color: "white",
+              borderRadius: "8px",
+              padding: 1,
+              pl: 2,
+              alignItems: "center"
+            }}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Inventory />
+                <Typography variant="body1" fontWeight="bold">
+                  Archived
+                </Typography>
+              </Stack>
+            </Stack>
+          }
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" color="primary" startIcon={<DeleteOutlinedIcon />} disabled>
-              Delete Session...
+          {!isArchived &&
+              <Button
+                variant="outlined"
+                startIcon={<ArchiveOutlined />}
+                onClick={() => handleArchiveSession(true)}
+              >
+                Archive
+              </Button>
+            }
+            {isArchived &&
+              <Button
+                variant="outlined"
+                startIcon={<UnarchiveOutlined />}
+                onClick={() => handleArchiveSession(false)}
+              >
+                Unarchive
+              </Button>
+            }
+            <Button
+              variant="outlined"
+              startIcon={<DeleteOutline />}
+              sx={{
+                '&:hover': {
+                  color: 'white',
+                  borderColor: 'error.main',
+                  backgroundColor: 'error.main'
+                }
+              }}
+              onClick={handleDeleteSession}
+            >
+              Delete
             </Button>
           </Stack>
         </Stack>

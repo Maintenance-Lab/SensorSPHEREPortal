@@ -1,41 +1,15 @@
 import { useState, useEffect } from 'react';
 import {
-  AppBar,
-  Box,
   Container,
-  Toolbar,
-  Button,
-  TextField,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Switch,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Tab,
-  Tabs,
   Typography,
-  Snackbar,
   Stack,
-  Grid
+  Grid,
+  Chip
 } from '@mui/material';
-import { makeStyles } from '@mui/styles';
-import { Theme } from '@mui/material/styles';
 import { Helmet } from 'react-helmet-async';
-import MuiAlert from '@mui/material/Alert';
 import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
+import { Inventory, PushPin } from '@mui/icons-material';
 
 const Home = () => {
 
@@ -48,37 +22,25 @@ const Home = () => {
         <Typography variant="h1">Home</Typography>
       </PageTitleWrapper>
       <Container>
-          <Typography variant="h2">Pinned</Typography>
-          <Grid container spacing={2} sx={{ py: 2 }}>
-            <Grid item xs={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h4">Project</Typography>
-                  <Typography variant="h3">Name Of Project</Typography>
-                  <Typography variant="body1">Current Status</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h4">Device</Typography>
-                  <Typography variant="h3">Name Of Device</Typography>
-                  <Typography variant="body1">Current Status</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h4">Session</Typography>
-                  <Typography variant="h3">Name Of Session</Typography>
-                  <Typography variant="body1">Current Status</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
+        <Grid container spacing={2} >
+          <Grid item xs={6} lg={4}>
+            <Card sx={{ p: 2 }}>
+              <Stack direction="row" spacing={1} mb={1}>
+                <Chip label="Pinned" icon={<PushPin />} size="small" sx={{ px: 0.5 }} />
+                <Chip label="Archived" icon={<Inventory />} size="small" color="warning" sx={{ px: 0.5 }} />
+              </Stack>
+              <Typography variant="h6">Project Name</Typography>
+              <Typography variant="subtitle1">Description</Typography>
+              <Stack direction="row" spacing={1} mt={0.5}>
+                <Typography variant="body2" fontWeight="600">2</Typography>
+                <Typography variant="body2">Devices</Typography>
+              </Stack>
+            </Card>
           </Grid>
-          <Typography variant="h2">Latest Activity</Typography>
+        </Grid>
+        <Stack spacing={2} mt={4}>
+        <Typography variant="h2">Getting Started</Typography>
+        </Stack>
       </Container>
     </div>
   );

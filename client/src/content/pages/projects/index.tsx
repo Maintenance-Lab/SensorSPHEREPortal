@@ -27,6 +27,7 @@ import {
   GridToolbarContainer,
   GridToolbarQuickFilter
 } from '@mui/x-data-grid';
+import CreateProjectDialog from './CreateProjectDialog';
 
 const fetchActiveProjects = async () => {
   const res = await fetch('/api/projects/active', {
@@ -110,9 +111,6 @@ const archiveProjects = async (projectIds) => {
 
 function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetchData }) {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState(`Project ${new Date().toDateString()}`);
-  const [description, setDescription] = useState('');
-
   const activeSelection = selectedProjectIds.length > 0;
 
   const handleCreateProject = useCallback(async () => {
@@ -122,22 +120,6 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
       console.error(error);
     }
   }, []);
-
-  const handleSubmitCreateProject = useCallback(async () => {
-    try {
-      const project = await createProject(name, description);
-      if (!project) return; 
-
-      const { _id } = project;
-      // redirect to /projects/detail/:id
-      window.location.href = `/projects/detail/${_id}`;
-
-      // setOpen(false);
-      // fetchData();
-    } catch (error) {
-      console.error(error);
-    }
-  }, [name, description]);
 
   const handleDeleteProjects = useCallback(async () => {
     try {
@@ -189,32 +171,10 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
           Delete
         </Button>
       </Stack>
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Create New Project</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Project Name"
-            fullWidth
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <TextField
-            margin="dense"
-            label="Project Description"
-            fullWidth
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleSubmitCreateProject} variant="contained" color="primary">
-            Create
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <CreateProjectDialog
+        open={open}
+        setOpen={setOpen}
+      />
     </GridToolbarContainer>
   );
 };

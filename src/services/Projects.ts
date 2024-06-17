@@ -39,12 +39,27 @@ export const getActiveProjectsByOwner = async (accountId: string) => {
   });
 };
 
+export const getActiveProjectsByAccountId = async (accountId: string) => {
+  // get all accounts where you are the owner or in the collaborators list
+  return new Promise(async (resolve) => {
+    const doc = await Project.find({ $or: [{ owner: accountId }, { collaborators: accountId }], archived: false });
+    return resolve(doc);
+  });
+};
+
 export const getArchivedProjectsByOwner = async (accountId: string) => {
   return new Promise(async (resolve) => {
     const doc = await Project.find({ owner: accountId, archived: true });
     return resolve(doc);
   });
 };
+
+export const getArchivedProjectsByAccountId = async (accountId: string) => {
+  return new Promise(async (resolve) => {
+    const doc = await Project.find({ $or: [{ owner: accountId }, { collaborators: accountId }], archived: true });
+    return resolve(doc);
+  });
+}
 
 export const getProjectByName = async (name: string) => {
   return new Promise(async (resolve) => {

@@ -10,7 +10,9 @@ import {
   updateProject,
   getArchivedProjectsByOwner,
   getActiveProjectsByOwner,
-  deleteProjects
+  deleteProjects,
+  getActiveProjectsByAccountId,
+  getArchivedProjectsByAccountId,
 } from "../../services/Projects.js";
 import { getSession } from "../../utils.js";
 
@@ -31,7 +33,7 @@ router.get("/active", async (req, res) => {
   const { _id } = account;
   if (!_id) return res.status(400).json({ message: "Account ID is required" });
 
-  const doc = await getActiveProjectsByOwner(_id);
+  const doc = await getActiveProjectsByAccountId(_id);
   return res.json(doc);
 });
 
@@ -45,15 +47,44 @@ router.get("/archived", async (req, res) => {
   const { _id } = account;
   if (!_id) return res.status(400).json({ message: "Account ID is required" });
 
-  const doc = await getArchivedProjectsByOwner(_id);
+  const doc = await getArchivedProjectsByAccountId(_id);
   return res.json(doc);
 });
 
-router.get("/id/:id", async (req, res) => { // Fix auth
-  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-  const { id } = req.params;
-  const doc = await getProjectById(id, true);
-  return res.json(doc);
+router.get("/id/:id", async (req, res) => {
+  try {
+    const response = await getSession(req, res);
+    if (!response) return;
+
+    const { id } = req.params;
+    const doc: any = await getProjectById(id, true);
+    if (!doc) return res.status(404).json({ message: "Project not found" });
+
+    // check if user is owner or collaborator
+    const { account } = response;
+    if (!account) return res.status(401).json({ message: "Unauthorized" });
+    const { _id } = account;
+
+    let found = false;
+    if (doc.owner?._id.toString() === _id) {
+      found = true;
+    } else {
+      if (doc.collaborators) {
+        for (const collab of doc.collaborators) {
+          if (collab._id.toString() === _id) {
+            found = true;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!found) return res.status(401).json({ message: "Unauthorized" });
+    else return res.json(doc);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 // router.get("/account/:accountId", async (req, res) => {
@@ -93,7 +124,8 @@ router.post("/create", async (req, res) => {
 //   return res.json(results);
 // });
 
-router.put("/update/:id", async (req, res) => { // Fix auth
+router.put("/update/:id", async (req, res) => {
+  // Fix auth
   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
   const { id } = req.params;
   const { body } = req;
@@ -113,7 +145,8 @@ router.put("/update/:id", async (req, res) => { // Fix auth
 //   return res.json(results);
 // });
 
-router.post("/delete", async (req, res) => { // Fix auth
+router.post("/delete", async (req, res) => {
+  // Fix auth
   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
   const { ids } = req.body;
   const result = await deleteProjects(ids);

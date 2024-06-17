@@ -125,9 +125,15 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
 
   const handleSubmitCreateProject = useCallback(async () => {
     try {
-      await createProject(name, description);
-      setOpen(false);
-      fetchData();
+      const project = await createProject(name, description);
+      if (!project) return; 
+
+      const { _id } = project;
+      // redirect to /projects/detail/:id
+      window.location.href = `/projects/detail/${_id}`;
+
+      // setOpen(false);
+      // fetchData();
     } catch (error) {
       console.error(error);
     }

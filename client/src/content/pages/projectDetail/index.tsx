@@ -408,6 +408,7 @@ function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionId
     try {
       await createSession(projectId, name, description, sensorUnits);
       setOpen(false);
+      fetchProject();
     } catch (error) {
       console.error(error);
     }

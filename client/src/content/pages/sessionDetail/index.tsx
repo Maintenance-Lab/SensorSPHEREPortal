@@ -19,9 +19,11 @@ import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
-import { ArchiveOutlined, DeleteOutline, Devices, Inventory, UnarchiveOutlined } from '@mui/icons-material';
+import { ArchiveOutlined, DeleteOutline, Devices, Edit, EventNote, Inventory, MoreTime, Pause, PlayArrow, Schedule, Stop, UnarchiveOutlined } from '@mui/icons-material';
 import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
+import { set } from 'date-fns';
+import { error } from 'console';
 
 const devicesPlaceholder = {
   '00:00:00:00:00:00': {
@@ -123,12 +125,12 @@ const deviceColumns: GridColDef[] = [
           {params.value.map((sensor: { id: number, name: string }) => (
             <ListItem key={sensor.id} disableGutters disablePadding sx={{ py: 0.5 }}>
               {/* <ListItemButton disableGutters sx={{ p: 0 }}> */}
-                {/* <Switch
+              {/* <Switch
                   edge="start"
                   checked=
                   disableRipple
                 /> */}
-                <Chip label={sensor.name} size="small" />
+              <Chip label={sensor.name} size="small" />
               {/* </ListItemButton> */}
             </ListItem>
           ))}
@@ -145,7 +147,7 @@ const deviceColumns: GridColDef[] = [
   },
 ];
 
-const updateSession = async (sessionId, name, description, archived, sensorUnits) => {
+const updateSession = async (sessionId, name, description, archived, sensorUnits, status) => {
   const res = await fetch('/api/sessions/update/' + sessionId, {
     method: 'PUT',
     headers: {
@@ -156,12 +158,33 @@ const updateSession = async (sessionId, name, description, archived, sensorUnits
       name: name,
       description: description,
       archived: archived,
-      sensorUnits: sensorUnits
+      sensorUnits: sensorUnits,
+      status: status
     })
   });
 
   if (!res.ok) {
     console.error('Failed to update session');
+    return;
+  }
+  const data = await res.json();
+  return data;
+};
+
+const updateSessionStatus = async (sessionId, status) => {
+  const res = await fetch('/api/sessions/update/' + sessionId, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({
+      status: status
+    })
+  });
+
+  if (!res.ok) {
+    console.error('Failed to update session status');
     return;
   }
   const data = await res.json();
@@ -185,10 +208,146 @@ const deleteSession = async (sessionId) => {
   return data;
 };
 
+const SessionStatusCard = ({ sessionId, status }) => {
+  const [sessionStatus, setSessionStatus] = useState('');
+
+  const statusLabel = {
+    inactive: 'Inactive',
+    active: 'Active',
+    activeScheduled: 'Active (Scheduled)',
+    paused: 'Paused',
+    scheduled: 'Scheduled',
+    completed: 'Completed',
+    error: 'Error',
+    stopped: 'Stopped'
+  };
+
+  const statusColor = {
+    inactive: '',
+    active: 'primary.main',
+    activeScheduled: 'primary.main',
+    paused: 'secondary.main',
+    scheduled: 'primary.main',
+    completed: 'success.main',
+    error: 'error.main',
+    stopped: 'error.main'
+  };
+
+  useEffect(() => {
+    setSessionStatus(status);
+  }, [status]);
+
+  const handleSessionStart = async () => {
+    await updateSessionStatus(sessionId, 'active');
+    setSessionStatus('active');
+  };
+
+  const handleSessionPause = async () => {
+    await updateSessionStatus(sessionId, 'paused');
+    setSessionStatus('paused');
+  };
+
+  const handleSessionStop = async () => {
+    await updateSessionStatus(sessionId, 'completed');
+    setSessionStatus('completed');
+  };
+
+  const handleSessionContinue = async () => {
+    await updateSessionStatus(sessionId, 'active');
+    setSessionStatus('active');
+  };
+
+  return (
+    <Stack spacing={1} sx={{ p: 2 }} component={Paper}>
+      <Typography variant="h4" color={statusColor[sessionStatus]}>{statusLabel[sessionStatus]}</Typography>
+      {/* <Stack direction="row" spacing={1}>
+        <EventNote />
+        <Typography variant="body1">No schedule</Typography>
+      </Stack> */}
+      {sessionStatus == 'inactive' && (
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            startIcon={<PlayArrow />}
+            onClick={handleSessionStart}
+          >
+            Start
+          </Button>
+          {/* <Button
+            variant="outlined"
+            startIcon={<EventNote />}
+          // onClick={handleSessionSchedule}
+          >
+            Set Schedule...
+          </Button> */}
+        </Stack>
+      )}
+      {sessionStatus == 'active' && (
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            startIcon={<Pause />}
+            onClick={handleSessionPause}
+          >
+            Pause
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Stop />}
+            onClick={handleSessionStop}
+          >
+            Stop
+          </Button>
+        </Stack>
+      )}
+      {/* {sessionStatus == 'activeScheduled' && (
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            startIcon={<Stop />}
+            onClick={handleSessionStop}
+          >
+            Stop
+          </Button>
+        </Stack>
+      )} */}
+      {sessionStatus == 'paused' && (
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            startIcon={<PlayArrow />}
+            onClick={handleSessionContinue}
+          >
+            Continue
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Stop />}
+            onClick={handleSessionStop}
+          >
+            Stop
+          </Button>
+        </Stack>
+      )}
+      {/* {sessionStatus == 'scheduled' && (
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            startIcon={<Edit />}
+          >
+            Edit Schedule...
+          </Button>
+        </Stack>
+      )} */}
+    </Stack>
+  );
+};
+
 const SessionDetail = () => {
   const { sessionId } = useParams();
   const [sessionName, setSessionName] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
+  const [sessionStatus, setSessionStatus] = useState('');
   const [projectId, setProjectId] = useState('');
   const [projectName, setProjectName] = useState('');
   const [isArchived, setIsArchived] = useState(false);
@@ -221,6 +380,7 @@ const SessionDetail = () => {
     setIsArchived(data.archived);
     setSessionSensorUnits(data.sensorUnits);
     setProjectId(data.project);
+    setSessionStatus(data.status);
 
     const projectResponse = await fetch('/api/projects/id/' + data.project, {
       method: 'GET',
@@ -240,19 +400,19 @@ const SessionDetail = () => {
   }
 
   const handleNameChange = async (event) => {
-    await updateSession(sessionId, event.target.value, sessionDescription, isArchived, sessionSensorUnits);
+    await updateSession(sessionId, event.target.value, sessionDescription, isArchived, sessionSensorUnits, sessionStatus);
     setIsEditingName(false);
     fetchSession();
   };
 
   const handleDescriptionChange = async (event) => {
-    await updateSession(sessionId, sessionName, event.target.value, isArchived, sessionSensorUnits);
+    await updateSession(sessionId, sessionName, event.target.value, isArchived, sessionSensorUnits, sessionStatus);
     setIsEditingDescription(false);
     fetchSession();
   };
 
   const handleArchiveSession = async (archive) => {
-    await updateSession(sessionId, sessionName, sessionDescription, archive, sessionSensorUnits);
+    await updateSession(sessionId, sessionName, sessionDescription, archive, sessionSensorUnits, sessionStatus);
     fetchSession();
   };
 
@@ -401,7 +561,9 @@ const SessionDetail = () => {
       </PageTitleWrapper>
       <Container>
         <Stack spacing={2}>
-          <Typography variant="h2">Devices and Sensors</Typography>
+          <Typography variant="h2">Status</Typography>
+          <SessionStatusCard status={sessionStatus} sessionId={sessionId} />
+          <Typography variant="h2" sx={{ pt: 2 }}>Devices and Sensors</Typography>
           <Paper>
             <DataGrid
               rows={deviceRows}

@@ -12,7 +12,7 @@ export interface SessionModel {
   sensorUnits?: string[];
   lastActive?: Date;
   archived?: boolean;
-  status: "inactive" | "active" | "paused" | "completed" | "error" | "scheduled";
+  status: "inactive" | "active" | "activeScheduled" | "paused" | "completed" | "error" | "scheduled" | "stopped";
 }
 
 const SessionSchema = new mongoose.Schema({
@@ -26,7 +26,7 @@ const SessionSchema = new mongoose.Schema({
   archived: { type: Boolean, default: false },
   status: {
     type: String,
-    enum: ["inactive", "active", "paused", "completed", "error", "scheduled"],
+    enum: ["inactive", "active", "activeScheduled", "paused", "completed", "error", "scheduled", "stopped", ],
     default: "inactive"
   },
 });

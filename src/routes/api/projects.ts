@@ -133,17 +133,18 @@ router.put("/update/:id", async (req, res) => {
   return res.json(result);
 });
 
-// router.put("/update-many", async (req, res) => {
-//   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-//   const { body } = req;
-//   const results = [];
-//   for (const item of body) {
-//     const { id } = item;
-//     const result = await updateProject(id, item);
-//     results.push(result);
-//   }
-//   return res.json(results);
-// });
+router.put("/update-many", async (req, res) => {
+  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
+  const { body } = req;
+  const results = [];
+  for (const item of body) {
+    // TODO: Check if owner
+    const { id } = item;
+    const result = await updateProject(id, item);
+    results.push(result);
+  }
+  return res.json(results);
+});
 
 router.post("/delete", async (req, res) => {
   // Fix auth

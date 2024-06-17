@@ -28,7 +28,7 @@ import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQu
 import FaceIcon from '@mui/icons-material/Face';
 import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import { Add, ArchiveOutlined, Cancel, DeleteOutline, Devices, Inventory, Remove, UnarchiveOutlined } from '@mui/icons-material';
+import { Add, ArchiveOutlined, Cancel, DeleteOutline, Devices, Inventory, PushPin, Remove, UnarchiveOutlined } from '@mui/icons-material';
 import { is } from 'date-fns/locale';
 
 const DeviceStatus = ({ status, project }) => {
@@ -226,6 +226,24 @@ const addDevicesRows: GridRowsProp = Object.keys(devicesPlaceholder).map((macAdd
   battery: devicesPlaceholder[macAddress].battery,
   sensors: devicesPlaceholder[macAddress].sensors,
 }));
+
+const fetchPinnedProjects = async () => {
+  const res = await fetch('/api/account/pinned', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
+
+  if (!res.ok) {
+    console.error('Failed to fetch pinned projects');
+    return [];
+  };
+
+  const data = await res.json();
+  return data;
+};
 
 const updateProject = async (projectId, name: string, description: string, archived: boolean, sensorUnits) => {
   const res = await fetch('/api/projects/update/' + projectId, {
@@ -507,6 +525,7 @@ const ProjectDetail = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [pinned, setPinned] = useState(false);
 
   const deviceRows: GridRowsProp = projectSensorUnits.map((macAddress) => ({
     id: macAddress,
@@ -563,7 +582,11 @@ const ProjectDetail = () => {
 
     const dataSessions = await resSessions.json();
     setSessions(dataSessions);
-    console.log(dataSessions);
+
+    const pinnedProjects = await fetchPinnedProjects();
+    if (pinnedProjects.includes(projectId)) {
+      setPinned(true);
+    };
   };
 
   const handleNameChange = async (event) => {
@@ -576,6 +599,42 @@ const ProjectDetail = () => {
     await updateProject(projectId, projectName, event.target.value, isArchived, projectSensorUnits);
     setIsEditingDescription(false);
     fetchProject();
+  };
+
+  const handlePinProject = async () => {
+    const res = await fetch('/api/account/pin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      },
+      body: JSON.stringify({ projectId })
+    });
+
+    if (!res.ok) {
+      console.error('Failed to pin project');
+      return;
+    };
+
+    setPinned(true);
+  };
+
+  const handleUnpinProject = async () => {
+    const res = await fetch('/api/account/unpin', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      },
+      body: JSON.stringify({ projectId })
+    });
+
+    if (!res.ok) {
+      console.error('Failed to unpin project');
+      return;
+    };
+
+    setPinned(false);
   };
 
   const handleArchiveProject = async (archived: boolean) => {
@@ -736,6 +795,23 @@ const ProjectDetail = () => {
             </Stack>
           }
           <Stack direction="row" spacing={1}>
+            {!pinned ? (
+              <Button
+                variant="outlined"
+                startIcon={<PushPin />}
+              onClick={handlePinProject}
+              >
+                Pin to Home
+              </Button>
+            ) : (
+              <Button
+                variant="outlined"
+                startIcon={<Remove />}
+              onClick={handleUnpinProject}
+              >
+                Unpin from Home
+              </Button>
+            )}
             {!isArchived &&
               <Button
                 variant="outlined"

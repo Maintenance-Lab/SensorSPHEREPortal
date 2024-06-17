@@ -1,5 +1,7 @@
 import mongoose, { Schema } from "mongoose";
+import { ProjectModel } from "./Project";
 const { ObjectId } = Schema.Types;
+
 
 export interface AccountModel {
   _id: string;
@@ -13,6 +15,7 @@ export interface AccountModel {
   hasChangedPassword?: boolean;
   role: "administrator" | "student" | "teacher" | "staff";
   hasAvatar: boolean;
+  pinnedProjects?: string[] | ProjectModel[];
 }
 
 const AccountSchema = new mongoose.Schema({
@@ -26,6 +29,7 @@ const AccountSchema = new mongoose.Schema({
   hasChangedPassword: { type: Boolean, default: false },
   role: { type: String, enum: ["administrator", "student", "teacher", "staff"], default: "student" },
   hasAvatar: { type: Boolean, default: false },
+  pinnedProjects: [{ type: ObjectId, ref: "Project" }],
 });
 
 export default mongoose.models.Account || mongoose.model("Account", AccountSchema);

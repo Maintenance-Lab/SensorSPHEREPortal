@@ -5,15 +5,17 @@ import {
   Stack,
   Grid,
   Chip,
-  CardActionArea
+  CardActionArea,
+  Skeleton
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import Card from '@mui/material/Card';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
-import { Inventory, PushPin } from '@mui/icons-material';
+import { DesignServices, Inventory, PushPin, Usb } from '@mui/icons-material';
 
 const Home = () => {
   const [pinnedProjects, setPinnedProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchPinnedProjects = async () => {
     const res = await fetch('/api/account/pinned', {
@@ -51,6 +53,7 @@ const Home = () => {
 
     const projectsData = await Promise.all(projects);
     setPinnedProjects(projectsData);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -67,6 +70,11 @@ const Home = () => {
       </PageTitleWrapper>
       <Container>
         <Grid container spacing={2} >
+          {loading && (
+            <Grid item xs={6} lg={4}>
+              <Skeleton variant="rounded" height={120} animation="wave" />
+            </Grid>
+          )}
           {pinnedProjects.map((project) => (
             <Grid item xs={6} lg={4} key={project._id}>
               <Card>
@@ -85,9 +93,42 @@ const Home = () => {
               </Card>
             </Grid>
           ))}
+          {pinnedProjects.length === 0 && !loading && (
+            <Grid item xs={6} lg={4} height="130px">
+              <PushPin fontSize="small" sx={{ color: 'gray' }} />
+              <Typography variant="body2" color='gray'>Pinned projects will show up here.</Typography>
+            </Grid>
+          )}
         </Grid>
+
         <Stack spacing={2} mt={4}>
           <Typography variant="h2">Getting Started</Typography>
+        </Stack>
+        <Stack direction="row" spacing={2} mt={2}>
+          <Card sx={{ flex: 1 }}>
+            <CardActionArea
+              sx={{ p: 2 }}
+            // onClick={() => window.location.href = '/projects/detail/' + project._id}
+            >
+              <Stack spacing={1}>
+                <DesignServices fontSize='large' />
+                <Typography variant="h6">Create a New Project</Typography>
+                <Typography variant="subtitle1">Create a new project, add devices, and start data collection sessions.</Typography>
+              </Stack>
+            </CardActionArea>
+          </Card>
+          <Card sx={{ flex: 1 }}>
+            <CardActionArea
+              sx={{ p: 2 }}
+              onClick={() => window.location.href = '/devices'}
+            >
+              <Stack spacing={1}>
+                <Usb fontSize='large' />
+                <Typography variant="h6">Find Devices</Typography>
+                <Typography variant="subtitle1">Search, find, and add devices to your projects.</Typography>
+              </Stack>
+            </CardActionArea>
+          </Card>
         </Stack>
       </Container>
     </div>

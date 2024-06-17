@@ -357,6 +357,7 @@ const deleteSession = async (sessionId) => {
     console.error('Failed to delete session');
     return;
   }
+  return res.json();
 };
 
 function CustomProjectSensorUnitsToolbar({ selectedDeviceIds, projectId, projectName, projectDescription, projectSensorUnits, isArchived, fetchProject, handleOpenAddDevices }) {
@@ -644,7 +645,7 @@ const ProjectDetail = () => {
   };
 
   const handleDeleteProject = async () => {
-    deleteProject(projectId);
+    await deleteProject(projectId);
     window.location.href = '/projects';
   };
 

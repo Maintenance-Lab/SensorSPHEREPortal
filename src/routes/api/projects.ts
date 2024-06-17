@@ -15,6 +15,7 @@ import {
   getArchivedProjectsByAccountId,
 } from "../../services/Projects.js";
 import { getSession } from "../../utils.js";
+import { ProjectModel } from "src/models/Project.js";
 
 const router = Router();
 
@@ -125,33 +126,93 @@ router.post("/create", async (req, res) => {
 // });
 
 router.put("/update/:id", async (req, res) => {
-  // Fix auth
-  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
   const { id } = req.params;
   const { body } = req;
-  const result = await updateProject(id, body);
+
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account, sessions } = response;
+  if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
+
+  const { _id } = account;
+  const project: any = await getProjectById(id);
+  if (!project) return res.status(404).json({ message: "Project not found" });
+
+  if (project.owner?._id.toString() !== _id) return res.status(401).json({ message: "Unauthorized" });
+
+  const cleaned = cleanBody(body);
+
+  const result = await updateProject(id, cleaned);
   return res.json(result);
 });
 
 router.put("/update-many", async (req, res) => {
-  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-  const { body } = req;
-  const results = [];
-  for (const item of body) {
-    // TODO: Check if owner
-    const { id } = item;
-    const result = await updateProject(id, item);
-    results.push(result);
+  try {
+    const response = await getSession(req, res);
+    if (!response) return;
+
+    const { account, sessions } = response;
+    if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
+
+    const { _id } = account;
+
+    const { body } = req;
+    const toUpdate = [];
+    const results = [];
+    // create cleaned update body and check if you are the owner
+    for (const item of body) {
+      const { id, ...rest } = item;
+      const cleaned = cleanBody(rest);
+
+      const project: any = await getProjectById(id);
+      if (!project) return res.status(404).json({ message: "Project not found" });
+
+      if (project.owner?._id.toString() !== _id) return res.status(401).json({ message: "Unauthorized" });
+
+      toUpdate.push({ id, cleaned });
+    }
+
+    // Apply updates
+    for (const { id, cleaned } of toUpdate) {
+      const result = await updateProject(id, cleaned);
+      results.push(result);
+    }
+
+    return res.json(results);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
   }
-  return res.json(results);
 });
 
 router.post("/delete", async (req, res) => {
-  // Fix auth
-  if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
   const { ids } = req.body;
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account, sessions } = response;
+  if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
+  const { _id } = account;
+
+  const project: any = await getProjectById(ids);
+  if (!project) return res.status(404).json({ message: "Project not found" });
+
+  if (project.owner?._id.toString() !== _id) return res.status(401).json({ message: "Unauthorized" });
+
   const result = await deleteProjects(ids);
   return res.json(result);
 });
 
 export default router;
+
+const cleanBody = (body: Partial<ProjectModel>) => {
+  const cleaned = { ...body };
+  if (cleaned.meta) delete cleaned.meta;
+  if (cleaned.createdAt) delete cleaned.createdAt;
+  if (cleaned._id) delete cleaned._id;
+  if (cleaned.owner) delete cleaned.owner;
+  if (cleaned.collaborators) delete cleaned.collaborators;
+  if (cleaned.sensorUnits) delete cleaned.sensorUnits;
+  return cleaned;
+};

@@ -12,10 +12,12 @@ import { Helmet } from 'react-helmet-async';
 import Card from '@mui/material/Card';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import { DesignServices, Inventory, PushPin, Usb } from '@mui/icons-material';
+import CreateProjectDialog from '../projects/CreateProjectDialog';
 
 const Home = () => {
   const [pinnedProjects, setPinnedProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openCreateProjectDialog, setOpenCreateProjectDialog] = useState(false);
 
   const fetchPinnedProjects = async () => {
     const res = await fetch('/api/account/pinned', {
@@ -68,6 +70,7 @@ const Home = () => {
       <PageTitleWrapper>
         <Typography variant="h1">Home</Typography>
       </PageTitleWrapper>
+      <CreateProjectDialog open={openCreateProjectDialog} setOpen={setOpenCreateProjectDialog} /> 
       <Container>
         <Grid container spacing={2} >
           {loading && (
@@ -108,7 +111,7 @@ const Home = () => {
           <Card sx={{ flex: 1 }}>
             <CardActionArea
               sx={{ p: 2 }}
-            // onClick={() => window.location.href = '/projects/detail/' + project._id}
+              onClick={() => setOpenCreateProjectDialog(true)}
             >
               <Stack spacing={1}>
                 <DesignServices fontSize='large' />
@@ -125,7 +128,7 @@ const Home = () => {
               <Stack spacing={1}>
                 <Usb fontSize='large' />
                 <Typography variant="h6">Find Devices</Typography>
-                <Typography variant="subtitle1">Search, find, and add devices to your projects.</Typography>
+                <Typography variant="subtitle1">Search and find devices, view sensors, and use them in your projects.</Typography>
               </Stack>
             </CardActionArea>
           </Card>

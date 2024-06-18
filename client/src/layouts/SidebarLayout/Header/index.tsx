@@ -1,5 +1,5 @@
-import { useContext } from 'react';
-
+import { useContext, useEffect, useState } from 'react';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import {
   Box,
   alpha,
@@ -9,15 +9,19 @@ import {
   IconButton,
   Tooltip,
   styled,
-  useTheme
+  useTheme,
+  Breadcrumbs,
+  Link,
+  Typography,
+  Skeleton
 } from '@mui/material';
 import MenuTwoToneIcon from '@mui/icons-material/MenuTwoTone';
 import { SidebarContext } from 'src/contexts/SidebarContext';
 import CloseTwoToneIcon from '@mui/icons-material/CloseTwoTone';
-
 import HeaderButtons from './Buttons';
 import HeaderUserbox from './Userbox';
 import HeaderMenu from './Menu';
+import { set } from 'date-fns';
 
 const HeaderWrapper = styled(Box)(
   ({ theme }) => `
@@ -38,9 +42,106 @@ const HeaderWrapper = styled(Box)(
 `
 );
 
+const mapBreadcrumbName = (pathname: string) => {
+  switch (pathname) {
+    case '/home':
+      return 'Home';
+    case '/projects':
+      return 'Projects';
+    case '/projects/overview':
+      return 'Projects';
+    case '/devices':
+      return 'Devices';
+    case '/devices/overview':
+      return 'Devices';
+    case '/sessions':
+      return 'Sessions';
+    case '/admin':
+      return 'Admin';
+    case '/admin/users':
+      return 'Manage Users';
+    case '/account':
+      return 'User Settings';
+    default:
+      if (/^\/(.*)\/detail\/(.*)$/.test(pathname)) {
+        const id = pathname.split('/')[3];
+        return id;
+      } else {
+        return pathname;
+      };
+  };
+};
+
+const fetchProjectName = async (id: string) => {
+  try {
+    const response = await fetch(`/api/projects/id/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch project name');
+    }
+
+    const data = await response.json();
+    return data.name;
+  } catch (error) {
+    console.error(error);
+  };
+};
+
+const fetchSession = async (id: string) => {
+  try {
+    const response = await fetch(`/api/sessions/id/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch session name');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(error);
+  };
+};
+
 function Header() {
+  const [projectId, setProjectId] = useState('');
+  const [projectName, setProjectName] = useState('');
+  const [sessionName, setSessionName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const location = useLocation();
   const { sidebarToggle, toggleSidebar } = useContext(SidebarContext);
   const theme = useTheme();
+  const pathnames = location.pathname.split('/').filter((x) => x);
+
+  const fetchData = async () => {
+    if (location.pathname.includes('/projects/detail/')) {
+      const projectId = location.pathname.split('/')[3];
+      await fetchProjectName(projectId).then((name) => setProjectName(name));
+    } else if (location.pathname.includes('/sessions/detail/')) {
+      const sessionId = location.pathname.split('/')[3];
+      await fetchSession(sessionId).then(async (data) => {
+        setSessionName(data.name);
+        setProjectId(data.project);
+        await fetchProjectName(data.project).then((name) => setProjectName(name));
+      });
+    };
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, [location]);
 
   return (
     <HeaderWrapper
@@ -50,16 +151,16 @@ function Header() {
         boxShadow:
           theme.palette.mode === 'dark'
             ? `0 1px 0 ${alpha(
-                lighten(theme.colors.primary.main, 0.7),
-                0.15
-              )}, 0px 2px 8px -3px rgba(0, 0, 0, 0.2), 0px 5px 22px -4px rgba(0, 0, 0, .1)`
+              lighten(theme.colors.primary.main, 0.7),
+              0.15
+            )}, 0px 2px 8px -3px rgba(0, 0, 0, 0.2), 0px 5px 22px -4px rgba(0, 0, 0, .1)`
             : `0px 2px 8px -3px ${alpha(
-                theme.colors.alpha.black[100],
-                0.2
-              )}, 0px 5px 22px -4px ${alpha(
-                theme.colors.alpha.black[100],
-                0.1
-              )}`
+              theme.colors.alpha.black[100],
+              0.2
+            )}, 0px 5px 22px -4px ${alpha(
+              theme.colors.alpha.black[100],
+              0.1
+            )}`
       }}
     >
       <Stack
@@ -68,10 +169,57 @@ function Header() {
         alignItems="center"
         spacing={2}
       >
-        <HeaderMenu />
+        {/* Sessions get custom breadcrumbs, as they do not have an overview 'Sessions' page.
+            They are part of projects, so it shows the session path as part of the project. */}
+        {location.pathname.includes('/sessions/detail') ? (
+          <Breadcrumbs separator="/">
+            <Link component={RouterLink} to="/projects" color="inherit">
+              {loading ? <Skeleton width="100px" /> : "Projects"}
+            </Link>
+            <Link component={RouterLink} to={"/projects/detail/" + projectId} color="inherit">
+              {loading ? <Skeleton width="100px" /> : projectName}
+            </Link>
+            <Typography color="text.primary">
+              {loading ? <Skeleton width="100px" /> : sessionName}
+            </Typography>
+          </Breadcrumbs>
+        ) : (
+          // Default breadcrumbs
+          <Breadcrumbs separator="/">
+            {pathnames.map((value, index) => {
+              const last = index === pathnames.length - 1;
+              const to = `/${pathnames.slice(0, index + 1).join('/')}`;
+              let label = mapBreadcrumbName(to);
+
+              // Prevent showing breadcrumbs for non-existant/duplicate pages
+              const skipConditions = [
+                pathnames.includes('overview') && value === 'projects',
+                pathnames.includes('overview') && value === 'devices',
+                value === 'detail'
+              ];
+
+              if (skipConditions.some(Boolean)) {
+                return;
+              } else if (last && /^\/projects\/detail\/(.*)$/.test(location.pathname)) {
+                label = projectName;
+              };
+
+              return last ? (
+                <Typography color="text.primary" key={to}>
+                  {loading ? <Skeleton width="100px" /> : label}
+                </Typography>
+              ) : (
+                <Link component={RouterLink} to={to} key={to} color="inherit">
+                  {loading ? <Skeleton width="100px" /> : label}
+                </Link>
+              );
+            })}
+          </Breadcrumbs>
+        )}
+        {/* <HeaderMenu /> */}
       </Stack>
       <Box display="flex" alignItems="center">
-        <HeaderButtons />
+        {/* <HeaderButtons /> */}
         <HeaderUserbox />
         <Box
           component="span"

@@ -213,6 +213,6 @@ const cleanBody = (body: Partial<ProjectModel>) => {
   if (cleaned._id) delete cleaned._id;
   if (cleaned.owner) delete cleaned.owner;
   if (cleaned.collaborators) delete cleaned.collaborators;
-  if (cleaned.sensorUnits) delete cleaned.sensorUnits;
+  // if (cleaned.sensorUnits) delete cleaned.sensorUnits;
   return cleaned;
 };

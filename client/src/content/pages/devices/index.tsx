@@ -268,7 +268,6 @@ const Devices = () => {
         <DialogTitle>Add Devices To Project</DialogTitle>
         <DialogContent>
           <Stack direction="row" spacing={1} sx={{ mt: 1, mb: 2 }}>
-            <Button startIcon={<AddIcon />} variant="outlined" size="medium" sx={{ flex: 1 }}>New Project</Button>
             <TextField
               label="Search Projects"
               variant="outlined"

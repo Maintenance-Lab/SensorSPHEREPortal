@@ -5,8 +5,11 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle
+  DialogTitle,
+  Typography,
+  Stack
 } from '@mui/material';
+import { Info, InfoOutlined } from '@mui/icons-material';
 
 const CreateProjectDialog = ({ open, setOpen }) => {
   const [name, setName] = useState(`Project ${new Date().toDateString()}`);
@@ -38,8 +41,15 @@ const CreateProjectDialog = ({ open, setOpen }) => {
     <Dialog open={open} onClose={() => setOpen(false)}>
       <DialogTitle>Create New Project</DialogTitle>
       <DialogContent>
+        <Stack direction="row" spacing={1} mb={2} color="secondary.main">
+          <InfoOutlined />
+          <Typography variant="body1">
+            You can add devices, invite collaborators, and start data collection sessions after creating a project.
+          </Typography>
+        </Stack>
         <TextField
           autoFocus
+          onFocus={(event) => { event.target.select(); }}
           margin="dense"
           label="Project Name"
           fullWidth

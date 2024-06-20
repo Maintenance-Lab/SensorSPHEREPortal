@@ -312,24 +312,31 @@ const deleteProject = async (projectId) => {
 }
 
 const createSession = async (projectId, name, description, sensorUnits) => {
-  const res = await fetch('/api/sessions/create', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      credentials: 'include'
-    },
-    body: JSON.stringify({
-      project: projectId,
-      name: name,
-      description: description,
-      sensorUnits: sensorUnits
-    })
-  });
+  try {
+    const res = await fetch('/api/sessions/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      },
+      body: JSON.stringify({
+        project: projectId,
+        name: name,
+        description: description,
+        sensorUnits: sensorUnits
+      })
+    });
 
-  if (!res.ok) {
-    console.error('Failed to create session');
-    return;
-  }
+    if (!res.ok) {
+      console.error('Failed to create session');
+      return;
+    }
+
+    const data = await res.json();
+    window.location.href = `/sessions/detail/${data._id}`;
+  } catch (error) {
+    console.error(error);
+  };
 };
 
 const updateSession = async (sessionId, archived) => {
@@ -512,13 +519,16 @@ function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionId
             fullWidth
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && document.getElementById('description-input').focus()}
           />
           <TextField
+            id="description-input"
             margin="dense"
             label="Session Description"
             fullWidth
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmitCreateSession()}
           />
         </DialogContent>
         <DialogActions>

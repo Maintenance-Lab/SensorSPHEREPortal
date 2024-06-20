@@ -12,14 +12,15 @@ import {
   ListItem,
   ListItemButton,
   Checkbox,
-  Switch
+  Switch,
+  LinearProgress
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
-import { ArchiveOutlined, DeleteOutline, Devices, Edit, EventNote, InfoOutlined, Inventory, MoreTime, Pause, PlayArrow, Schedule, Stop, UnarchiveOutlined } from '@mui/icons-material';
+import { ArchiveOutlined, DeleteOutline, Devices, Edit, EventNote, InfoOutlined, Inventory, MoreTime, Pause, PlayArrow, Router, Schedule, Stop, UnarchiveOutlined, Usb } from '@mui/icons-material';
 import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import { set } from 'date-fns';
@@ -261,10 +262,10 @@ const SessionStatusCard = ({ sessionId, status }) => {
     <Stack spacing={1} sx={{ p: 2 }} component={Paper}>
       <Typography variant="h4" color={statusColor[sessionStatus]}>{statusLabel[sessionStatus]}</Typography>
       {sessionStatus == 'inactive' && (
-      <Stack direction="row" spacing={1}>
-        <InfoOutlined sx={{ color: "gray" }} />
-        <Typography sx={{ color: "gray" }} variant="body1">Start this session to collect data.</Typography>
-      </Stack>
+        <Stack direction="row" spacing={1}>
+          <InfoOutlined sx={{ color: "gray" }} />
+          <Typography sx={{ color: "gray" }} variant="body1">Start this session to collect data.</Typography>
+        </Stack>
       )}
       {/* <Stack direction="row" spacing={1}>
         <EventNote />
@@ -289,21 +290,34 @@ const SessionStatusCard = ({ sessionId, status }) => {
         </Stack>
       )}
       {sessionStatus == 'active' && (
-        <Stack direction="row" spacing={1}>
-          <Button
-            variant="outlined"
-            startIcon={<Pause />}
-            onClick={handleSessionPause}
-          >
-            Pause
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<Stop />}
-            onClick={handleSessionStop}
-          >
-            Stop
-          </Button>
+        <Stack spacing={1}>
+          <Stack direction="row" spacing={1} alignItems="center" maxWidth="200px">
+            <Usb color="primary" />
+            <LinearProgress sx={{ flex: 1, transform: "scaleX(-1)" }} variant="buffer" value={0} valueBuffer={0} />
+            <Router color="primary" />
+          </Stack>
+          <Stack direction="row" spacing={1} alignItems="center">
+          <InfoOutlined sx={{ color: "secondary.main" }} />
+            <Typography sx={{ color: "secondary.main" }} variant="body1">
+              The device is collecting data and sending it to the gateway. Ask your supervisor how to access the data.
+            </Typography>
+          </Stack>
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="outlined"
+              startIcon={<Pause />}
+              onClick={handleSessionPause}
+            >
+              Pause
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<Stop />}
+              onClick={handleSessionStop}
+            >
+              Stop
+            </Button>
+          </Stack>
         </Stack>
       )}
       {/* {sessionStatus == 'activeScheduled' && (

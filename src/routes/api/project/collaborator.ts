@@ -32,14 +32,14 @@ router.post("/add", async (req, res) => {
         break;
       }
     }
-    if (found) return res.status(400).json({ message: "Collaborator already added" });
+    if (found) return res.status(400).json({ message: "Collaborator already invited" });
     else collaborators.push(collaborator._id);
 
     project.collaborators = collaborators;
     const result = await updateProject(projectId, project);
     if (!result) return res.status(400).json({ message: "Failed to add collaborator" });
 
-    return res.json({ message: `Added ${collaborator.name} to ${project.name}` });
+    return res.json({ message: `Invited ${collaborator.name} to ${project.name}` });
   } catch (error) {
     if (!IS_PROD) console.error(error);
     return res.status(500).json({ message: "Internal server error" });

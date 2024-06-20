@@ -6,12 +6,13 @@ import {
   Grid,
   Chip,
   CardActionArea,
-  Skeleton
+  Skeleton,
+  Divider
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import Card from '@mui/material/Card';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
-import { DesignServices, Inventory, PushPin, Usb } from '@mui/icons-material';
+import { Add, DesignServices, DesignServicesOutlined, Inventory, PlayCircleOutline, PlusOne, PushPin, Usb } from '@mui/icons-material';
 import CreateProjectDialog from '../projects/CreateProjectDialog';
 
 const Home = () => {
@@ -107,20 +108,20 @@ const Home = () => {
         <Stack spacing={2} mt={4}>
           <Typography variant="h2">Getting Started</Typography>
         </Stack>
-        <Grid container spacing={2} mt={1}  py={2}>
-          <Grid item xs={12} lg={4}>
-              <Typography variant="h2" color="primary.main">1</Typography>
-              <Typography variant="body1" mt={1}>Create a data collection project.</Typography>
-          </Grid>
-          <Grid item xs={12} lg={4}>
-            <Typography variant="h2" color="primary.main">2</Typography>
+        <Stack spacing={2} mt={2} py={2} direction="row" divider={<Divider orientation="vertical" flexItem />}>
+          <Stack spacing={2}>
+            <DesignServicesOutlined fontSize='large' />
+            <Typography variant="body1" mt={1}>Create a data collection project.</Typography>
+          </Stack>
+          <Stack spacing={2}>
+            <Usb fontSize='large' />
             <Typography variant="body1" mt={1}>Find and add your devices.</Typography>
-          </Grid>
-          <Grid item xs={12} lg={4}>
-            <Typography variant="h2" color="primary.main">3</Typography>
-            <Typography variant="body1" mt={1}>Start a data collection session in the project.</Typography>
-          </Grid>
-        </Grid>
+          </Stack>
+          <Stack spacing={2}>
+            <PlayCircleOutline fontSize='large' />
+            <Typography variant="body1" mt={1}>Start a data collection session in your project.</Typography>
+          </Stack>
+        </Stack>
         <Stack direction="row" spacing={2} mt={3}>
           <Card sx={{ flex: 1 }}>
             <CardActionArea

@@ -18,7 +18,9 @@ import {
   Card,
   Stepper,
   Step,
-  StepLabel
+  StepLabel,
+  List,
+  ListItem
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
@@ -32,7 +34,7 @@ import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQu
 import FaceIcon from '@mui/icons-material/Face';
 import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import { Add, ArchiveOutlined, Cancel, DeleteOutline, Devices, Inventory, PushPin, Remove, UnarchiveOutlined } from '@mui/icons-material';
+import { Add, ArchiveOutlined, Cancel, DeleteOutline, Devices, InfoOutlined, Inventory, PushPin, PushPinOutlined, Remove, UnarchiveOutlined, Usb } from '@mui/icons-material';
 import { is } from 'date-fns/locale';
 
 const DeviceStatus = ({ status, project }) => {
@@ -406,7 +408,7 @@ function CustomProjectSensorUnitsToolbar({ selectedDeviceIds, projectId, project
 function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, sensorUnits, projectId, fetchProject }) {
   const activeSelection = selectedSessionIds.length > 0;
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
+  const [name, setName] = useState(`Session ${new Date().toDateString()}`)
   const [description, setDescription] = useState('');
 
   const handleSubmitCreateSession = async () => {
@@ -476,8 +478,35 @@ function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionId
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Create New Session</DialogTitle>
         <DialogContent>
+          <Stack direction="row" spacing={1} mb={2} color="secondary.main">
+            <InfoOutlined />
+            <List sx={{ p: 0 }}>
+              <ListItem sx={{ px: 0, pt: 0 }}>
+                <Typography variant="body1">
+                  This project's devices will be used to collect data:
+                </Typography>
+              </ListItem>
+              {sensorUnits.map((macAddress) => (
+                <ListItem key={macAddress} sx={{ px: 0 }}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Usb />
+                    <Typography variant="body1" fontWeight="500">
+                      {devicesPlaceholder[macAddress].type}
+                    </Typography>
+                    <Typography variant="body2">
+                      {macAddress}
+                    </Typography>
+                    <Typography variant="body2">
+                      {devicesPlaceholder[macAddress].sensors.map((sensor) => sensor.name).join(', ')}
+                    </Typography>
+                  </Stack>
+                </ListItem>
+              ))}
+            </List>
+          </Stack>
           <TextField
             autoFocus
+            onFocus={(event) => { event.target.select(); }}
             margin="dense"
             label="Session Name"
             fullWidth
@@ -599,7 +628,7 @@ const ProjectDetail = () => {
       setActiveStep(0);
     } else if (dataSessions.length === 0) {
       setActiveStep(1);
-    } else if (dataSessions.filter((session) => session.status === 'active').length === 0) {
+    } else if (dataSessions.filter((session) => session.status != "inactive").length === 0) {
       setActiveStep(2);
     } else {
       setActiveStep(3);
@@ -815,7 +844,7 @@ const ProjectDetail = () => {
             {!pinned ? (
               <Button
                 variant="outlined"
-                startIcon={<PushPin />}
+                startIcon={<PushPinOutlined />}
                 onClick={handlePinProject}
               >
                 Pin
@@ -930,7 +959,7 @@ const ProjectDetail = () => {
               }}
             />
           </Paper>
-          <Typography variant="h2" pt={2}>Sessions</Typography>
+          <Typography variant="h2" pt={2}>Data Collection Sessions</Typography>
           <Paper>
             <DataGrid
               rows={sessionRows}

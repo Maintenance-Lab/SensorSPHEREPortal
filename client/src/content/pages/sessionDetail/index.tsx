@@ -19,7 +19,7 @@ import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
-import { ArchiveOutlined, DeleteOutline, Devices, Edit, EventNote, Inventory, MoreTime, Pause, PlayArrow, Schedule, Stop, UnarchiveOutlined } from '@mui/icons-material';
+import { ArchiveOutlined, DeleteOutline, Devices, Edit, EventNote, InfoOutlined, Inventory, MoreTime, Pause, PlayArrow, Schedule, Stop, UnarchiveOutlined } from '@mui/icons-material';
 import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import { set } from 'date-fns';
@@ -213,7 +213,7 @@ const SessionStatusCard = ({ sessionId, status }) => {
 
   const statusLabel = {
     inactive: 'Inactive',
-    active: 'Active',
+    active: 'Collecting Data',
     activeScheduled: 'Active (Scheduled)',
     paused: 'Paused',
     scheduled: 'Scheduled',
@@ -260,6 +260,12 @@ const SessionStatusCard = ({ sessionId, status }) => {
   return (
     <Stack spacing={1} sx={{ p: 2 }} component={Paper}>
       <Typography variant="h4" color={statusColor[sessionStatus]}>{statusLabel[sessionStatus]}</Typography>
+      {sessionStatus == 'inactive' && (
+      <Stack direction="row" spacing={1}>
+        <InfoOutlined sx={{ color: "gray" }} />
+        <Typography sx={{ color: "gray" }} variant="body1">Start this session to collect data.</Typography>
+      </Stack>
+      )}
       {/* <Stack direction="row" spacing={1}>
         <EventNote />
         <Typography variant="body1">No schedule</Typography>

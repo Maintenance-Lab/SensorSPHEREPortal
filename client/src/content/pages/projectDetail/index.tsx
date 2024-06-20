@@ -1011,6 +1011,7 @@ const ProjectDetail = () => {
             fullWidth
             value={collaboratorEmail}
             onChange={(e) => setCollaboratorEmail(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddCollaborator()}
           />
         </DialogContent>
         <DialogActions>

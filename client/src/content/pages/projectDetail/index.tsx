@@ -14,7 +14,11 @@ import {
   DialogTitle,
   Snackbar,
   Alert,
-  Chip
+  Chip,
+  Card,
+  Stepper,
+  Step,
+  StepLabel
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
@@ -528,6 +532,7 @@ const ProjectDetail = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
+  const [activeStep, setActiveStep] = useState(3);
 
   const deviceRows: GridRowsProp = projectSensorUnits.map((macAddress) => ({
     id: macAddress,
@@ -589,6 +594,16 @@ const ProjectDetail = () => {
     if (pinnedProjects.includes(projectId)) {
       setPinned(true);
     };
+
+    if (data.sensorUnits.length === 0) {
+      setActiveStep(0);
+    } else if (dataSessions.length === 0) {
+      setActiveStep(1);
+    } else if (dataSessions.filter((session) => session.status === 'active').length === 0) {
+      setActiveStep(2);
+    } else {
+      setActiveStep(3);
+    }
   };
 
   const handleNameChange = async (event) => {
@@ -801,17 +816,17 @@ const ProjectDetail = () => {
               <Button
                 variant="outlined"
                 startIcon={<PushPin />}
-              onClick={handlePinProject}
+                onClick={handlePinProject}
               >
-                Pin to Home
+                Pin
               </Button>
             ) : (
               <Button
                 variant="outlined"
                 startIcon={<Remove />}
-              onClick={handleUnpinProject}
+                onClick={handleUnpinProject}
               >
-                Unpin from Home
+                Unpin
               </Button>
             )}
             {!isArchived &&
@@ -860,7 +875,34 @@ const ProjectDetail = () => {
       </PageTitleWrapper>
       <Container>
         <Stack spacing={1}>
-          <Typography variant="h2">Devices</Typography>
+          {activeStep != 3 && (
+            <Stack spacing={2}>
+              <Typography variant="h2">Project Setup</Typography>
+              <Card>
+                <Stepper activeStep={activeStep} sx={{ p: 2 }} >
+                  <Step sx={{ flex: 2 }}>
+                    <StepLabel>Add Devices</StepLabel>
+                    <Typography variant="body2" mt={1} fontWeight={activeStep === 0 ? "500" : "normal"}>
+                      Add devices, such as the M5Stack Core2, to your project. Ask your administrator on how to obtain one.
+                    </Typography>
+                  </Step>
+                  <Step sx={{ flex: 2 }}>
+                    <StepLabel>Create Data Collection Session</StepLabel>
+                    <Typography variant="body2" mt={1} fontWeight={activeStep === 1 ? "500" : "normal"} color={activeStep < 1 ? "gray" : ""}>
+                      Create a new data collection session. Your project devices will be added automatically.
+                    </Typography>
+                  </Step>
+                  <Step sx={{ flex: 2 }}>
+                    <StepLabel>Start Session</StepLabel>
+                    <Typography variant="body2" mt={1} fontWeight={activeStep === 2 ? "500" : "normal"} color={activeStep < 2 ? "gray" : ""}>
+                      Start the data collection session to begin recording data from all the sensors on the project's devices.
+                    </Typography>
+                  </Step>
+                </Stepper>
+              </Card>
+            </Stack>
+          )}
+          <Typography variant="h2" sx={{ pt: activeStep != 3 ? 2 : 0 }}>Devices</Typography>
           <Paper>
             <DataGrid
               rows={deviceRows}
@@ -888,7 +930,7 @@ const ProjectDetail = () => {
               }}
             />
           </Paper>
-          <Typography variant="h2" sx={{ pt: 2 }}>Sessions</Typography>
+          <Typography variant="h2" pt={2}>Sessions</Typography>
           <Paper>
             <DataGrid
               rows={sessionRows}

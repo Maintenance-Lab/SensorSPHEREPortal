@@ -55,13 +55,16 @@ const CreateProjectDialog = ({ open, setOpen }) => {
           fullWidth
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && document.getElementById('description-input').focus()}
         />
         <TextField
+          id="description-input"
           margin="dense"
           label="Project Description"
           fullWidth
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSubmitCreateProject()}
         />
       </DialogContent>
       <DialogActions>

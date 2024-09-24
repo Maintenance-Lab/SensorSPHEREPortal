@@ -15,6 +15,7 @@ export const dbConnect = async () => {
   if (!cached.promise) {
     const opts = {
       bufferCommands: !IS_PROD
+      // bufferCommands: true
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {

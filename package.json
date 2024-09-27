@@ -24,6 +24,8 @@
     "mqtt": "^5.7.3",
     "node-cleanup": "^2.1.2",
     "readline-sync": "^1.4.10",
+    "sequelize": "^6.37.3",
+    "sqlite3": "^5.1.7",
     "universal-cookie": "^7.1.4"
   },
   "devDependencies": {

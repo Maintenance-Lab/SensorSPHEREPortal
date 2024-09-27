@@ -4,7 +4,7 @@ import dbConnect from "./mongo.js";
 
 const ws = new WebServer();
 
-dbConnect();
+// dbConnect();
 
 cleanup(() => {
   ws.close();

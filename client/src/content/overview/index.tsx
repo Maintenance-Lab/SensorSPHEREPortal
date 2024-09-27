@@ -31,10 +31,30 @@ const useStyles = makeStyles((theme: Theme) => ({
   }
 }));
 
+const fetchTest = async () => {
+  const res = await fetch('/api/test/testing', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
+
+  if (!res.ok) {
+    console.error('Failed to fetch data');
+    return [];
+  }
+  const data = await res.json();
+  console.log(data);
+  return data;
+}
+
 function Overview() {
   const classes = useStyles();
   const user = getUser();
   const navigate = useNavigate();
+  fetchTest();
+
 
   const redirectToLogin = () => navigate('/login');
 

@@ -1,34 +1,26 @@
-import mongoose, { Schema } from "mongoose";
-import { ProjectModel } from "./Project";
-const { ObjectId } = Schema.Types;
+import Device from "./Device";
 
-export interface SessionModel {
-  _id: string;
-  name: string;
-  description: string;
-  project: string | ProjectModel;
-  meta: object; // Extra info if needed
-  createdAt?: Date;
-  sensorUnits?: string[];
-  lastActive?: Date;
-  archived?: boolean;
-  status: "inactive" | "active" | "activeScheduled" | "paused" | "completed" | "error" | "scheduled" | "stopped";
-}
+import { Sequelize, DataTypes, Model } from 'sequelize'
+const sequelize = new Sequelize('sqlite::memory:');
 
-const SessionSchema = new mongoose.Schema({
-  name: { type: String, default: "Default Project Title" },
-  description: { type: String, default: "Default Project Description" },
-  project: { type: ObjectId, ref: "Project" },
-  meta: { type: Object, default: {} },
-  createdAt: { type: Date, default: Date.now },
-  sensorUnits: { type: [String], default: [] },
-  lastActive: { type: Date, default: Date.now },
-  archived: { type: Boolean, default: false },
-  status: {
-    type: String,
-    enum: ["inactive", "active", "activeScheduled", "paused", "completed", "error", "scheduled", "stopped", ],
-    default: "inactive"
-  },
+class Session extends Model {}
+
+Session.init({
+    SessionId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    DeviceId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Device, key: 'DeviceId' } },
+    Name: { type: DataTypes.STRING, allowNull: false },
+    Status: { type: DataTypes.STRING, allowNull: false, validate: { isIn: [['inactive', 'active', 'activeScheduled', 'paused', 'completed', 'error', 'scheduled', 'stopped']] } },
+    ScheduledFrom: { type: DataTypes.DATE, allowNull: false },
+    ScheduledTo: { type: DataTypes.DATE, allowNull: false },
+    // ProjectId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Project, key: 'ProjectId' } },
+    Meta: { type: DataTypes.JSON },
+    CreatedAt: { type: DataTypes.DATE },
+    LastActive: { type: DataTypes.DATE },
+    Archived: { type: DataTypes.BOOLEAN },
+},
+{
+    sequelize,
+    modelName: 'SessionModel',
 });
 
-export default mongoose.models.Session || mongoose.model("Session", SessionSchema);
+export default Session;

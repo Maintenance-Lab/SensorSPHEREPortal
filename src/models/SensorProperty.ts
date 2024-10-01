@@ -1,7 +1,18 @@
-import { SensorModel } from "./Sensor";
+import Sensor from "./Sensor";
 
-export interface SensorPropertyModel {
-    PropertyName: string;
-    Model: string | SensorModel;
-    ManufacturerName: string | SensorModel;
-}
+import { Sequelize, DataTypes, Model } from 'sequelize'
+const sequelize = new Sequelize('sqlite::memory:');
+
+class SensorProperty extends Model {}
+
+SensorProperty.init({
+    PropertyName: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
+    Model: { type: DataTypes.STRING, allowNull: false, references: { model: Sensor, key: 'Model' } },
+    ManufacturerName: { type: DataTypes.STRING, allowNull: false, references: { model: Sensor, key: 'ManufacturerName' } },
+},
+{
+    sequelize,
+    modelName: 'SensorPropertyModel',
+});
+
+export default SensorProperty;

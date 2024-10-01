@@ -1,10 +1,21 @@
-import { SessionModel } from "./Session";
-import { DeviceModel } from "./Device";
-import { SensorPropertyModel } from "./SensorProperty";
+import Session from "./Session";
+import Device from "./Device";
+import SensorProperty from "./SensorProperty";
 
-export interface DeviceSensorConfigurationModel {
-    SessionId: number | SessionModel;
-    DeviceId: number | DeviceModel;
-    PropertyName: string | SensorPropertyModel;
-    Active: boolean;
-}
+import { Sequelize, DataTypes, Model } from 'sequelize'
+const sequelize = new Sequelize('sqlite::memory:');
+
+class DeviceSensorConfiguration extends Model {}
+
+DeviceSensorConfiguration.init({
+    SessionId: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false, references: { model: Session, key: 'SessionId' } },
+    DeviceId: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false, references: { model: Device, key: 'DeviceId' } },
+    PropertyName: { type: DataTypes.STRING, primaryKey: true, allowNull: false, references: { model: SensorProperty, key: 'PropertyName' } },
+    Active: { type: DataTypes.BOOLEAN, defaultValue: false },
+},
+{
+    sequelize,
+    modelName: 'DeviceSensorConfigurationModel',
+});
+
+export default DeviceSensorConfiguration;

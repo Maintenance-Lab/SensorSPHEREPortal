@@ -11,6 +11,15 @@ export interface LoginSessionModel {
   token: string;
 }
 
+// // sqlite version
+// const LoginSessionSchem  = new Schema({
+//   date: { type: Date, default: Date.now },
+//   Account: { type: ObjectId, ref: "Account" },
+//   userAgent: { type: String, required: true },
+//   ip: { type: String, required: true },
+//   token: { type: String, required: true },
+// });
+
 const LoginSessionSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
   Account: { type: ObjectId, ref: "Account" },

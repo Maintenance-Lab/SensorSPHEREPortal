@@ -1,37 +1,37 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { IS_PROD, JWT_ACCESS_SECRET } from "./config.js";
-import { AccountModel } from "./models/Account.js";
+import Account from "./models/Account.js";
 import { getLoginSessionsByAccountID } from "./services/LoginSession.js";
-import { LoginSessionModel } from "./models/LoginSession.js";
+import LoginSession from "./models/LoginSession.js";
 
 const isValidObjectID = (id: string): boolean => {
   return /^[0-9a-fA-F]{24}$/.test(id);
 };
 
-export const createAccountResponse = (account: Partial<AccountModel>): Partial<AccountModel> => {
-  let { _id, enabled, name, email, meta, createdBy, createdAt, hasChangedPassword, role, hasAvatar } = account;
-  if (createdBy && typeof createdBy === "object") createdBy = createdBy.name || "System";
+export const createAccountResponse = (account: Partial<Account>): Partial<Account> => {
+  // let { AccountId, Enabled, Name, Email, Meta, CreatedAt, HasChangedPassword, Role, HasAvatar } = account;
+  // if (createdBy && typeof createdBy === "object") createdBy = createdBy.name || "System";
+  const { AccountId, Enabled, Name, Email, Meta, CreatedAt, HasChangedPassword, Role, HasAvatar } = account;
   return {
-    _id,
-    enabled,
-    name,
-    email,
-    meta,
-    createdBy,
-    createdAt,
-    hasChangedPassword,
-    role,
-    hasAvatar,
+    AccountId,
+    Enabled,
+    Name,
+    Email,
+    Meta,
+    CreatedAt,
+    HasChangedPassword,
+    Role,
+    HasAvatar,
   };
 };
 
-export const createBaseAccount = (account: Partial<AccountModel>): Partial<AccountModel> => {
+export const createBaseAccount = (account: Partial<Account>): Partial<Account> => {
   console.log(account);
   return {
-    _id: account._id,
-    name: account.name,
-    email: account.email,
+    AccountId: account.AccountId,
+    Name: account.Name,
+    Email: account.Email,
   };
 }
 
@@ -48,7 +48,7 @@ export const isAdmin = async (req: Request, res: Response) => {
     res.status(401).send("Unauthorized");
     return false;
   }
-  if (account.role !== "administrator") {
+  if (account.Role !== "administrator") {
     res.status(403).send("Forbidden");
     return false;
   }
@@ -65,7 +65,7 @@ export const isAdmin = async (req: Request, res: Response) => {
     return false;
   }
 
-  const session = sessions.find((s) => s.token === cookies.token);
+  const session = sessions.find((s) => s.Token === cookies.token);
   if (!session) {
     res.cookie("token", "", { maxAge: 0 }).status(401).send("Unauthorized");
     return false;
@@ -75,8 +75,8 @@ export const isAdmin = async (req: Request, res: Response) => {
 };
 
 export interface SessionResponse {
-  account: Partial<AccountModel>;
-  sessions: LoginSessionModel[];
+  account: Partial<Account>;
+  sessions: LoginSession[];
 }
 
 export const getSession = async (req: Request, res: Response): Promise<SessionResponse | false> => {
@@ -108,7 +108,7 @@ export const getSession = async (req: Request, res: Response): Promise<SessionRe
     }
 
     // Find the session that matches the token
-    const session = sessions.find((s) => s.token === cookies.token);
+    const session = sessions.find((s) => s.Token === cookies.token);
     if (!session) {
       res.cookie("token", "", { maxAge: 0 }).status(401).send("Unauthorized");
       return false;
@@ -117,7 +117,7 @@ export const getSession = async (req: Request, res: Response): Promise<SessionRe
     const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
     // Check if the IP matches. We do not check user agents as this will be anoying when a browser updates.
-    if (session.ip !== ip) {
+    if (session.Ip !== ip) {
       res.cookie("token", "", { maxAge: 0 }).status(401).send("Unauthorized");
       return false;
     }

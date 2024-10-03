@@ -3,7 +3,19 @@ import Device from "./Device";
 import { Sequelize, DataTypes, Model } from 'sequelize'
 const sequelize = new Sequelize('sqlite::memory:');
 
-class Session extends Model {}
+class Session extends Model {
+    SessionId: number;
+    DeviceId: number;
+    Name: string;
+    Status: string;
+    ScheduledFrom: Date;
+    ScheduledTo: Date;
+    // ProjectId: number;
+    Meta: object;
+    CreatedAt: Date;
+    LastActive: Date;
+    Archived: boolean;
+}
 
 Session.init({
     SessionId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },

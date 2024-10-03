@@ -3,7 +3,13 @@ import Sensor from './Sensor';
 import { Sequelize, DataTypes, Model } from 'sequelize'
 const sequelize = new Sequelize('sqlite::memory:');
 
-class Device extends Model {}
+class Device extends Model {
+    DeviceId: number;
+    ManufacturerName: string;
+    Model: string;
+    ConnectStatus: boolean;
+    MaxHz: number;
+}
 
 Device.init({
     // Device id should be a mac address, maybe double check if this is correct?

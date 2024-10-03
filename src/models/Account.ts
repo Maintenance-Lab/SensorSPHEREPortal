@@ -3,7 +3,20 @@ import Project from "./Project";
 import { Sequelize, DataTypes, Model } from 'sequelize'
 const sequelize = new Sequelize('sqlite::memory:');
 
-class Account extends Model {}
+class Account extends Model {
+    AccountId: number;
+    ProjectId: number[];
+    Enabled: boolean;
+    Name: string;
+    Email: string;
+    Password: string;
+    Meta: object;
+    CreatedAt: Date;
+    HasChangedPassword: boolean;
+    Role: string;
+    HasAvatar: boolean;
+    PinnedProjects: number[];
+}
 
 Account.init({
     AccountId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, allowNull: false },

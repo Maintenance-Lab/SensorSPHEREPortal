@@ -3,7 +3,11 @@ import Sensor from "./Sensor";
 import { Sequelize, DataTypes, Model } from 'sequelize'
 const sequelize = new Sequelize('sqlite::memory:');
 
-class SensorProperty extends Model {}
+class SensorProperty extends Model {
+    PropertyName: string;
+    Model: string;
+    ManufacturerName: string;
+}
 
 SensorProperty.init({
     PropertyName: { type: DataTypes.STRING, primaryKey: true, allowNull: false },

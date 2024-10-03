@@ -126,8 +126,8 @@ const ManageUsers = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const updateAccount = async (id: string, update: any) => {
-    const index = accounts.findIndex((account) => account._id === id);
+  const updateAccount = async (id: number, update: any) => {
+    const index = accounts.findIndex((account) => account.AccountId === id);
     const account = accounts[index];
     if (!account) return;
     Object.assign(account, update);
@@ -244,16 +244,16 @@ const ManageUsers = () => {
       });
   };
 
-  const handleResetPassword = (id: string) => {
+  const handleResetPassword = (id: number) => {
     const password = generateRandomString(8);
     updateAccount(id, { password, hasChangedPassword: false });
   };
 
-  const handleToggleEnabled = (id: string, currentVal: boolean) => {
+  const handleToggleEnabled = (id: number, currentVal: boolean) => {
     updateAccount(id, { enabled: !currentVal });
   };
 
-  const handleRoleChange = (id: string, role: string) => {
+  const handleRoleChange = (id: number, role: string) => {
     updateAccount(id, { role });
   };
 

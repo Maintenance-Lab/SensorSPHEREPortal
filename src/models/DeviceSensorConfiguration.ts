@@ -5,7 +5,12 @@ import SensorProperty from "./SensorProperty";
 import { Sequelize, DataTypes, Model } from 'sequelize'
 const sequelize = new Sequelize('sqlite::memory:');
 
-class DeviceSensorConfiguration extends Model {}
+class DeviceSensorConfiguration extends Model {
+    SessionId: number;
+    DeviceId: number;
+    PropertyName: string;
+    Active: boolean;
+}
 
 DeviceSensorConfiguration.init({
     SessionId: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false, references: { model: Session, key: 'SessionId' } },

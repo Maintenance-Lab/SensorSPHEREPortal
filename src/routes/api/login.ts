@@ -17,29 +17,29 @@ router.post("/", async (req, res) => {
     const account = await getAccountByNameOrEmail(username);
     if (!account) return res.json({ success: false, location: null, error: "Invalid login credentials" });
 
-    if (!account.enabled)
+    if (!account.Enabled)
       return res.json({
         success: false,
         location: null,
         error: "Account is disabled, contact your system administrator",
       });
 
-    const isValid = await verify(account.password, password);
+    const isValid = await verify(account.Password, password);
     if (!isValid) return res.json({ success: false, location: null, error: "Invalid login credentials" });
 
-    const { _id, name, role, hasAvatar, email, hasChangedPassword } = account;
+    const { AccountId, Name, Role, HasAvatar, Email, HasChangedPassword } = account;
 
-    const token = jwt.sign({ _id, name, role, hasAvatar, email, hasChangedPassword }, JWT_ACCESS_SECRET, {
+    const Token = jwt.sign({ AccountId, Name, Role, HasAvatar, Email, HasChangedPassword }, JWT_ACCESS_SECRET, {
       expiresIn: JWT_EXPIRESIN,
     });
 
-    const userAgent = req.headers["user-agent"];
-    const ip: any = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+    const UserAgent = req.headers["user-agent"];
+    const Ip: any = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
-    await createLoginSession({ Account: _id, token, userAgent, ip });
+    await createLoginSession({ Account: AccountId, Token, UserAgent, Ip });
 
     return res
-      .cookie("token", token, {
+      .cookie("Token", Token, {
         secure: IS_PROD,
         maxAge: JWT_EXPIRESIN * 1000,
       })

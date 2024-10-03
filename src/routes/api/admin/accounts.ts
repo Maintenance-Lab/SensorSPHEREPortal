@@ -34,15 +34,15 @@ AdminAccountRouter.post("/create", async (req, res) => {
     const account = await isAdmin(req, res);
     if (!account) return;
 
-    const { name, email, role, password } = req.body;
-    if (!name || !email || !role || !password) return res.json({ success: false, error: "Missing fields" });
+    const { Name, Email, Role, Password } = req.body;
+    if (!Name || !Email || !Role || !Password) return res.json({ success: false, error: "Missing fields" });
 
-    const hashedPassword = await hash(password);
-    const newAccount = await createAccount({ name, email, role, password: hashedPassword, createdBy: account._id });
+    const hashedPassword = await hash(Password);
+    const newAccount = await createAccount({ Name, Email, Role, Password: hashedPassword});
 
     const resposeAccount = createAccountResponse(newAccount);
     if (!resposeAccount) return res.json({ success: false, error: "Error creating account" });
-    resposeAccount["createdBy"] = account.name || "System";
+    // resposeAccount["createdBy"] = account.name || "System";
 
     return res.json({ success: true, error: null, account: resposeAccount });
   } catch (error: any) {

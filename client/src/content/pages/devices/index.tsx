@@ -46,7 +46,7 @@ const fetchActiveProjects = async () => {
   return data;
 }
 
-const updateProject = async (projectId: string, selectedSensorUnits) => {
+const updateProject = async (projectId: number, selectedSensorUnits) => {
   console.log('Updating project', projectId, selectedSensorUnits);
   const projectResponse = await fetch('/api/projects/id/' + projectId, {
     method: 'GET',

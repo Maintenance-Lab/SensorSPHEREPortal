@@ -1,13 +1,13 @@
-import LoginSession, { LoginSessionModel } from "../models/LoginSession.js";
+import LoginSession from "../models/LoginSession.js";
 import { JWT_EXPIRESIN } from "../config.js";
 
-export const getLoginSessionsByAccountID = (id: string): Promise<LoginSessionModel[]> => {
+export const getLoginSessionsByAccountID = (id: string): Promise<LoginSession[]> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const doc = await LoginSession.find({ Account: id });
-      const notExpired = doc.filter(({ date }) => {
+      const doc = await LoginSession.findAll({ where: { Account: id }});
+      const notExpired = doc.filter(({ LoginSessionDate }) => {
         const now = new Date();
-        const diff = now.getTime() - date.getTime();
+        const diff = now.getTime() - LoginSessionDate.getTime();
         return (diff * 1000) < JWT_EXPIRESIN;
       });
       return resolve(doc);
@@ -17,7 +17,7 @@ export const getLoginSessionsByAccountID = (id: string): Promise<LoginSessionMod
   });
 };
 
-export const createLoginSession = (item: Partial<LoginSessionModel>): Promise<LoginSessionModel> => {
+export const createLoginSession = (item: Partial<LoginSession>): Promise<LoginSession> => {
   return new Promise(async (resolve, reject) => {
     try {
       const result = await LoginSession.create(item);
@@ -28,10 +28,13 @@ export const createLoginSession = (item: Partial<LoginSessionModel>): Promise<Lo
   });
 };
 
-export const deleteLoginSession = (id: string): Promise<LoginSessionModel> => {
+export const deleteLoginSession = (id: string): Promise<LoginSession> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const doc = await LoginSession.findByIdAndDelete(id);
+      const doc = await LoginSession.findByPk(id);
+      if (!doc) return reject(new Error("LoginSession not found"));
+      await doc.destroy();
+
       return resolve(doc);
     } catch (error) {
       reject(error);
@@ -42,7 +45,7 @@ export const deleteLoginSession = (id: string): Promise<LoginSessionModel> => {
 export const deleteLoginSessionsByAccountID = (id: string) => {
   return new Promise(async (resolve, reject) => {
     try {
-      await LoginSession.deleteMany({ Account: id });
+      await LoginSession.destroy({ where: { Account: id }});
       return resolve(true);
     } catch (error) {
       reject(error);

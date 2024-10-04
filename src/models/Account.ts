@@ -37,4 +37,4 @@ Account.init({
     modelName: 'AccountModel',
 });
 
-export default Account;
+export default Project;

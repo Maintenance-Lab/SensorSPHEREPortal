@@ -10,7 +10,10 @@ router.get("/testing", async (_, res) => {
 //     console.log("testing spannend!!!");
 //     console.log("db", db);
 
-    db.all('SELECT * FROM Sensor', (err: Error, rows: any[]) => {
+// Get project names for account 1
+
+    db.all('SELECT * FROM Project JOIN AccountProjectMapping ON Project.ProjectID = AccountProjectMapping.ProjectID WHERE AccountProjectMapping.AccountID = 1;', (err, rows) => {
+
         if (err) {
             console.error(err.message);
             return res.status(500).json({ error: err.message });
@@ -18,15 +21,6 @@ router.get("/testing", async (_, res) => {
         console.log("ROWS: ", rows);
         return res.json(rows);
     });
-
-//     db.all('SELECT * FROM books', (err: Error, rows: any[]) => {
-//         if (err) {
-//             console.error(err.message);
-//             return res.status(500).json({ error: err.message });
-//         }
-//         console.log("ROWS: ", rows);
-//         return res.json(rows);
-//     });
 });
 
 export default router;

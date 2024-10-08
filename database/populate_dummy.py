@@ -112,6 +112,54 @@ c.executemany('''
     VALUES (?, ?, ?)
 ''', sensor_properties)
 
+# Create mappings between sessions and devices
+session_device_mappings = [
+    (1, 1),  # Session 1 is using Device 1
+    (1, 2),  # Session 1 is using Device 2
+    (2, 3),  # Session 2 is using Device 3
+    (3, 4),  # Session 3 is using Device 4
+    (4, 1),  # Session 4 is using Device 1
+    (4, 5),  # Session 4 is using Device 5
+    (5, 2)   # Session 5 is using Device 2
+]
+
+c.executemany('''
+    INSERT INTO SessionDeviceMapping (SessionId, DeviceId)
+    VALUES (?, ?)
+''', session_device_mappings)
+
+# Create mappings between devices and sensors
+device_sensor_mappings = [
+    (1, "TempSensor", "SensorCo", 1),  # Device 1 is mapped to TempSensor
+    (2, "PressureSensor", "DeviceInc", 1),  # Device 2 is mapped to PressureSensor
+    (3, "HumiditySensor", "GadgetWorks", 1),  # Device 3 is mapped to HumiditySensor
+    (4, "TempSensor", "SensorCo", 1),  # Device 4 is mapped to TempSensor
+    (5, "PressureSensor", "DeviceInc", 1)   # Device 5 is mapped to PressureSensor
+]
+
+c.executemany('''
+    INSERT INTO DeviceSensorMapping (DeviceId, SensorModel, ManufacturerName, Channel)
+    VALUES (?, ?, ?, ?)
+''', device_sensor_mappings)
+
+
+# Create mappings between accounts and projects
+account_project_mappings = [
+    (1, 1),  # Alice Johnson is mapped to Project Alpha
+    (1, 2),  # Alice Johnson is mapped to Project Beta
+    (2, 1),  # Bob Smith is mapped to Project Alpha
+    (2, 3),  # Bob Smith is mapped to Project Gamma
+    (3, 4),  # Charlie Brown is mapped to Project Delta
+    (4, 5),  # David Wilson is mapped to Project Epsilon
+    (5, 1)   # Eva Green is mapped to Project Alpha
+]
+
+c.executemany('''
+    INSERT INTO AccountProjectMapping (AccountId, ProjectId)
+    VALUES (?, ?)
+''', account_project_mappings)
+
+
 # Commit the changes and close the connection
 conn.commit()
 conn.close()

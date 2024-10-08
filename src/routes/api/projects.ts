@@ -4,12 +4,11 @@ import {
   getAllProjects,
   getProjectById,
   getProjectByName,
-  getProjectsByAccount,
+  // getProjectsByAccount,
   createProject,
   createProjects,
   updateProject,
-  getArchivedProjectsByOwner,
-  getActiveProjectsByOwner,
+  // getArchivedProjectsByOwner,
   deleteProjects,
   getActiveProjectsByAccountId,
   getArchivedProjectsByAccountId,
@@ -59,7 +58,8 @@ router.get("/id/:id", async (req, res) => {
     if (!response) return;
 
     const id = Number(req.params);
-    const doc: any = await getProjectById(id, true);
+    // const doc: any = await getProjectById(id, true);
+    const doc: any = await getProjectById(id);
     if (!doc) return res.status(404).json({ message: "Project not found" });
 
     // // check if user is owner or collaborator
@@ -116,7 +116,7 @@ router.post("/create", async (req, res) => {
   if (!AccountId) return res.status(400).json({ message: "Account ID is required" });
 
   const { body } = req;
-  body.owner = AccountId;
+  // body.owner = AccountId;
   const result = await createProject(body);
   return res.json(result);
 });
@@ -171,7 +171,7 @@ router.put("/update-many", async (req, res) => {
       const project: any = await getProjectById(id);
       if (!project) return res.status(404).json({ message: "Project not found" });
 
-      if (project.owner?._id.toString() !== AccountId) return res.status(401).json({ message: "Unauthorized" });
+      // if (project.owner?._id.toString() !== AccountId) return res.status(401).json({ message: "Unauthorized" });
 
       toUpdate.push({ id, cleaned });
     }
@@ -201,7 +201,7 @@ router.post("/delete", async (req, res) => {
   const project: any = await getProjectById(ids);
   if (!project) return res.status(404).json({ message: "Project not found" });
 
-  if (project.owner?._id.toString() !== AccountId) return res.status(401).json({ message: "Unauthorized" });
+  // if (project.owner?._id.toString() !== AccountId) return res.status(401).json({ message: "Unauthorized" });
 
   const result = await deleteProjects(ids);
   return res.json(result);
@@ -215,6 +215,6 @@ const cleanBody = (body: Partial<Project>) => {
   if (cleaned.Meta) delete cleaned.Meta;
   if (cleaned.CreatedAt) delete cleaned.CreatedAt;
   if (cleaned.ProjectId) delete cleaned.ProjectId;
-  if (cleaned.Owner) delete cleaned.Owner;
+  // if (cleaned.Owner) delete cleaned.Owner;
   return cleaned;
 };

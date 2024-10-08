@@ -1,16 +1,16 @@
 import { Sequelize, DataTypes, Model } from 'sequelize'
 const sequelize = new Sequelize('sqlite::memory:');
 
-class SensorManufacturer extends Model {
+class Manufacturer extends Model {
     ManufacturerName: string;
 }
 
-SensorManufacturer.init({
+Manufacturer.init({
     ManufacturerName: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
 },
 {
     sequelize,
-    modelName: 'SensorManufacturerModel',
+    modelName: 'ManufacturerModel',
 });
 
-export default SensorManufacturer;
+export default Manufacturer;

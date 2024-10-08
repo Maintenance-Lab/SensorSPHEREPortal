@@ -21,7 +21,6 @@ Project.init({
     Name: { type: DataTypes.STRING(100), allowNull: false },
     Description: { type: DataTypes.STRING(1000)},
     Meta: { type: DataTypes.JSON, defaultValue: {} },
-    // Owner: { type: DataTypes.ARRAY(DataTypes.INTEGER), references: { model: Account, key: 'AccountId' } },
     CreatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     // SessionId: { type: DataTypes.ARRAY(DataTypes.INTEGER), references: { model: Session, key: 'SessionId' } },
     LastActive: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },

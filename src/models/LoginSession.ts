@@ -1,5 +1,5 @@
-import Account from "./Account";
-import { Sequelize, DataTypes, Model } from 'sequelize'
+import Account from "./Account.js";
+import { Sequelize, DataTypes, Model } from 'sequelize';
 const sequelize = new Sequelize('sqlite::memory:');
 
 class LoginSession extends Model {

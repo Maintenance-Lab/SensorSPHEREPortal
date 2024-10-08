@@ -5,7 +5,7 @@ const sequelize = new Sequelize('sqlite::memory:');
 
 class Session extends Model {
     SessionId: number;
-    DeviceId: number;
+    // DeviceId: number;
     Name: string;
     Status: string;
     ScheduledFrom: Date;
@@ -19,7 +19,7 @@ class Session extends Model {
 
 Session.init({
     SessionId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    DeviceId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Device, key: 'DeviceId' } },
+    // DeviceId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Device, key: 'DeviceId' } },
     Name: { type: DataTypes.STRING, allowNull: false },
     Status: { type: DataTypes.STRING, allowNull: false, validate: { isIn: [['inactive', 'active', 'activeScheduled', 'paused', 'completed', 'error', 'scheduled', 'stopped']] } },
     ScheduledFrom: { type: DataTypes.DATE, allowNull: false },

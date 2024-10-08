@@ -56,7 +56,7 @@ const initDb = () => {
                 FOREIGN KEY (ProjectId) REFERENCES Project(ProjectId)
             );
         `);
-        
+
 
         // Session table
         db.run(`
@@ -163,7 +163,7 @@ const initDb = () => {
                 ManufacturerName TEXT PRIMARY KEY
             );
         `);
-        
+
     })
     return db;
 };
@@ -178,7 +178,6 @@ const closeDb = (db: Database) => {
     });
 };
 
+const db = initDb();
 export { initDb, closeDb };
-// const db = initDb();
-
-// export default db;
+export default db;

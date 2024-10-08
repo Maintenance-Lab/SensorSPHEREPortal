@@ -125,9 +125,9 @@ export const Overview = () => {
               </Typography>
               <Box>
                 {data.length > 0 ? (
-                  data.map((book, index) => (
+                  data.map((sensor, index) => (
                     <Typography key={index} variant="body1">
-                      {book.title}
+                      {sensor.CategoryName}
                     </Typography>
                   ))
                 ) : (

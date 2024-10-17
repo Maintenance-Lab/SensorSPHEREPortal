@@ -1,4 +1,4 @@
-import { config } from "dotenv-safe";
+import { config } from 'dotenv-safe';
 config();
 
 export const ENV = process.env.ENV;

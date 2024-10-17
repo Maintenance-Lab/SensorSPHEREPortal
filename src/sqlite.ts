@@ -1,6 +1,8 @@
 import sqlite3 from 'sqlite3';
+// import * as sqlite3 from 'sqlite3';
 import { Database } from 'sqlite3';
 import { SQLITE_PATH } from './config.js';
+import sequelize from './sequelize.js';
 
 // const sqlite3 = require('sqlite3').verbose();
 
@@ -14,9 +16,9 @@ const initDb = () => {
         console.log('Connected to SQLite database.');
         }
     });
+
     // Create tables
     db.serialize(() => {
-
         // Account table
         db.run(`
             CREATE TABLE IF NOT EXISTS Account (
@@ -164,6 +166,18 @@ const initDb = () => {
             );
         `);
 
+        // LoginSession table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS LoginSession (
+                LoginSessionId INTEGER PRIMARY KEY AUTOINCREMENT,
+                Account INTEGER,
+                LoginSessionDate DATE,
+                UserAgent TEXT,
+                Ip TEXT,
+                Token TEXT,
+                FOREIGN KEY (Account) REFERENCES Account(AccountId)
+            );
+        `);
     })
     return db;
 };
@@ -178,6 +192,29 @@ const closeDb = (db: Database) => {
     });
 };
 
-const db = initDb();
-export { initDb, closeDb };
-export default db;
+
+// (async () => {
+//     await sequelize.sync({force: true});
+//     console.log('All models were synchronized successfully.');
+// })();
+
+const startDb = async () => {
+    // Set up associations
+    // TODO: Add associations
+    // console.log('In set up associations');
+
+    // Sync models to the database
+    // await sequelize.sync({alter: true});
+    await sequelize.sync();
+    console.log('All models were synchronized successfully.');
+}
+
+// initDb();
+// startDb();
+
+export { initDb, closeDb, startDb };
+// export default db;
+
+
+
+

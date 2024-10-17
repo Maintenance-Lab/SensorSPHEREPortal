@@ -1,8 +1,6 @@
-// import Account from "./Account";
-import Session from "./Session";
-
 import { Sequelize, DataTypes, Model } from 'sequelize';
-const sequelize = new Sequelize('sqlite::memory:');
+import sequelize from '../sequelize.js';
+// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class Project extends Model {
     ProjectId: number;
@@ -28,7 +26,9 @@ Project.init({
 },
 {
     sequelize,
-    modelName: 'ProjectModel',
+    modelName: 'Project',
+    tableName: 'Project',
+    timestamps: false,
 });
 
 export default Project;

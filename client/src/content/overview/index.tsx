@@ -123,17 +123,6 @@ export const Overview = () => {
               <Typography variant="subtitle1" gutterBottom>
                 Welcome to SensorSphere, your gateway to manage your projects
               </Typography>
-              <Box>
-                {data.length > 0 ? (
-                  data.map((Project, index) => (
-                    <Typography key={index} variant="body1">
-                      {Project.Name}
-                    </Typography>
-                  ))
-                ) : (
-                  <Typography variant="body1">No projects available</Typography>
-                )}
-              </Box>
             </Box>
           </Box>
           <Box className={classes.buttonBox}>

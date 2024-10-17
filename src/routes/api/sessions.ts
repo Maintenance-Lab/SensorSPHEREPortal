@@ -1,5 +1,5 @@
-import { Router } from "express";
-import { IS_PROD } from "../../config.js";
+import { Router } from 'express';
+import { IS_PROD } from '../../config.js';
 import {
     getSessionById,
     createSession,
@@ -8,7 +8,7 @@ import {
     getActiveSessionsByProject,
     getArchivedSessionsByProject,
     deleteSession
-} from "../../services/Sessions.js";
+} from '../../services/Sessions.js';
 
 const router = Router();
 

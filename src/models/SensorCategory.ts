@@ -1,5 +1,6 @@
 import { Sequelize, DataTypes, Model } from 'sequelize'
-const sequelize = new Sequelize('sqlite::memory:');
+import sequelize from '../sequelize.js';
+// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class SensorCategory extends Model {
     CategoryName: string;
@@ -10,7 +11,9 @@ SensorCategory.init({
 },
 {
     sequelize,
-    modelName: 'SensorCategoryModel',
+    modelName: 'SensorCategory',
+    tableName: 'SensorCategory',
+    timestamps: false,
 });
 
 export default SensorCategory;

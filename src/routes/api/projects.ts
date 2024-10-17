@@ -1,5 +1,5 @@
-import { Router } from "express";
-import { IS_PROD } from "../../config.js";
+import { Router } from 'express';
+import { IS_PROD } from '../../config.js';
 import {
   getAllProjects,
   getProjectById,
@@ -12,10 +12,9 @@ import {
   deleteProjects,
   getActiveProjectsByAccountId,
   getArchivedProjectsByAccountId,
-} from "../../services/Projects.js";
-import { getSession } from "../../utils.js";
-import Project from "src/models/Project.js";
-import Account from "src/models/Account.js";
+} from '../../services/Projects.js';
+import { getSession } from '../../utils.js';
+import Project from '../../models/Project.js';
 
 const router = Router();
 

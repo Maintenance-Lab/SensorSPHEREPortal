@@ -1,7 +1,6 @@
-import Device from "./Device";
-
 import { Sequelize, DataTypes, Model } from 'sequelize'
-const sequelize = new Sequelize('sqlite::memory:');
+import sequelize from '../sequelize.js';
+// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class Session extends Model {
     SessionId: number;
@@ -32,7 +31,9 @@ Session.init({
 },
 {
     sequelize,
-    modelName: 'SessionModel',
+    modelName: 'Session',
+    tableName: 'Session',
+    timestamps: false,
 });
 
 export default Session;

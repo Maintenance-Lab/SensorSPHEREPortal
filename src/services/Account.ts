@@ -1,5 +1,7 @@
-import Account from "../models/Account.js";
-// import {Account, AccountModel} from "../models/Account";
+import e from 'express';
+import Account from '../models/Account.js';
+import { Op } from 'sequelize';
+// import {Account, AccountModel} from '../models/Account";
 // Als je dit weghaald krijg je errors bij find
 
 export const getAllAccounts = (): Promise<Account[]> => {
@@ -49,16 +51,37 @@ export const getAccountByName = (name: string): Promise<Account> => {
   });
 };
 
+// where: {LastName: "Doe", $or: [{FirstName:{ $eq: "John"}}]
+// {where: {LastName: "Doe",$or: [{FirstName:{$eq: "John"}} ]} }
+
 export const getAccountByNameOrEmail = (input: string): Promise<Account> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const doc = await Account.findOne({where: { $or: [{ Name: input }, { Email: input }] }});
+      const doc = await Account.findOne({where: {[Op.or]: [{ name: input },{ email: input }]}})
       if (!doc) return reject(new Error("Account not found"));
-      return resolve(doc);
+      else {
+        return resolve(doc);
+      }
     } catch (error) {
       reject(error);
     }
   });
+
+
+
+  // return new Promise(async (resolve, reject) => {
+  //   console.log("input", input);
+  //   try {
+  //       const doc = await Account.findOne({ where: { name: input }});
+  //       // console.log("doc", doc);
+  //       if (doc != null) {
+  //         return resolve(doc);
+  //       }
+  //   } catch (error) {
+  //     console.log("error", error);
+  //     reject(error);
+  //   }
+  // });
 };
 
 export const createAccount = (item: Partial<Account>): Promise<Account> => {

@@ -1,5 +1,6 @@
 import { Sequelize, DataTypes, Model } from 'sequelize';
-const sequelize = new Sequelize('sqlite::memory:');
+import sequelize from '../../sequelize.js';
+// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class SessionDeviceMapping extends Model {
     SessionId: number;
@@ -14,6 +15,8 @@ SessionDeviceMapping.init({
 }, {
     sequelize,
     modelName: 'SessionDeviceMapping',
+    tableName: 'SessionDeviceMapping',
+    timestamps: false,
 });
 
 export default SessionDeviceMapping;

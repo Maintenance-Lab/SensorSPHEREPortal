@@ -1,7 +1,8 @@
-import Sensor from "./Sensor";
+import Sensor from './Sensor';
 
 import { Sequelize, DataTypes, Model } from 'sequelize'
-const sequelize = new Sequelize('sqlite::memory:');
+import sequelize from '../sequelize.js';
+// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class SensorProperty extends Model {
     PropertyName: string;
@@ -16,7 +17,9 @@ SensorProperty.init({
 },
 {
     sequelize,
-    modelName: 'SensorPropertyModel',
+    modelName: 'SensorProperty',
+    tableName: 'SensorProperty',
+    timestamps: false,
 });
 
 export default SensorProperty;

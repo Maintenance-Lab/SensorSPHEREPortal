@@ -1,7 +1,7 @@
-import LoginSession from "../models/LoginSession.js";
-import { JWT_EXPIRESIN } from "../config.js";
+import LoginSession from '../models/LoginSession.js';
+import { JWT_EXPIRESIN } from '../config.js';
 
-export const getLoginSessionsByAccountID = (id: string): Promise<LoginSession[]> => {
+export const getLoginSessionsByAccountID = (id: number): Promise<LoginSession[]> => {
   return new Promise(async (resolve, reject) => {
     try {
       const doc = await LoginSession.findAll({ where: { Account: id }});
@@ -28,7 +28,7 @@ export const createLoginSession = (item: Partial<LoginSession>): Promise<LoginSe
   });
 };
 
-export const deleteLoginSession = (id: string): Promise<LoginSession> => {
+export const deleteLoginSession = (id: number): Promise<LoginSession> => {
   return new Promise(async (resolve, reject) => {
     try {
       const doc = await LoginSession.findByPk(id);
@@ -42,7 +42,7 @@ export const deleteLoginSession = (id: string): Promise<LoginSession> => {
   });
 };
 
-export const deleteLoginSessionsByAccountID = (id: string) => {
+export const deleteLoginSessionsByAccountID = (id: number) => {
   return new Promise(async (resolve, reject) => {
     try {
       await LoginSession.destroy({ where: { Account: id }});

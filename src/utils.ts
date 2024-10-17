@@ -1,9 +1,9 @@
-import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
-import { IS_PROD, JWT_ACCESS_SECRET } from "./config.js";
-import Account from "./models/Account.js";
-import { getLoginSessionsByAccountID } from "./services/LoginSession.js";
-import LoginSession from "./models/LoginSession.js";
+import { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
+import { IS_PROD, JWT_ACCESS_SECRET } from './config.js';
+import Account from './models/Account.js';
+import { getLoginSessionsByAccountID } from './services/LoginSession.js';
+import LoginSession from './models/LoginSession.js';
 
 const isValidObjectID = (id: string): boolean => {
   return /^[0-9a-fA-F]{24}$/.test(id);

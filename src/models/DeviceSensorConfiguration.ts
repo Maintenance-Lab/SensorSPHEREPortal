@@ -1,9 +1,10 @@
-import Session from "./Session";
-import Device from "./Device";
-import SensorProperty from "./SensorProperty";
+import Session from './Session';
+import Device from './Device';
+import SensorProperty from './SensorProperty';
+import sequelize from '../sequelize.js';
 
 import { Sequelize, DataTypes, Model } from 'sequelize'
-const sequelize = new Sequelize('sqlite::memory:');
+// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class DeviceSensorConfiguration extends Model {
     SessionId: number;
@@ -20,7 +21,9 @@ DeviceSensorConfiguration.init({
 },
 {
     sequelize,
-    modelName: 'DeviceSensorConfigurationModel',
+    modelName: 'DeviceSensorConfiguration',
+    tableName: 'DeviceSensorConfiguration',
+    timestamps: false,
 });
 
 export default DeviceSensorConfiguration;

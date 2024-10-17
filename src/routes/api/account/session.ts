@@ -1,7 +1,7 @@
-import { Router } from "express";
-import { getSession } from "../../../utils.js";
-import { deleteLoginSession } from "../../../services/LoginSession.js";
-import { IS_PROD } from "../../../config.js";
+import { Router } from 'express';
+import { getSession } from '../../../utils.js';
+import { deleteLoginSession } from '../../../services/LoginSession.js';
+import { IS_PROD } from '../../../config.js';
 
 const router = Router();
 
@@ -15,7 +15,7 @@ router.get("/", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = Number(req.params.id);
     if (!id) return res.status(400).json({ message: "Invalid request" });
 
     // Make sure the user is logged in and the session exists

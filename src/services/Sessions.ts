@@ -1,4 +1,4 @@
-import Session from "../models/Session.js";
+import Session from '../models/Session.js';
 
 export const getSessionById = async (id: number): Promise<Session> => {
   return new Promise(async (resolve, reject) => {

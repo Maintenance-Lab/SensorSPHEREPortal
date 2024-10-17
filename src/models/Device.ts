@@ -1,7 +1,8 @@
 import Sensor from './Sensor';
 
 import { Sequelize, DataTypes, Model } from 'sequelize'
-const sequelize = new Sequelize('sqlite::memory:');
+import sequelize from '../sequelize.js';
+// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class Device extends Model {
     DeviceId: number;
@@ -21,7 +22,9 @@ Device.init({
 },
 {
     sequelize,
-    modelName: 'DeviceModel',
+    modelName: 'Device',
+    tableName: 'Device',
+    timestamps: false,
 });
 
 export default Device;

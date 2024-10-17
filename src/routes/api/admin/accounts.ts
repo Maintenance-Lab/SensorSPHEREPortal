@@ -1,10 +1,10 @@
-import { Router } from "express";
-import { IS_PROD } from "../../../config.js";
-import { createAccount, getAllAccounts, updateAccount } from "../../../services/Account.js";
-import { hash } from "@node-rs/argon2";
-import { handleMongoError } from "../../../tools/utils.js";
-import mongoose from "mongoose";
-import { isAdmin, createAccountResponse } from "../../../utils.js";
+import { Router } from 'express';
+import { IS_PROD } from '../../../config.js';
+import { createAccount, getAllAccounts, updateAccount } from '../../../services/Account.js';
+import { hash } from '@node-rs/argon2';
+import { handleMongoError } from '../../../tools/utils.js';
+import mongoose from 'mongoose';
+import { isAdmin, createAccountResponse } from '../../../utils.js';
 
 const AdminAccountRouter = Router();
 

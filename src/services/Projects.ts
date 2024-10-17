@@ -1,7 +1,7 @@
-import { createBaseAccount } from "../utils.js";
-import Project from "../models/Project.js";
-// was import { Project, ProjectModel } from "src/models/Project.js";
-import Account from "../models/Account.js";
+import { createBaseAccount } from '../utils.js';
+import Project from '../models/Project.js';
+// was import { Project, ProjectModel } from 'src/models/Project.js';
+import Account from '../models/Account.js';
 
 export const getAllProjects = async () => {
   return new Promise(async (resolve) => {

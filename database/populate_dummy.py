@@ -4,16 +4,23 @@ import string
 import datetime
 
 # connect to the database
-conn = sqlite3.connect('db.sqlite3')
+conn = sqlite3.connect('database/db.sqlite3')
 c = conn.cursor()
+
+# First delete all existing data
+def delete_all():
+    for table in ['AccountProjectMapping', 'DeviceSensorConfiguration', 'DeviceSensorMapping', 'SessionDeviceMapping', 'SensorProperty', 'Sensor', 'Manufacturer', 'SensorCategory', 'Device', 'Session', 'Project', 'Account']:
+        c.execute(f'DELETE FROM {table};')
+
+delete_all();
 
 # Create dummy accounts
 accounts = [
-    (1, 1, "Alice Johnson", "password123", "Admin", "alice@example.com", None, "2023-01-01", 0, 1),
-    (2, 1, "Bob Smith", "password123", "User", "bob@example.com", None, "2023-01-02", 0, 1),
-    (3, 1, "Charlie Brown", "password123", "User", "charlie@example.com", None, "2023-01-03", 0, 0),
-    (4, 1, "David Wilson", "password123", "Admin", "david@example.com", None, "2023-01-04", 0, 1),
-    (5, 1, "Eva Green", "password123", "User", "eva@example.com", None, "2023-01-05", 0, 0)
+    (1, 1, "Test", "password123", "admin", "test@example.com", None, "2023-01-01", 0, 1),
+    (2, 1, "Bob Smith", "password123", "student", "bob@example.com", None, "2023-01-02", 0, 1),
+    (3, 1, "Charlie Brown", "password123", "student", "charlie@example.com", None, "2023-01-03", 0, 0),
+    (4, 1, "David Wilson", "password123", "student", "david@example.com", None, "2023-01-04", 0, 1),
+    (5, 1, "Eva Green", "password123", "student", "eva@example.com", None, "2023-01-05", 0, 0)
 ]
 
 c.executemany('''
@@ -145,19 +152,49 @@ c.executemany('''
 
 # Create mappings between accounts and projects
 account_project_mappings = [
-    (1, 1),  # Alice Johnson is mapped to Project Alpha
-    (1, 2),  # Alice Johnson is mapped to Project Beta
-    (2, 1),  # Bob Smith is mapped to Project Alpha
-    (2, 3),  # Bob Smith is mapped to Project Gamma
-    (3, 4),  # Charlie Brown is mapped to Project Delta
-    (4, 5),  # David Wilson is mapped to Project Epsilon
-    (5, 1)   # Eva Green is mapped to Project Alpha
+    (1, 1),
+    (1, 2),
+    (2, 1),
+    (2, 3),
+    (3, 4),
+    (4, 5),
+    (5, 1)
 ]
 
 c.executemany('''
     INSERT INTO AccountProjectMapping (AccountId, ProjectId)
     VALUES (?, ?)
 ''', account_project_mappings)
+
+# Device sensor configurations
+device_sensor_configurations = [
+    (1, 1, "MaxTemperature", 1),  # Device 1 is configured to monitor MaxTemperature
+    (1, 1, "MinTemperature", 0),  # Device 1 is configured to monitor MinTemperature
+    (1, 1, "GyroX", 0),  # Device 1 is configured to monitor GyroX
+    (1, 1, "GyroY", 1),  # Device 1 is configured to monitor GyroY
+    (1, 1, "GyroZ", 0),  # Device 1 is configured to monitor GyroZ
+    (1, 2, "PressureLevel", 1),  # Device 2 is configured to monitor PressureLevel
+    (2, 3, "HumidityLevel", 1),  # Device 3 is configured to monitor HumidityLevel
+    (3, 4, "MaxTemperature", 0),  # Device 4 is configured to monitor MaxTemperature
+    (4, 1, "PressureLevel", 1),  # Device 1 is configured to monitor PressureLevel
+    (4, 5, "HumidityLevel", 0),  # Device 5 is configured to monitor HumidityLevel
+    (5, 2, "MaxTemperature", 1)   # Device 2 is configured to monitor MaxTemperature
+]
+
+c.executemany('''
+    INSERT INTO DeviceSensorConfiguration (SessionId, DeviceId, PropertyName, Active)
+    VALUES (?, ?, ?, ?)
+''', device_sensor_configurations)
+
+# add 1 loginsession
+loginsession = [
+    (0, 1, "2023-01-01", "Mozilla/5.0", "127.000.1", "1234567890")
+]
+
+c.executemany('''
+    INSERT INTO LoginSession (LoginSessionId, Account, LoginSessionDate, UserAgent, Ip, Token)
+    VALUES (?, ?, ?, ?, ?, ?)
+''', loginsession)
 
 
 # Commit the changes and close the connection

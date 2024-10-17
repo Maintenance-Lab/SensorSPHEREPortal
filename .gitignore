@@ -24,6 +24,7 @@
 # databases
 *.sqlite
 *.sqlite3
+\database
 
 *.log*
 .vscode

@@ -3,8 +3,10 @@ import random
 import string
 import datetime
 
+database_path = "fill_in"
+
 # connect to the database
-conn = sqlite3.connect('database/db.sqlite3')
+conn = sqlite3.connect(database_path)
 c = conn.cursor()
 
 # First delete all existing data
@@ -24,7 +26,7 @@ accounts = [
 ]
 
 c.executemany('''
-    INSERT INTO Account (AccountId, Enabled, Name, Password, Role, Email, Meta, CreatedAt, HasChangedPassword, HasAvatar)
+    INSERT INTO Account (accountId, enabled, name, password, role, email, meta, createdAt, hasChangedPassword, hasAvatar)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ''', accounts)
 
@@ -38,7 +40,7 @@ projects = [
 ]
 
 c.executemany('''
-    INSERT INTO Project (ProjectId, Name, Description, Meta, CreatedAt, LastActive, Archived)
+    INSERT INTO Project (projectId, name, description, meta, createdAt, lastActive, archived)
     VALUES (?, ?, ?, ?, ?, ?, ?)
 ''', projects)
 
@@ -52,7 +54,7 @@ sessions = [
 ]
 
 c.executemany('''
-    INSERT INTO Session (SessionId, Name, Status, ScheduledFrom, ScheduledTo, Meta, CreatedAt, LastActive, Archived)
+    INSERT INTO Session (sessionId, name, status, scheduledFrom, scheduledTo, meta, createdAt, lastActive, archived)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 ''', sessions)
 
@@ -66,7 +68,7 @@ devices = [
 ]
 
 c.executemany('''
-    INSERT INTO Device (DeviceId, ConnectStatus, MaxHz)
+    INSERT INTO Device (deviceId, connectStatus, maxHz)
     VALUES (?, ?, ?)
 ''', devices)
 
@@ -78,7 +80,7 @@ sensor_categories = [
 ]
 
 c.executemany('''
-    INSERT INTO SensorCategory (CategoryName)
+    INSERT INTO SensorCategory (categoryName)
     VALUES (?)
 ''', [(category,) for category in sensor_categories])
 
@@ -90,7 +92,7 @@ manufacturers = [
 ]
 
 c.executemany('''
-    INSERT INTO Manufacturer (ManufacturerName)
+    INSERT INTO Manufacturer (manufacturerName)
     VALUES (?)
 ''', [(manufacturer,) for manufacturer in manufacturers])
 
@@ -102,7 +104,7 @@ sensors = [
 ]
 
 c.executemany('''
-    INSERT INTO Sensor (Model, ManufacturerName, CategoryName, PropertyName)
+    INSERT INTO Sensor (model, manufacturerName, categoryName, propertyName)
     VALUES (?, ?, ?, ?)
 ''', sensors)
 
@@ -115,7 +117,7 @@ sensor_properties = [
 ]
 
 c.executemany('''
-    INSERT INTO SensorProperty (PropertyName, Model, ManufacturerName)
+    INSERT INTO SensorProperty (propertyName, model, manufacturerName)
     VALUES (?, ?, ?)
 ''', sensor_properties)
 
@@ -131,7 +133,7 @@ session_device_mappings = [
 ]
 
 c.executemany('''
-    INSERT INTO SessionDeviceMapping (SessionId, DeviceId)
+    INSERT INTO SessionDeviceMapping (sessionId, deviceId)
     VALUES (?, ?)
 ''', session_device_mappings)
 
@@ -145,7 +147,7 @@ device_sensor_mappings = [
 ]
 
 c.executemany('''
-    INSERT INTO DeviceSensorMapping (DeviceId, SensorModel, ManufacturerName, Channel)
+    INSERT INTO DeviceSensorMapping (deviceId, sensorModel, manufacturerName, channel)
     VALUES (?, ?, ?, ?)
 ''', device_sensor_mappings)
 
@@ -162,7 +164,7 @@ account_project_mappings = [
 ]
 
 c.executemany('''
-    INSERT INTO AccountProjectMapping (AccountId, ProjectId)
+    INSERT INTO AccountProjectMapping (accountId, projectId)
     VALUES (?, ?)
 ''', account_project_mappings)
 
@@ -182,7 +184,7 @@ device_sensor_configurations = [
 ]
 
 c.executemany('''
-    INSERT INTO DeviceSensorConfiguration (SessionId, DeviceId, PropertyName, Active)
+    INSERT INTO DeviceSensorConfiguration (sessionId, deviceId, propertyName, active)
     VALUES (?, ?, ?, ?)
 ''', device_sensor_configurations)
 
@@ -192,7 +194,7 @@ loginsession = [
 ]
 
 c.executemany('''
-    INSERT INTO LoginSession (LoginSessionId, Account, LoginSessionDate, UserAgent, Ip, Token)
+    INSERT INTO LoginSession (loginSessionId, account, loginSessionDate, userAgent, ip, token)
     VALUES (?, ?, ?, ?, ?, ?)
 ''', loginsession)
 

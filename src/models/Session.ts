@@ -3,31 +3,31 @@ import sequelize from '../sequelize.js';
 // const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class Session extends Model {
-    SessionId: number;
+    sessionId: number;
     // DeviceId: number;
-    Name: string;
-    Status: string;
-    ScheduledFrom: Date;
-    ScheduledTo: Date;
+    name: string;
+    status: string;
+    scheduledFrom: Date;
+    scheduledTo: Date;
     // ProjectId: number;
-    Meta: object;
-    CreatedAt: Date;
-    LastActive: Date;
-    Archived: boolean;
+    meta: object;
+    createdAt: Date;
+    lastActive: Date;
+    archived: boolean;
 }
 
 Session.init({
-    SessionId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    sessionId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     // DeviceId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Device, key: 'DeviceId' } },
-    Name: { type: DataTypes.STRING, allowNull: false },
-    Status: { type: DataTypes.STRING, allowNull: false, validate: { isIn: [['inactive', 'active', 'activeScheduled', 'paused', 'completed', 'error', 'scheduled', 'stopped']] } },
-    ScheduledFrom: { type: DataTypes.DATE, allowNull: false },
-    ScheduledTo: { type: DataTypes.DATE, allowNull: false },
+    name: { type: DataTypes.STRING, allowNull: false },
+    status: { type: DataTypes.STRING, allowNull: false, validate: { isIn: [['inactive', 'active', 'activeScheduled', 'paused', 'completed', 'error', 'scheduled', 'stopped']] } },
+    scheduledFrom: { type: DataTypes.DATE, allowNull: false },
+    scheduledTo: { type: DataTypes.DATE, allowNull: false },
     // ProjectId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Project, key: 'ProjectId' } },
-    Meta: { type: DataTypes.JSON },
-    CreatedAt: { type: DataTypes.DATE },
-    LastActive: { type: DataTypes.DATE },
-    Archived: { type: DataTypes.BOOLEAN },
+    meta: { type: DataTypes.JSON },
+    createdAt: { type: DataTypes.DATE },
+    lastActive: { type: DataTypes.DATE },
+    archived: { type: DataTypes.BOOLEAN },
 },
 {
     sequelize,

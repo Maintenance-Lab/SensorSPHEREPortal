@@ -20,17 +20,17 @@ const main = async () => {
 
   console.log("Welcome to the SensorSphere setup! Let's create an administrator account.");
 
-  let Name, Email, Password;
-  while (!Name || !Email || !Password) {
-    Name = reader.question("Enter a username: ");
-    Email = reader.question("Enter an email address: ");
-    Password = reader.question("Enter a password: ", { hideEchoBack: true });
-    if (!Name || !Email || !Password) console.error("Please provide a username, email address, and password.\n");
+  let name, email, password;
+  while (!name || !email || !password) {
+    name = reader.question("Enter a username: ");
+    email = reader.question("Enter an email address: ");
+    password = reader.question("Enter a password: ", { hideEchoBack: true });
+    if (!name || !email || !password) console.error("Please provide a username, email address, and password.\n");
   }
 
-  while (!isEmail(Email)) {
+  while (!isEmail(email)) {
     console.error("The email address is not valid.");
-    Email = reader.question("Enter an email address: ");
+    email = reader.question("Enter an email address: ");
   }
 
   //   while (!isPasswordStrong(password)) {
@@ -42,11 +42,11 @@ const main = async () => {
 
   console.log("Creating administrator account...");
   const accountObj: Partial<Account> = {
-    Name,
-    Email,
-    Password: hashSync(Password),
-    Role: "administrator",
-    HasChangedPassword: true, // We already created a secure password, no need to change it
+    name,
+    email,
+    password: hashSync(password),
+    role: "administrator",
+    hasChangedPassword: true, // We already created a secure password, no need to change it
   };
   const account = await createAccount(accountObj);
 

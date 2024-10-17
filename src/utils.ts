@@ -12,26 +12,26 @@ const isValidObjectID = (id: string): boolean => {
 export const createAccountResponse = (account: Partial<Account>): Partial<Account> => {
   // let { AccountId, Enabled, Name, Email, Meta, CreatedAt, HasChangedPassword, Role, HasAvatar } = account;
   // if (createdBy && typeof createdBy === "object") createdBy = createdBy.name || "System";
-  const { AccountId, Enabled, Name, Email, Meta, CreatedAt, HasChangedPassword, Role, HasAvatar } = account;
+  const { accountId, enabled, name, email, meta, createdAt, hasChangedPassword, role, hasAvatar } = account;
   return {
-    AccountId,
-    Enabled,
-    Name,
-    Email,
-    Meta,
-    CreatedAt,
-    HasChangedPassword,
-    Role,
-    HasAvatar,
+    accountId,
+    enabled,
+    name,
+    email,
+    meta,
+    createdAt,
+    hasChangedPassword,
+    role,
+    hasAvatar,
   };
 };
 
 export const createBaseAccount = (account: Partial<Account>): Partial<Account> => {
   console.log(account);
   return {
-    AccountId: account.AccountId,
-    Name: account.Name,
-    Email: account.Email,
+    accountId: account.accountId,
+    name: account.name,
+    email: account.email,
   };
 }
 
@@ -48,7 +48,7 @@ export const isAdmin = async (req: Request, res: Response) => {
     res.status(401).send("Unauthorized");
     return false;
   }
-  if (account.Role !== "administrator") {
+  if (account.role !== "administrator") {
     res.status(403).send("Forbidden");
     return false;
   }
@@ -65,7 +65,7 @@ export const isAdmin = async (req: Request, res: Response) => {
     return false;
   }
 
-  const session = sessions.find((s) => s.Token === cookies.token);
+  const session = sessions.find((s) => s.token === cookies.token);
   if (!session) {
     res.cookie("token", "", { maxAge: 0 }).status(401).send("Unauthorized");
     return false;
@@ -108,7 +108,7 @@ export const getSession = async (req: Request, res: Response): Promise<SessionRe
     }
 
     // Find the session that matches the token
-    const session = sessions.find((s) => s.Token === cookies.token);
+    const session = sessions.find((s) => s.token === cookies.token);
     if (!session) {
       res.cookie("token", "", { maxAge: 0 }).status(401).send("Unauthorized");
       return false;
@@ -117,7 +117,7 @@ export const getSession = async (req: Request, res: Response): Promise<SessionRe
     const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
     // Check if the IP matches. We do not check user agents as this will be anoying when a browser updates.
-    if (session.Ip !== ip) {
+    if (session.ip !== ip) {
       res.cookie("token", "", { maxAge: 0 }).status(401).send("Unauthorized");
       return false;
     }

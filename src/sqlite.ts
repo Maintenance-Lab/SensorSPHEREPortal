@@ -22,40 +22,40 @@ const initDb = () => {
         // Account table
         db.run(`
             CREATE TABLE IF NOT EXISTS Account (
-                AccountId INTEGER PRIMARY KEY AUTOINCREMENT,
-                Enabled INTEGER,
-                Name TEXT NOT NULL,
-                Password TEXT NOT NULL,
-                Role TEXT NOT NULL,
-                Email TEXT NOT NULL,
-                Meta TEXT,
-                CreatedAt DATE,
-                HasChangedPassword INTEGER,
-                HasAvatar INTEGER
+                accountId INTEGER PRIMARY KEY AUTOINCREMENT,
+                enabled INTEGER,
+                name TEXT NOT NULL,
+                password TEXT NOT NULL,
+                role TEXT NOT NULL,
+                email TEXT NOT NULL,
+                meta TEXT,
+                createdAt DATE,
+                hasChangedPassword INTEGER,
+                hasAvatar INTEGER
             );
         `);
 
         // Project table
         db.run(`
             CREATE TABLE IF NOT EXISTS Project (
-                ProjectId INTEGER PRIMARY KEY AUTOINCREMENT,
-                Name TEXT NOT NULL,
-                Description TEXT,
-                Meta TEXT,
-                CreatedAt DATE,
-                LastActive DATE,
-                Archived INTEGER
+                projectId INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                description TEXT,
+                meta TEXT,
+                createdAt DATE,
+                lastActive DATE,
+                archived INTEGER
             );
         `);
 
         // AccountProjectMapping table
         db.run(`
             CREATE TABLE IF NOT EXISTS AccountProjectMapping (
-                AccountId INTEGER,
-                ProjectId INTEGER,
-                PRIMARY KEY (AccountId, ProjectId),
-                FOREIGN KEY (AccountId) REFERENCES Account(AccountId),
-                FOREIGN KEY (ProjectId) REFERENCES Project(ProjectId)
+                accountId INTEGER,
+                projectId INTEGER,
+                PRIMARY KEY (accountId, projectId),
+                FOREIGN KEY (accountId) REFERENCES Account(accountId),
+                FOREIGN KEY (projectId) REFERENCES Project(projectId)
             );
         `);
 
@@ -63,81 +63,81 @@ const initDb = () => {
         // Session table
         db.run(`
             CREATE TABLE IF NOT EXISTS Session (
-                SessionId INTEGER,
-                Name TEXT NOT NULL,
-                Status TEXT,
-                ScheduledFrom DATE,
-                ScheduledTo DATE,
-                Meta TEXT,
-                CreatedAt DATE,
-                LastActive DATE,
-                Archived INTEGER,
-                PRIMARY KEY (SessionId)
+                sessionId INTEGER,
+                name TEXT NOT NULL,
+                status TEXT,
+                scheduledFrom DATE,
+                scheduledTo DATE,
+                meta TEXT,
+                createdAt DATE,
+                lastActive DATE,
+                archived INTEGER,
+                PRIMARY KEY (sessionId)
             );
         `);
 
         // SessionDeviceMapping table
         db.run(`
             CREATE TABLE IF NOT EXISTS SessionDeviceMapping (
-                SessionId INTEGER,
-                DeviceId INTEGER,
-                ConfiuredHz INTEGER,
-                PRIMARY KEY (SessionId, DeviceId),
-                FOREIGN KEY (SessionId) REFERENCES Session(SessionId),
-                FOREIGN KEY (DeviceId) REFERENCES Device(DeviceId)
+                sessionId INTEGER,
+                deviceId INTEGER,
+                confiuredHz INTEGER,
+                PRIMARY KEY (sessionId, deviceId),
+                FOREIGN KEY (sessionId) REFERENCES Session(sessionId),
+                FOREIGN KEY (deviceId) REFERENCES Device(deviceId)
             );
         `);
 
         // Device table
         db.run(`
             CREATE TABLE IF NOT EXISTS Device (
-                DeviceId INTEGER NOT NULL,
-                ConnectStatus BOOLEAN,
-                MaxHz INTEGER,
-                PRIMARY KEY (DeviceId),
-                FOREIGN KEY (DeviceId) REFERENCES DeviceSensorMapping(DeviceId)
+                deviceId INTEGER NOT NULL,
+                connectStatus BOOLEAN,
+                maxHz INTEGER,
+                PRIMARY KEY (deviceId),
+                FOREIGN KEY (deviceId) REFERENCES DeviceSensorMapping(deviceId)
             );
         `);
 
         // DeviceSensorConfiguration table
         db.run(`
             CREATE TABLE IF NOT EXISTS DeviceSensorConfiguration (
-                SessionId INTEGER NOT NULL,
-                DeviceId INTEGER NOT NULL,
-                PropertyName TEXT NOT NULL,
-                Active BOOLEAN NOT NULL,
-                PRIMARY KEY (SessionId, DeviceId, PropertyName),
-                FOREIGN KEY (SessionId) REFERENCES Session(SessionId),
-                FOREIGN KEY (DeviceId) REFERENCES Device(DeviceId),
-                FOREIGN KEY (PropertyName) REFERENCES SensorProperty(PropertyName)
+                sessionId INTEGER NOT NULL,
+                deviceId INTEGER NOT NULL,
+                propertyName TEXT NOT NULL,
+                active BOOLEAN NOT NULL,
+                PRIMARY KEY (sessionId, deviceId, propertyName),
+                FOREIGN KEY (sessionId) REFERENCES Session(sessionId),
+                FOREIGN KEY (deviceId) REFERENCES Device(deviceId),
+                FOREIGN KEY (propertyName) REFERENCES SensorProperty(propertyName)
             );
         `);
 
         // DeviceSensorMapping
         db.run(`
             CREATE TABLE IF NOT EXISTS DeviceSensorMapping (
-                DeviceId INTEGER,
-                SensorModel TEXT,
-                ManufacturerName TEXT,
-                Channel INTEGER,
-                PRIMARY KEY (DeviceId, SensorModel, ManufacturerName, Channel),
-                FOREIGN KEY (DeviceId) REFERENCES Device(DeviceId),
-                FOREIGN KEY (SensorModel) REFERENCES Sensor(Model),
-                FOREIGN KEY (ManufacturerName) REFERENCES Manufacturer(ManufacturerName)
+                deviceId INTEGER,
+                sensorModel TEXT,
+                manufacturerName TEXT,
+                channel INTEGER,
+                PRIMARY KEY (deviceId, sensorModel, manufacturerName, channel),
+                FOREIGN KEY (deviceId) REFERENCES Device(deviceId),
+                FOREIGN KEY (sensorModel) REFERENCES Sensor(model),
+                FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName)
             );
         `);
 
         // Sensor table
         db.run(`
             CREATE TABLE IF NOT EXISTS Sensor (
-                Model TEXT NOT NULL,
-                ManufacturerName TEXT NOT NULL,
-                CategoryName TEXT NOT NULL,
-                PropertyName TEXT NOT NULL,
-                PRIMARY KEY (Model, ManufacturerName),
-                FOREIGN KEY (ManufacturerName) REFERENCES Manufacturer(ManufacturerName),
-                FOREIGN KEY (CategoryName) REFERENCES SensorCategory(CategoryName),
-                FOREIGN KEY (PropertyName) REFERENCES SensorProperty(PropertyName)
+                model TEXT NOT NULL,
+                manufacturerName TEXT NOT NULL,
+                categoryName TEXT NOT NULL,
+                propertyName TEXT NOT NULL,
+                PRIMARY KEY (model, manufacturerName),
+                FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName),
+                FOREIGN KEY (categoryName) REFERENCES SensorCategory(categoryName),
+                FOREIGN KEY (propertyName) REFERENCES SensorProperty(propertyName)
                 );
         `);
 
@@ -151,31 +151,31 @@ const initDb = () => {
         // SensorProperty table
         db.run(`
             CREATE TABLE IF NOT EXISTS SensorProperty (
-                PropertyName TEXT PRIMARY KEY,
-                Model TEXT,
-                ManufacturerName TEXT,
-                FOREIGN KEY (ManufacturerName) REFERENCES Manufacturer(ManufacturerName),
-                FOREIGN KEY (Model) REFERENCES SensorCategory(Model)
+                propertyName TEXT PRIMARY KEY,
+                model TEXT,
+                manufacturerName TEXT,
+                FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName),
+                FOREIGN KEY (model) REFERENCES SensorCategory(model)
             );
         `);
 
         // Manufacturer table
         db.run(`
             CREATE TABLE IF NOT EXISTS Manufacturer (
-                ManufacturerName TEXT PRIMARY KEY
+                manufacturerName TEXT PRIMARY KEY
             );
         `);
 
         // LoginSession table
         db.run(`
             CREATE TABLE IF NOT EXISTS LoginSession (
-                LoginSessionId INTEGER PRIMARY KEY AUTOINCREMENT,
-                Account INTEGER,
-                LoginSessionDate DATE,
-                UserAgent TEXT,
-                Ip TEXT,
-                Token TEXT,
-                FOREIGN KEY (Account) REFERENCES Account(AccountId)
+                loginSessionId INTEGER PRIMARY KEY AUTOINCREMENT,
+                account INTEGER,
+                loginSessionDate DATE,
+                userAgent TEXT,
+                ip TEXT,
+                token TEXT,
+                FOREIGN KEY (Account) REFERENCES Account(accountId)
             );
         `);
     })

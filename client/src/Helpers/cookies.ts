@@ -11,8 +11,10 @@ const getUser = () => {
   try {
     console.log("Decoding token");
     const decoded: any = jwtDecode(token);
+    console.log('decoded:', decoded, decoded.name)
     if (!decoded || !decoded.name) {
       cookies.remove('token');
+      console.log('removed');
       return null;
     }
     return decoded;

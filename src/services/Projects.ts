@@ -95,9 +95,9 @@ export const updateProject = async (id: number, item: Partial<Project>) => {
   return new Promise(async (resolve, reject) => {
     if (!id) return reject(new Error("User Key not found"));
 
-    const { ProjectId, ...rest } = item;
+    const { projectId, ...rest } = item;
     const newItem = { ...rest };
-    const query = { _id: ProjectId };
+    const query = { _id: projectId };
 
     // const options = {
     //   // Return the document after updates are applied

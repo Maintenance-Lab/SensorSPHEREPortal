@@ -5,15 +5,15 @@ import sequelize from '../sequelize.js';
 // const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class SensorProperty extends Model {
-    PropertyName: string;
-    Model: string;
-    ManufacturerName: string;
+    propertyName: string;
+    model: string;
+    manufacturerName: string;
 }
 
 SensorProperty.init({
-    PropertyName: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
-    Model: { type: DataTypes.STRING, allowNull: false, references: { model: Sensor, key: 'Model' } },
-    ManufacturerName: { type: DataTypes.STRING, allowNull: false, references: { model: Sensor, key: 'ManufacturerName' } },
+    propertyName: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
+    model: { type: DataTypes.STRING, allowNull: false, references: { model: Sensor, key: 'Model' } },
+    manufacturerName: { type: DataTypes.STRING, allowNull: false, references: { model: Sensor, key: 'ManufacturerName' } },
 },
 {
     sequelize,

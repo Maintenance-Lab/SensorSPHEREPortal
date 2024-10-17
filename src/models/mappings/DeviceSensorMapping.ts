@@ -3,17 +3,17 @@ import sequelize from '../../sequelize.js';
 // const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class DeviceSensorMapping extends Model {
-    DeviceId: number;
-    SensorModel: string;
-    ManufacturerName: string;
-    Channel: number;
+    deviceId: number;
+    sensorModel: string;
+    manufacturerName: string;
+    channel: number;
 }
 
 DeviceSensorMapping.init({
-    Channel: {type: DataTypes.INTEGER, primaryKey: true},
-    DeviceId: { type: DataTypes.INTEGER, primaryKey: true, references: { model: 'Device', key: 'DeviceId' }, allowNull: false },
-    SensorModel: { type: DataTypes.INTEGER, primaryKey: true, references: { model: 'Sensor', key: 'Model'}, allowNull: false},
-    ManufacturerName: {type: DataTypes.STRING, primaryKey: true, references: { model: 'Manufacturer', key: 'ManufacturerName'}, allowNull: false },
+    deviceId: { type: DataTypes.INTEGER, primaryKey: true, references: { model: 'Device', key: 'DeviceId' }, allowNull: false },
+    sensorModel: { type: DataTypes.INTEGER, primaryKey: true, references: { model: 'Sensor', key: 'Model'}, allowNull: false},
+    manufacturerName: {type: DataTypes.STRING, primaryKey: true, references: { model: 'Manufacturer', key: 'ManufacturerName'}, allowNull: false },
+    channel: {type: DataTypes.INTEGER, primaryKey: true},
 }, {
     sequelize,
     modelName: 'DeviceSensorMapping',

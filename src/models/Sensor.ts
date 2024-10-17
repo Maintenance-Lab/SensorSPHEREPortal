@@ -7,17 +7,17 @@ import sequelize from '../sequelize.js';
 // const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class Sensor extends Model {
-    Model : string;
-    ManufacturerName : string;
-    CategoryName : string;
-    PropertyName : string;
+    model : string;
+    manufacturerName : string;
+    categoryName : string;
+    propertyName : string;
 }
 
 Sensor.init({
-    Model: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
-    ManufacturerName: { type: DataTypes.STRING, primaryKey: true, allowNull: false, references: { model: Manufacturer, key: 'ManufacturerName' } },
-    CategoryName: { type: DataTypes.STRING, allowNull: false, references: { model: SensorCategory, key: 'CategoryName' }},
-    PropertyName:{ type: DataTypes.STRING, allowNull: false, references: { model: SensorProperty, key: 'PropertyName' }},
+    model: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
+    manufacturerName: { type: DataTypes.STRING, primaryKey: true, allowNull: false, references: { model: Manufacturer, key: 'ManufacturerName' } },
+    categoryName: { type: DataTypes.STRING, allowNull: false, references: { model: SensorCategory, key: 'CategoryName' }},
+    propertyName:{ type: DataTypes.STRING, allowNull: false, references: { model: SensorProperty, key: 'PropertyName' }},
 },
 {
     sequelize,

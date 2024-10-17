@@ -115,9 +115,9 @@ export const updateAccount = (id: number, item: Partial<Account>): Promise<Accou
     try {
       if (!id) return reject(new Error("User Key not found"));
 
-      const { AccountId, ...rest } = item;
+      const { accountId, ...rest } = item;
       const newItem = { ...rest };
-      const query = { _id: AccountId };
+      const query = { _id: accountId };
 
       // const options = {
       //   // Return the document after updates are applied

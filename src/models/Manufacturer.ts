@@ -7,7 +7,7 @@ class Manufacturer extends Model {
 }
 
 Manufacturer.init({
-    ManufacturerName: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
+    manufacturerName: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
 },
 {
     sequelize,

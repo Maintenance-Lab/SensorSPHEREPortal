@@ -42,7 +42,7 @@ export const updateSession = async (id: number, item: Partial<Session>) => {
   return new Promise(async (resolve, reject) => {
     if (!id) return reject(new Error("Session ID not found"));
 
-    const { SessionId, ...rest } = item;
+    const { sessionId, ...rest } = item;
     const newItem = { ...rest };
     const query = { _id: id };
 
@@ -67,7 +67,7 @@ export const deleteSession = async (id: number) => {
     if (!id) return reject(new Error("Session ID not found"));
 
     const query = { _id: id };
-    const result = await Session.destroy({ where: { SessionId: id } });
+    const result = await Session.destroy({ where: { sessionId: id } });
     return resolve(result);
   });
 };

@@ -3,32 +3,32 @@ import sequelize from '../sequelize.js';
 // const sequelize = require('../database/sequelize.js');
 
 class Account extends Model {
-    AccountId: number;
+    accountId: number;
     // ProjectId: number[];
-    Enabled: boolean;
-    Name: string;
-    Password: string;
-    Role: string;
-    Email: string;
-    Meta: object;
-    CreatedAt: Date;
-    HasChangedPassword: boolean;
-    HasAvatar: boolean;
-    PinnedProjects: number[];
+    enabled: boolean;
+    name: string;
+    password: string;
+    role: string;
+    email: string;
+    meta: object;
+    createdAt: Date;
+    hasChangedPassword: boolean;
+    hasAvatar: boolean;
+    pinnedProjects: number[];
 }
 
 Account.init({
-    AccountId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, allowNull: false },
+    accountId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, allowNull: false },
     // ProjectId: { type: DataTypes.ARRAY(DataTypes.INTEGER), references: { model: Project, key: 'projectId' } },
-    Enabled: { type: DataTypes.BOOLEAN, defaultValue: true },
-    Name: { type: DataTypes.STRING(100), allowNull: false },
-    Email: { type: DataTypes.STRING(50), allowNull: false, unique: true },
-    Password: { type: DataTypes.STRING(50), allowNull: false },
-    Meta: { type: DataTypes.JSON, defaultValue: {} },
-    CreatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-    HasChangedPassword: { type: DataTypes.BOOLEAN, defaultValue: false },
-    Role: { type: DataTypes.STRING, defaultValue: "student", validate: { isIn: [["admin", "student", "teacher", "staff"]] } },
-    HasAvatar: { type: DataTypes.BOOLEAN, defaultValue: false },
+    enabled: { type: DataTypes.BOOLEAN, defaultValue: true },
+    name: { type: DataTypes.STRING(100), allowNull: false },
+    email: { type: DataTypes.STRING(50), allowNull: false, unique: true },
+    password: { type: DataTypes.STRING(50), allowNull: false },
+    meta: { type: DataTypes.JSON, defaultValue: {} },
+    createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    hasChangedPassword: { type: DataTypes.BOOLEAN, defaultValue: false },
+    role: { type: DataTypes.STRING, defaultValue: "student", validate: { isIn: [["admin", "student", "teacher", "staff"]] } },
+    hasAvatar: { type: DataTypes.BOOLEAN, defaultValue: false },
     // PinnedProjects: { type: DataTypes.ARRAY(DataTypes.INTEGER), references: { model: Project, key: 'id' } },
 },
 {

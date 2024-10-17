@@ -5,9 +5,9 @@ export const getLoginSessionsByAccountID = (id: number): Promise<LoginSession[]>
   return new Promise(async (resolve, reject) => {
     try {
       const doc = await LoginSession.findAll({ where: { Account: id }});
-      const notExpired = doc.filter(({ LoginSessionDate }) => {
+      const notExpired = doc.filter(({ loginSessionDate }) => {
         const now = new Date();
-        const diff = now.getTime() - LoginSessionDate.getTime();
+        const diff = now.getTime() - loginSessionDate.getTime();
         return (diff * 1000) < JWT_EXPIRESIN;
       });
       return resolve(doc);

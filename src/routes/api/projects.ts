@@ -30,10 +30,10 @@ router.get("/active", async (req, res) => {
   const { account, sessions } = response;
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
 
-  const { AccountId } = account;
-  if (!AccountId) return res.status(400).json({ message: "Account ID is required" });
+  const { accountId } = account;
+  if (!accountId) return res.status(400).json({ message: "Account ID is required" });
 
-  const doc = await getActiveProjectsByAccountId(AccountId);
+  const doc = await getActiveProjectsByAccountId(accountId);
   return res.json(doc);
 });
 
@@ -44,10 +44,10 @@ router.get("/archived", async (req, res) => {
   const { account, sessions } = response;
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
 
-  const { AccountId } = account;
-  if (!AccountId) return res.status(400).json({ message: "Account ID is required" });
+  const { accountId } = account;
+  if (!accountId) return res.status(400).json({ message: "Account ID is required" });
 
-  const doc = await getArchivedProjectsByAccountId(AccountId);
+  const doc = await getArchivedProjectsByAccountId(accountId);
   return res.json(doc);
 });
 
@@ -111,11 +111,11 @@ router.post("/create", async (req, res) => {
   const { account, sessions } = response;
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
 
-  const { AccountId } = account;
-  if (!AccountId) return res.status(400).json({ message: "Account ID is required" });
+  const { accountId } = account;
+  if (!accountId) return res.status(400).json({ message: "Account ID is required" });
 
   const { body } = req;
-  // body.owner = AccountId;
+  // body.owner = accountId;
   const result = await createProject(body);
   return res.json(result);
 });
@@ -137,11 +137,11 @@ router.put("/update/:id", async (req, res) => {
   const { account, sessions } = response;
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
 
-  const { AccountId } = account;
+  const { accountId } = account;
   const project: any = await getProjectById(id);
   if (!project) return res.status(404).json({ message: "Project not found" });
 
-  if (project.owner?._id.toString() !== AccountId) return res.status(401).json({ message: "Unauthorized" });
+  if (project.owner?._id.toString() !== accountId) return res.status(401).json({ message: "Unauthorized" });
 
   const cleaned = cleanBody(body);
 
@@ -157,7 +157,7 @@ router.put("/update-many", async (req, res) => {
     const { account, sessions } = response;
     if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
 
-    const { AccountId } = account;
+    const { accountId } = account;
 
     const { body } = req;
     const toUpdate = [];
@@ -170,7 +170,7 @@ router.put("/update-many", async (req, res) => {
       const project: any = await getProjectById(id);
       if (!project) return res.status(404).json({ message: "Project not found" });
 
-      // if (project.owner?._id.toString() !== AccountId) return res.status(401).json({ message: "Unauthorized" });
+      // if (project.owner?._id.toString() !== accountId) return res.status(401).json({ message: "Unauthorized" });
 
       toUpdate.push({ id, cleaned });
     }
@@ -195,12 +195,12 @@ router.post("/delete", async (req, res) => {
 
   const { account, sessions } = response;
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
-  const { AccountId } = account;
+  const { accountId } = account;
 
   const project: any = await getProjectById(ids);
   if (!project) return res.status(404).json({ message: "Project not found" });
 
-  // if (project.owner?._id.toString() !== AccountId) return res.status(401).json({ message: "Unauthorized" });
+  // if (project.owner?._id.toString() !== accountId) return res.status(401).json({ message: "Unauthorized" });
 
   const result = await deleteProjects(ids);
   return res.json(result);
@@ -211,9 +211,9 @@ export default router;
 const cleanBody = (body: Partial<Project>) => {
   console.log(body);
   const cleaned = { ...body };
-  if (cleaned.Meta) delete cleaned.Meta;
-  if (cleaned.CreatedAt) delete cleaned.CreatedAt;
-  if (cleaned.ProjectId) delete cleaned.ProjectId;
+  if (cleaned.meta) delete cleaned.meta;
+  if (cleaned.createdAt) delete cleaned.createdAt;
+  if (cleaned.projectId) delete cleaned.projectId;
   // if (cleaned.Owner) delete cleaned.Owner;
   return cleaned;
 };

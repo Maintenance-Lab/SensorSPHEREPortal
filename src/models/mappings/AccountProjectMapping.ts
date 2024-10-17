@@ -3,13 +3,13 @@ import sequelize from '../../sequelize.js';
 // const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class AccountProjectMapping extends Model {
-    AccountId: number;
-    ProjectId: number;
+    accountId: number;
+    projectId: number;
 }
 
 AccountProjectMapping.init({
-    AccountId: { type: DataTypes.INTEGER, references: { model: 'Account', key: 'AccountId' }, allowNull: false },
-    ProjectId: { type: DataTypes.INTEGER, references: { model: 'Projects', key: 'ProjectId' }, allowNull: false },
+    accountId: { type: DataTypes.INTEGER, references: { model: 'Account', key: 'AccountId' }, allowNull: false },
+    projectId: { type: DataTypes.INTEGER, references: { model: 'Projects', key: 'ProjectId' }, allowNull: false },
 }, {
     sequelize,
     modelName: 'AccountProject',

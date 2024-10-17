@@ -127,7 +127,7 @@ const ManageUsers = () => {
   };
 
   const updateAccount = async (id: number, update: any) => {
-    const index = accounts.findIndex((account) => account.AccountId === id);
+    const index = accounts.findIndex((account) => account.accountId === id);
     const account = accounts[index];
     if (!account) return;
     Object.assign(account, update);

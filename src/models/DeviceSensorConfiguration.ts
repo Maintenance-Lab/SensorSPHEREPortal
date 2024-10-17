@@ -7,17 +7,17 @@ import { Sequelize, DataTypes, Model } from 'sequelize'
 // const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class DeviceSensorConfiguration extends Model {
-    SessionId: number;
-    DeviceId: number;
-    PropertyName: string;
-    Active: boolean;
+    sessionId: number;
+    deviceId: number;
+    propertyName: string;
+    active: boolean;
 }
 
 DeviceSensorConfiguration.init({
-    SessionId: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false, references: { model: Session, key: 'SessionId' } },
-    DeviceId: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false, references: { model: Device, key: 'DeviceId' } },
-    PropertyName: { type: DataTypes.STRING, primaryKey: true, allowNull: false, references: { model: SensorProperty, key: 'PropertyName' } },
-    Active: { type: DataTypes.BOOLEAN, defaultValue: false },
+    sessionId: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false, references: { model: Session, key: 'SessionId' } },
+    deviceId: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false, references: { model: Device, key: 'DeviceId' } },
+    propertyName: { type: DataTypes.STRING, primaryKey: true, allowNull: false, references: { model: SensorProperty, key: 'PropertyName' } },
+    active: { type: DataTypes.BOOLEAN, defaultValue: false },
 },
 {
     sequelize,

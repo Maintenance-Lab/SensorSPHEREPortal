@@ -24,12 +24,12 @@ router.get("/pinned", async (req, res) => {
 
   const { account } = response;
   if (!account) return res.status(401).json({ message: "Unauthorized" });
-  if (!account.AccountId) return res.status(400).json({ message: "Account ID is required" });
+  if (!account.accountId) return res.status(400).json({ message: "Account ID is required" });
 
-  const dbAccount = await getAccountById(account.AccountId);
+  const dbAccount = await getAccountById(account.accountId);
 
-  const { PinnedProjects } = dbAccount;
-  return res.json(PinnedProjects);
+  const {pinnedProjects } = dbAccount;
+  return res.json(pinnedProjects);
 });
 
 router.post("/pin", async (req, res) => {
@@ -38,22 +38,22 @@ router.post("/pin", async (req, res) => {
 
   const { account } = response;
   if (!account) return res.status(401).json({ message: "Unauthorized" });
-  if (!account.AccountId) return res.status(400).json({ message: "Account ID is required" });
+  if (!account.accountId) return res.status(400).json({ message: "Account ID is required" });
 
-  const dbAccount = await getAccountById(account.AccountId);
+  const dbAccount = await getAccountById(account.accountId);
   if (!dbAccount) return res.status(500).json({ message: "Internal Server Error" });
 
-  const { PinnedProjects } = dbAccount;
-  if (!PinnedProjects) return res.status(400).json({ message: "Pinned projects is required" });
+  const { pinnedProjects } = dbAccount;
+  if (!pinnedProjects) return res.status(400).json({ message: "Pinned projects is required" });
 
   const { projectId } = req.body;
 
-  if (PinnedProjects.includes(projectId)) {
+  if (pinnedProjects.includes(projectId)) {
     return;
   }
-  PinnedProjects.push(projectId);
+  pinnedProjects.push(projectId);
 
-  const updatedAccount = await updateAccount(account.AccountId, { PinnedProjects });
+  const updatedAccount = await updateAccount(account.accountId, { pinnedProjects });
   if (!updatedAccount) return res.status(500).json({ message: "Internal Server Error" });
 
   return res.json(updatedAccount);
@@ -65,19 +65,19 @@ router.post("/unpin", async (req, res) => {
 
   const { account } = response;
   if (!account) return res.status(401).json({ message: "Unauthorized" });
-  if (!account.AccountId) return res.status(400).json({ message: "Account ID is required" });
+  if (!account.accountId) return res.status(400).json({ message: "Account ID is required" });
 
-  const dbAccount = await getAccountById(account.AccountId);
+  const dbAccount = await getAccountById(account.accountId);
   if (!dbAccount) return res.status(500).json({ message: "Internal Server Error" });
 
-  const { PinnedProjects } = dbAccount;
-  if (!PinnedProjects) return res.status(400).json({ message: "Pinned projects is required" });
+  const { pinnedProjects } = dbAccount;
+  if (!pinnedProjects) return res.status(400).json({ message: "Pinned projects is required" });
 
   const { projectId } = req.body;
 
-  PinnedProjects.splice(PinnedProjects.indexOf(projectId), 1);
+  pinnedProjects.splice(pinnedProjects.indexOf(projectId), 1);
 
-  const updatedAccount = await updateAccount(account.AccountId, { PinnedProjects });
+  const updatedAccount = await updateAccount(account.accountId, { pinnedProjects });
   if (!updatedAccount) return res.status(500).json({ message: "Internal Server Error" });
 
   return res.json(updatedAccount);
@@ -94,15 +94,15 @@ router.post("/password", async (req, res) => {
   if (!newPass || !currentPass) return res.status(400).json({ message: "Current and new password required" });
   if (newPass === currentPass) return res.status(400).json({ message: "New password cannot be the same as the current password" });
 
-  const { AccountId } = account;
-  if (!AccountId) return res.status(400).json({ message: "Account ID is required" });
+  const { accountId } = account;
+  if (!accountId) return res.status(400).json({ message: "Account ID is required" });
 
-  const dbAccount = await getAccountById(AccountId);
-  const { Password } = dbAccount;
-  if (!Password) return res.status(500).json({ message: "Internal Server Error" });
+  const dbAccount = await getAccountById(accountId);
+  const { password } = dbAccount;
+  if (!password) return res.status(500).json({ message: "Internal Server Error" });
 
   try {
-    const valid = await verify(Password, currentPass);
+    const valid = await verify(password, currentPass);
     if (!valid) return res.status(400).json({ message: "Invalid current password" });
   } catch (error) {
     return res.status(400).json({ message: "Invalid current password" });
@@ -110,22 +110,22 @@ router.post("/password", async (req, res) => {
 
   newPass = await hash(newPass);
 
-  const updatedAccount = await updateAccount(AccountId, { Password: newPass, HasChangedPassword: true });
+  const updatedAccount = await updateAccount(accountId, { password: newPass, hasChangedPassword: true });
   if (!updatedAccount) return res.status(500).json({ message: "Internal Server Error" });
 
-  const { Name, Role, HasAvatar, Email, HasChangedPassword } = updatedAccount;
+  const { name, role, hasAvatar, email, hasChangedPassword } = updatedAccount;
 
-  const Token = jwt.sign({ AccountId, Name, Role, HasAvatar, Email, HasChangedPassword }, JWT_ACCESS_SECRET, {
+  const token = jwt.sign({ accountId, name, role, hasAvatar, email, hasChangedPassword }, JWT_ACCESS_SECRET, {
     expiresIn: JWT_EXPIRESIN,
   });
 
-  const UserAgent = req.headers["user-agent"];
-  const Ip: any = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  const userAgent = req.headers["user-agent"];
+  const ip: any = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
-  await createLoginSession({ Account: AccountId, Token, UserAgent, Ip });
+  await createLoginSession({ account: accountId, token, userAgent, ip });
 
   return res
-    .cookie("token", Token, {
+    .cookie("token", token, {
       secure: IS_PROD,
       maxAge: JWT_EXPIRESIN * 1000,
     })

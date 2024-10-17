@@ -3,11 +3,11 @@ import sequelize from '../sequelize.js';
 // const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class SensorCategory extends Model {
-    CategoryName: string;
+    categoryName: string;
 }
 
 SensorCategory.init({
-    CategoryName: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
+    categoryName: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
 },
 {
     sequelize,

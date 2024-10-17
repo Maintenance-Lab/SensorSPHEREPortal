@@ -3,15 +3,15 @@ import sequelize from '../../sequelize.js';
 // const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class SessionDeviceMapping extends Model {
-    SessionId: number;
-    DeviceId: number;
-    ConfiguredHz: number;
+    sessionId: number;
+    deviceId: number;
+    configuredHz: number;
 }
 
 SessionDeviceMapping.init({
-    SessionId: { type: DataTypes.INTEGER, references: { model: 'Session', key: 'SessionId' }, allowNull: false },
-    DeviceId: { type: DataTypes.INTEGER, references: { model: 'Device', key: 'DeviceId' }, allowNull: false },
-    ConfiguredHz: { type: DataTypes.INTEGER, allowNull: false },
+    sessionId: { type: DataTypes.INTEGER, references: { model: 'Session', key: 'SessionId' }, allowNull: false },
+    deviceId: { type: DataTypes.INTEGER, references: { model: 'Device', key: 'DeviceId' }, allowNull: false },
+    configuredHz: { type: DataTypes.INTEGER, allowNull: false },
 }, {
     sequelize,
     modelName: 'SessionDeviceMapping',

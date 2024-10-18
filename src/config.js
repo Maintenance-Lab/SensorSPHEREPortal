@@ -1,0 +1,13 @@
+"use strict";
+var _a;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SQLITE_PATH = exports.MQTT_URI = exports.JWT_EXPIRESIN = exports.JWT_ACCESS_SECRET = exports.PORT = exports.IS_PROD = exports.ENV = void 0;
+var dotenv_safe_1 = require("dotenv-safe");
+(0, dotenv_safe_1.config)();
+exports.ENV = process.env.ENV;
+exports.IS_PROD = exports.ENV === "production";
+exports.PORT = +((_a = process.env.PORT) !== null && _a !== void 0 ? _a : 7080);
+exports.JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "";
+exports.JWT_EXPIRESIN = parseInt(process.env.JWT_EXPIRESIN || "7200");
+exports.MQTT_URI = process.env.MQTT_URI || "";
+exports.SQLITE_PATH = process.env.SQLITE_PATH || "";

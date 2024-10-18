@@ -1,34 +1,39 @@
-import mongoose, { Schema } from "mongoose";
-import { ProjectModel } from "./Project";
-const { ObjectId } = Schema.Types;
+import { Sequelize, DataTypes, Model } from 'sequelize'
+import sequelize from '../sequelize.js';
+// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
-export interface SessionModel {
-  _id: string;
-  name: string;
-  description: string;
-  project: string | ProjectModel;
-  meta: object; // Extra info if needed
-  createdAt?: Date;
-  sensorUnits?: string[];
-  lastActive?: Date;
-  archived?: boolean;
-  status: "inactive" | "active" | "activeScheduled" | "paused" | "completed" | "error" | "scheduled" | "stopped";
+class Session extends Model {
+    sessionId: number;
+    // DeviceId: number;
+    name: string;
+    status: string;
+    scheduledFrom: Date;
+    scheduledTo: Date;
+    // ProjectId: number;
+    meta: object;
+    createdAt: Date;
+    lastActive: Date;
+    archived: boolean;
 }
 
-const SessionSchema = new mongoose.Schema({
-  name: { type: String, default: "Default Project Title" },
-  description: { type: String, default: "Default Project Description" },
-  project: { type: ObjectId, ref: "Project" },
-  meta: { type: Object, default: {} },
-  createdAt: { type: Date, default: Date.now },
-  sensorUnits: { type: [String], default: [] },
-  lastActive: { type: Date, default: Date.now },
-  archived: { type: Boolean, default: false },
-  status: {
-    type: String,
-    enum: ["inactive", "active", "activeScheduled", "paused", "completed", "error", "scheduled", "stopped", ],
-    default: "inactive"
-  },
+Session.init({
+    sessionId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    // DeviceId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Device, key: 'DeviceId' } },
+    name: { type: DataTypes.STRING, allowNull: false },
+    status: { type: DataTypes.STRING, allowNull: false, validate: { isIn: [['inactive', 'active', 'activeScheduled', 'paused', 'completed', 'error', 'scheduled', 'stopped']] } },
+    scheduledFrom: { type: DataTypes.DATE, allowNull: false },
+    scheduledTo: { type: DataTypes.DATE, allowNull: false },
+    // ProjectId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Project, key: 'ProjectId' } },
+    meta: { type: DataTypes.JSON },
+    createdAt: { type: DataTypes.DATE },
+    lastActive: { type: DataTypes.DATE },
+    archived: { type: DataTypes.BOOLEAN },
+},
+{
+    sequelize,
+    modelName: 'Session',
+    tableName: 'Session',
+    timestamps: false,
 });
 
-export default mongoose.models.Session || mongoose.model("Session", SessionSchema);
+export default Session;

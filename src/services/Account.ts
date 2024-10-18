@@ -1,9 +1,13 @@
-import Account, { AccountModel } from "../models/Account.js";
+import e from 'express';
+import Account from '../models/Account.js';
+import { Op } from 'sequelize';
+// import {Account, AccountModel} from '../models/Account";
+// Als je dit weghaald krijg je errors bij find
 
-export const getAllAccounts = (): Promise<AccountModel[]> => {
+export const getAllAccounts = (): Promise<Account[]> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const results: any = await Account.find({}).populate("createdBy");
+      const results: any = await Account.findAll();
       return resolve(results);
     } catch (error) {
       reject(error);
@@ -11,10 +15,11 @@ export const getAllAccounts = (): Promise<AccountModel[]> => {
   });
 };
 
-export const getAccountById = (id: string): Promise<AccountModel> => {
+export const getAccountById = (id: number): Promise<Account> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const doc = await Account.findById(id);
+      const doc = await Account.findByPk(id);
+      if (!doc) return reject(new Error("Account not found"));
       return resolve(doc);
     } catch (error) {
       reject(error);
@@ -22,10 +27,11 @@ export const getAccountById = (id: string): Promise<AccountModel> => {
   });
 };
 
-export const getAccountByEmail = (email: string): Promise<AccountModel> => {
+export const getAccountByEmail = (email: string): Promise<Account> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const doc = await Account.findOne({ email });
+      const doc = await Account.findOne({ where: { email }});
+      if (!doc) return reject(new Error("Account not found"));
       return resolve(doc);
     } catch (error) {
       reject(error);
@@ -33,10 +39,11 @@ export const getAccountByEmail = (email: string): Promise<AccountModel> => {
   });
 };
 
-export const getAccountByName = (name: string): Promise<AccountModel> => {
+export const getAccountByName = (name: string): Promise<Account> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const doc = await Account.findOne({ name });
+      const doc = await Account.findOne({ where: { name }});
+      if (!doc) return reject(new Error("Account not found"));
       return resolve(doc);
     } catch (error) {
       reject(error);
@@ -44,18 +51,40 @@ export const getAccountByName = (name: string): Promise<AccountModel> => {
   });
 };
 
-export const getAccountByNameOrEmail = (input: string): Promise<AccountModel> => {
+// where: {LastName: "Doe", $or: [{FirstName:{ $eq: "John"}}]
+// {where: {LastName: "Doe",$or: [{FirstName:{$eq: "John"}} ]} }
+
+export const getAccountByNameOrEmail = (input: string): Promise<Account> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const doc = await Account.findOne({ $or: [{ name: input }, { email: input }] });
-      return resolve(doc);
+      const doc = await Account.findOne({where: {[Op.or]: [{ name: input },{ email: input }]}})
+      if (!doc) return reject(new Error("Account not found"));
+      else {
+        return resolve(doc);
+      }
     } catch (error) {
       reject(error);
     }
   });
+
+
+
+  // return new Promise(async (resolve, reject) => {
+  //   console.log("input", input);
+  //   try {
+  //       const doc = await Account.findOne({ where: { name: input }});
+  //       // console.log("doc", doc);
+  //       if (doc != null) {
+  //         return resolve(doc);
+  //       }
+  //   } catch (error) {
+  //     console.log("error", error);
+  //     reject(error);
+  //   }
+  // });
 };
 
-export const createAccount = (item: Partial<AccountModel>): Promise<AccountModel> => {
+export const createAccount = (item: Partial<Account>): Promise<Account> => {
   return new Promise(async (resolve, reject) => {
     try {
       const result = await Account.create(item);
@@ -66,7 +95,7 @@ export const createAccount = (item: Partial<AccountModel>): Promise<AccountModel
   });
 };
 
-export const createAccounts = (items: Array<Partial<AccountModel>>) => {
+export const createAccounts = (items: Array<Partial<Account>>) => {
   return new Promise(async (resolve, reject) => {
     try {
       const results = [];
@@ -81,23 +110,26 @@ export const createAccounts = (items: Array<Partial<AccountModel>>) => {
   });
 };
 
-export const updateAccount = (id: string, item: Partial<AccountModel>): Promise<AccountModel> => {
+export const updateAccount = (id: number, item: Partial<Account>): Promise<Account> => {
   return new Promise(async (resolve, reject) => {
     try {
       if (!id) return reject(new Error("User Key not found"));
 
-      const { _id, ...rest } = item;
-
+      const { accountId, ...rest } = item;
       const newItem = { ...rest };
+      const query = { _id: accountId };
 
-      const query = { _id: id };
-      const options = {
-        // Return the document after updates are applied
-        new: true,
-        // Create a document if one isn't found.
-        upsert: false,
-      };
-      const result = await Account.findOneAndUpdate(query, newItem, options).populate("createdBy");
+      // const options = {
+      //   // Return the document after updates are applied
+      //   new: true,
+      //   // Create a document if one isn't found.
+      //   upsert: false,
+      // };
+      // const result = await Account.findOneAndUpdate(query, newItem, options).populate("createdBy");
+
+      const result = await Account.findOne({ where: query});
+      if (!result) return reject(new Error("Account not found"));
+      result.update(newItem);
       return resolve(result);
     } catch (error) {
       reject(error);

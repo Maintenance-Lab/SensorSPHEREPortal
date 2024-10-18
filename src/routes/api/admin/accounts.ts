@@ -1,10 +1,10 @@
-import { Router } from "express";
-import { IS_PROD } from "../../../config.js";
-import { createAccount, getAllAccounts, updateAccount } from "../../../services/Account.js";
-import { hash } from "@node-rs/argon2";
-import { handleMongoError } from "../../../tools/utils.js";
-import mongoose from "mongoose";
-import { isAdmin, createAccountResponse } from "../../../utils.js";
+import { Router } from 'express';
+import { IS_PROD } from '../../../config.js';
+import { createAccount, getAllAccounts, updateAccount } from '../../../services/Account.js';
+import { hash } from '@node-rs/argon2';
+import { handleMongoError } from '../../../tools/utils.js';
+import mongoose from 'mongoose';
+import { isAdmin, createAccountResponse } from '../../../utils.js';
 
 const AdminAccountRouter = Router();
 
@@ -38,11 +38,11 @@ AdminAccountRouter.post("/create", async (req, res) => {
     if (!name || !email || !role || !password) return res.json({ success: false, error: "Missing fields" });
 
     const hashedPassword = await hash(password);
-    const newAccount = await createAccount({ name, email, role, password: hashedPassword, createdBy: account._id });
+    const newAccount = await createAccount({ name, email, role, password: hashedPassword});
 
     const resposeAccount = createAccountResponse(newAccount);
     if (!resposeAccount) return res.json({ success: false, error: "Error creating account" });
-    resposeAccount["createdBy"] = account.name || "System";
+    // resposeAccount["createdBy"] = account.name || "System";
 
     return res.json({ success: true, error: null, account: resposeAccount });
   } catch (error: any) {

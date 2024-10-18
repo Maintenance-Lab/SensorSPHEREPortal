@@ -1,67 +1,73 @@
-import Session, { SessionModel } from "../models/Session.js";
+import Session from '../models/Session.js';
 
-export const getSessionById = async (id: string): Promise<SessionModel> => {
+export const getSessionById = async (id: number): Promise<Session> => {
   return new Promise(async (resolve, reject) => {
-    const doc = await Session.findById(id);
+    const doc = await Session.findByPk(id);
     if (!doc) return reject(new Error("Session not found"));
-    const returnDoc = doc.toObject();
+    const returnDoc = doc.toJSON();
 
     return resolve(returnDoc);
   });
 };
 
-export const getSessionsByProject = async (projectId: string) => {
+export const getSessionsByProject = async (projectId: number) => {
   return new Promise(async (resolve) => {
-    const doc = await Session.find({ project: projectId });
+    const doc = await Session.findAll({ where: {project: projectId }});
     return resolve(doc);
   });
 };
 
-export const getActiveSessionsByProject = async (projectId: string) => {
+export const getActiveSessionsByProject = async (projectId: number) => {
   return new Promise(async (resolve) => {
-    const doc = await Session.find({ project: projectId, archived: false });
+    const doc = await Session.findAll({ where: {project: projectId, archived: false }});
     return resolve(doc);
   });
 };
 
-export const getArchivedSessionsByProject = async (projectId: string) => {
+export const getArchivedSessionsByProject = async (projectId: number) => {
   return new Promise(async (resolve) => {
-    const doc = await Session.find({ project: projectId, archived: true });
+    const doc = await Session.findAll({ where: {project: projectId, archived: true }});
     return resolve(doc);
   });
 };
 
-export const createSession = async (item: Partial<SessionModel>) => {
+export const createSession = async (item: Partial<Session>) => {
   return new Promise(async (resolve) => {
     const result = await Session.create(item);
     return resolve(result);
   });
 };
 
-export const updateSession = async (id: string, item: Partial<SessionModel>) => {
+export const updateSession = async (id: number, item: Partial<Session>) => {
   return new Promise(async (resolve, reject) => {
     if (!id) return reject(new Error("Session ID not found"));
 
-    const { _id, ...rest } = item;
+    const { sessionId, ...rest } = item;
     const newItem = { ...rest };
     const query = { _id: id };
-    const options = {
-      // Return the document after updates are applied
-      new: true,
-      // Create a document if one isn't found.
-      upsert: false,
-    };
-    const result = await Session.findOneAndUpdate(query, newItem, options);
+
+    // const options = {
+    //   // Return the document after updates are applied
+    //   new: true,
+    //   // Create a document if one isn't found.
+    //   upsert: false,
+    // };
+    // const result = await Session.findOneAndUpdate(query, newItem, options);
+
+    const result = await Session.findOne({ where: query });
+    if (!result) return reject(new Error("Session not found"));
+    result.update(newItem);
+
     return resolve(result);
   });
 };
 
-export const deleteSession = async (id: string) => {
+export const deleteSession = async (id: number) => {
   return new Promise(async (resolve, reject) => {
     if (!id) return reject(new Error("Session ID not found"));
 
     const query = { _id: id };
-    const result = await Session.deleteOne(query);
+    const result = await Session.destroy({ where: { sessionId: id } });
     return resolve(result);
   });
 };

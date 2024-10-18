@@ -1,15 +1,15 @@
-/* 
- This file runs as part of the setup and creates an administrator account. 
+/*
+ This file runs as part of the setup and creates an administrator account.
 */
 
-import { hashSync } from "@node-rs/argon2";
-import reader from "readline-sync";
-import { AccountModel } from "src/models/Account";
-import dbConnect from "src/mongo";
-import { createAccount, getAllAccounts } from "src/services/Account";
-import { isEmail, isPasswordStrong } from "src/tools/utils";
+import { hashSync } from '@node-rs/argon2';
+import reader from 'readline-sync';
+import Account from '../models/Account.js';
+// import dbConnect from 'src/mongo";
+import { createAccount, getAllAccounts } from 'src/services/Account';
+import { isEmail, isPasswordStrong } from 'src/tools/utils';
 
-dbConnect();
+// dbConnect();
 
 const main = async () => {
   const accounts = await getAllAccounts();
@@ -41,7 +41,7 @@ const main = async () => {
   //   }
 
   console.log("Creating administrator account...");
-  const accountObj: Partial<AccountModel> = {
+  const accountObj: Partial<Account> = {
     name,
     email,
     password: hashSync(password),

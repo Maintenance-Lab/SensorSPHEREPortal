@@ -1,30 +1,34 @@
-import mongoose, { Schema } from "mongoose";
-import { AccountModel } from "./Account";
-const { ObjectId } = Schema.Types;
+import { Sequelize, DataTypes, Model } from 'sequelize';
+import sequelize from '../sequelize.js';
+// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
-export interface ProjectModel {
-  _id: string;
-  name: string;
-  description: string;
-  meta: object; // Extra info if needed
-  owner?: string | AccountModel;
-  createdAt?: Date;
-  sensorUnits?: string[];
-  lastActive?: Date;
-  archived?: boolean;
-  collaborators?: string[] | AccountModel[]; // Array of Account IDs
+class Project extends Model {
+    projectId: number;
+    name: string;
+    description: string;
+    meta: object;
+    // Owner: number[];
+    createdAt: Date;
+    // SessionId: number[];
+    lastActive: Date;
+    archived: boolean;
 }
 
-const ProjectSchema = new mongoose.Schema({
-  name: { type: String, default: "Default Project Title" },
-  description: { type: String, default: "Default Project Description" },
-  meta: { type: Object, default: {} },
-  owner: { type: ObjectId, ref: "Account" },
-  createdAt: { type: Date, default: Date.now },
-  sensorUnits: { type: [String], default: [] },
-  lastActive: { type: Date, default: Date.now },
-  archived: { type: Boolean, default: false },
-  collaborators: [{ type: ObjectId, ref: "Account", default: []}],
+Project.init({
+    projectId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, allowNull: false },
+    name: { type: DataTypes.STRING(100), allowNull: false },
+    description: { type: DataTypes.STRING(1000)},
+    meta: { type: DataTypes.JSON, defaultValue: {} },
+    createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    // SessionId: { type: DataTypes.ARRAY(DataTypes.INTEGER), references: { model: Session, key: 'SessionId' } },
+    lastActive: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    archived: { type: DataTypes.BOOLEAN, defaultValue: false },
+},
+{
+    sequelize,
+    modelName: 'Project',
+    tableName: 'Project',
+    timestamps: false,
 });
 
-export default mongoose.models.Project || mongoose.model("Project", ProjectSchema);
+export default Project;

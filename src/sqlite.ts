@@ -1,0 +1,220 @@
+import sqlite3 from 'sqlite3';
+// import * as sqlite3 from 'sqlite3';
+import { Database } from 'sqlite3';
+import { SQLITE_PATH } from './config.js';
+import sequelize from './sequelize.js';
+
+// const sqlite3 = require('sqlite3').verbose();
+
+
+// Initialize and configure the SQLite database
+const initDb = () => {
+    const db = new sqlite3.Database(SQLITE_PATH, (err) => {
+        if (err) {
+        console.error('Error connecting to SQLite database:', err.message);
+        } else {
+        console.log('Connected to SQLite database.');
+        }
+    });
+
+    // Create tables
+    db.serialize(() => {
+        // Account table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS Account (
+                accountId INTEGER PRIMARY KEY AUTOINCREMENT,
+                enabled INTEGER,
+                name TEXT NOT NULL,
+                password TEXT NOT NULL,
+                role TEXT NOT NULL,
+                email TEXT NOT NULL,
+                meta TEXT,
+                createdAt DATE,
+                hasChangedPassword INTEGER,
+                hasAvatar INTEGER
+            );
+        `);
+
+        // Project table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS Project (
+                projectId INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                description TEXT,
+                meta TEXT,
+                createdAt DATE,
+                lastActive DATE,
+                archived INTEGER
+            );
+        `);
+
+        // AccountProjectMapping table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS AccountProjectMapping (
+                accountId INTEGER,
+                projectId INTEGER,
+                PRIMARY KEY (accountId, projectId),
+                FOREIGN KEY (accountId) REFERENCES Account(accountId),
+                FOREIGN KEY (projectId) REFERENCES Project(projectId)
+            );
+        `);
+
+
+        // Session table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS Session (
+                sessionId INTEGER,
+                name TEXT NOT NULL,
+                status TEXT,
+                scheduledFrom DATE,
+                scheduledTo DATE,
+                meta TEXT,
+                createdAt DATE,
+                lastActive DATE,
+                archived INTEGER,
+                PRIMARY KEY (sessionId)
+            );
+        `);
+
+        // SessionDeviceMapping table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS SessionDeviceMapping (
+                sessionId INTEGER,
+                deviceId INTEGER,
+                confiuredHz INTEGER,
+                PRIMARY KEY (sessionId, deviceId),
+                FOREIGN KEY (sessionId) REFERENCES Session(sessionId),
+                FOREIGN KEY (deviceId) REFERENCES Device(deviceId)
+            );
+        `);
+
+        // Device table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS Device (
+                deviceId INTEGER NOT NULL,
+                connectStatus BOOLEAN,
+                maxHz INTEGER,
+                PRIMARY KEY (deviceId),
+                FOREIGN KEY (deviceId) REFERENCES DeviceSensorMapping(deviceId)
+            );
+        `);
+
+        // DeviceSensorConfiguration table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS DeviceSensorConfiguration (
+                sessionId INTEGER NOT NULL,
+                deviceId INTEGER NOT NULL,
+                propertyName TEXT NOT NULL,
+                active BOOLEAN NOT NULL,
+                PRIMARY KEY (sessionId, deviceId, propertyName),
+                FOREIGN KEY (sessionId) REFERENCES Session(sessionId),
+                FOREIGN KEY (deviceId) REFERENCES Device(deviceId),
+                FOREIGN KEY (propertyName) REFERENCES SensorProperty(propertyName)
+            );
+        `);
+
+        // DeviceSensorMapping
+        db.run(`
+            CREATE TABLE IF NOT EXISTS DeviceSensorMapping (
+                deviceId INTEGER,
+                sensorModel TEXT,
+                manufacturerName TEXT,
+                channel INTEGER,
+                PRIMARY KEY (deviceId, sensorModel, manufacturerName, channel),
+                FOREIGN KEY (deviceId) REFERENCES Device(deviceId),
+                FOREIGN KEY (sensorModel) REFERENCES Sensor(model),
+                FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName)
+            );
+        `);
+
+        // Sensor table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS Sensor (
+                model TEXT NOT NULL,
+                manufacturerName TEXT NOT NULL,
+                categoryName TEXT NOT NULL,
+                propertyName TEXT NOT NULL,
+                PRIMARY KEY (model, manufacturerName),
+                FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName),
+                FOREIGN KEY (categoryName) REFERENCES SensorCategory(categoryName),
+                FOREIGN KEY (propertyName) REFERENCES SensorProperty(propertyName)
+                );
+        `);
+
+        // SensorCategory table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS SensorCategory (
+                CategoryName TEXT PRIMARY KEY
+            );
+        `);
+
+        // SensorProperty table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS SensorProperty (
+                propertyName TEXT PRIMARY KEY,
+                model TEXT,
+                manufacturerName TEXT,
+                FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName),
+                FOREIGN KEY (model) REFERENCES SensorCategory(model)
+            );
+        `);
+
+        // Manufacturer table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS Manufacturer (
+                manufacturerName TEXT PRIMARY KEY
+            );
+        `);
+
+        // LoginSession table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS LoginSession (
+                loginSessionId INTEGER PRIMARY KEY AUTOINCREMENT,
+                account INTEGER,
+                loginSessionDate DATE,
+                userAgent TEXT,
+                ip TEXT,
+                token TEXT,
+                FOREIGN KEY (Account) REFERENCES Account(accountId)
+            );
+        `);
+    })
+    return db;
+};
+
+const closeDb = (db: Database) => {
+    db.close((err) => {
+        if (err) {
+            console.error('Error closing database: ', err.message);
+        } else {
+            console.log('Closed the SQLite database connection.');
+        }
+    });
+};
+
+
+// (async () => {
+//     await sequelize.sync({force: true});
+//     console.log('All models were synchronized successfully.');
+// })();
+
+const startDb = async () => {
+    // Set up associations
+    // TODO: Add associations
+    // console.log('In set up associations');
+
+    // Sync models to the database
+    // await sequelize.sync({alter: true});
+    await sequelize.sync();
+    console.log('All models were synchronized successfully.');
+}
+
+// initDb();
+// startDb();
+
+export { initDb, closeDb, startDb };
+// export default db;
+
+
+
+

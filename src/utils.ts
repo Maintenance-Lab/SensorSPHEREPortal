@@ -99,7 +99,6 @@ export const getSession = async (req: Request, res: Response): Promise<SessionRe
       res.cookie("token", "", { maxAge: 0 }).status(401).send("Unauthorized");
       return false;
     }
-    console.log("komhier")
     // Get the login sessions for the account
     const sessions = await getLoginSessionsByAccountID(accountId);
     if (!sessions) {

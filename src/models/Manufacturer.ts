@@ -3,7 +3,7 @@ import sequelize from '../sequelize.js';
 // const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class Manufacturer extends Model {
-    ManufacturerName: string;
+    manufacturerName: string;
 }
 
 Manufacturer.init({

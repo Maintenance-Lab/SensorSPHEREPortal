@@ -1,10 +1,10 @@
-import { Router } from 'express';
-import { IS_PROD, JWT_ACCESS_SECRET, JWT_EXPIRESIN } from '../../../config.js';
-import { getAccountById, updateAccount } from '../../../services/Account.js';
-import { getSession } from '../../../utils.js';
-import { hash, verify } from '@node-rs/argon2';
-import jwt from 'jsonwebtoken';
-import { createLoginSession } from '../../../services/LoginSession.js';
+import { Router } from "express";
+import { IS_PROD, JWT_ACCESS_SECRET, JWT_EXPIRESIN } from "../../../config.js";
+import { getAccountById, updateAccount } from "../../../services/Account.js";
+import { getSession } from "../../../utils.js";
+import { hash, verify } from "@node-rs/argon2";
+import jwt from "jsonwebtoken";
+import { createLoginSession } from "../../../services/LoginSession.js";
 
 const router = Router();
 
@@ -24,11 +24,11 @@ router.get("/pinned", async (req, res) => {
 
   const { account } = response;
   if (!account) return res.status(401).json({ message: "Unauthorized" });
-  if (!account.accountId) return res.status(400).json({ message: "Account ID is required" });
+  if (!account._id) return res.status(400).json({ message: "Account ID is required" });
 
-  const dbAccount = await getAccountById(account.accountId);
+  const dbAccount = await getAccountById(account._id);
 
-  const {pinnedProjects } = dbAccount;
+  const { pinnedProjects } = dbAccount;
   return res.json(pinnedProjects);
 });
 
@@ -38,9 +38,9 @@ router.post("/pin", async (req, res) => {
 
   const { account } = response;
   if (!account) return res.status(401).json({ message: "Unauthorized" });
-  if (!account.accountId) return res.status(400).json({ message: "Account ID is required" });
+  if (!account._id) return res.status(400).json({ message: "Account ID is required" });
 
-  const dbAccount = await getAccountById(account.accountId);
+  const dbAccount = await getAccountById(account._id);
   if (!dbAccount) return res.status(500).json({ message: "Internal Server Error" });
 
   const { pinnedProjects } = dbAccount;
@@ -53,7 +53,7 @@ router.post("/pin", async (req, res) => {
   }
   pinnedProjects.push(projectId);
 
-  const updatedAccount = await updateAccount(account.accountId, { pinnedProjects });
+  const updatedAccount = await updateAccount(account._id, { pinnedProjects });
   if (!updatedAccount) return res.status(500).json({ message: "Internal Server Error" });
 
   return res.json(updatedAccount);
@@ -65,9 +65,9 @@ router.post("/unpin", async (req, res) => {
 
   const { account } = response;
   if (!account) return res.status(401).json({ message: "Unauthorized" });
-  if (!account.accountId) return res.status(400).json({ message: "Account ID is required" });
+  if (!account._id) return res.status(400).json({ message: "Account ID is required" });
 
-  const dbAccount = await getAccountById(account.accountId);
+  const dbAccount = await getAccountById(account._id);
   if (!dbAccount) return res.status(500).json({ message: "Internal Server Error" });
 
   const { pinnedProjects } = dbAccount;
@@ -77,7 +77,7 @@ router.post("/unpin", async (req, res) => {
 
   pinnedProjects.splice(pinnedProjects.indexOf(projectId), 1);
 
-  const updatedAccount = await updateAccount(account.accountId, { pinnedProjects });
+  const updatedAccount = await updateAccount(account._id, { pinnedProjects });
   if (!updatedAccount) return res.status(500).json({ message: "Internal Server Error" });
 
   return res.json(updatedAccount);
@@ -94,10 +94,10 @@ router.post("/password", async (req, res) => {
   if (!newPass || !currentPass) return res.status(400).json({ message: "Current and new password required" });
   if (newPass === currentPass) return res.status(400).json({ message: "New password cannot be the same as the current password" });
 
-  const { accountId } = account;
-  if (!accountId) return res.status(400).json({ message: "Account ID is required" });
+  const { _id } = account;
+  if (!_id) return res.status(400).json({ message: "Account ID is required" });
 
-  const dbAccount = await getAccountById(accountId);
+  const dbAccount = await getAccountById(_id);
   const { password } = dbAccount;
   if (!password) return res.status(500).json({ message: "Internal Server Error" });
 
@@ -110,19 +110,19 @@ router.post("/password", async (req, res) => {
 
   newPass = await hash(newPass);
 
-  const updatedAccount = await updateAccount(accountId, { password: newPass, hasChangedPassword: true });
+  const updatedAccount = await updateAccount(_id, { password: newPass, hasChangedPassword: true });
   if (!updatedAccount) return res.status(500).json({ message: "Internal Server Error" });
 
   const { name, role, hasAvatar, email, hasChangedPassword } = updatedAccount;
 
-  const token = jwt.sign({ accountId, name, role, hasAvatar, email, hasChangedPassword }, JWT_ACCESS_SECRET, {
+  const token = jwt.sign({ _id, name, role, hasAvatar, email, hasChangedPassword }, JWT_ACCESS_SECRET, {
     expiresIn: JWT_EXPIRESIN,
   });
 
   const userAgent = req.headers["user-agent"];
   const ip: any = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
-  await createLoginSession({ account: accountId, token, userAgent, ip });
+  await createLoginSession({ Account: _id, token, userAgent, ip });
 
   return res
     .cookie("token", token, {

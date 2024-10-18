@@ -1,5 +1,5 @@
-import { Router } from 'express';
-import AdminAccountRouter from './accounts.js';
+import { Router } from "express";
+import AdminAccountRouter from "./accounts.js";
 
 const AdminRouter = Router();
 

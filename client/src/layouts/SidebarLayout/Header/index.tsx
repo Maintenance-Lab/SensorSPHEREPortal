@@ -72,7 +72,7 @@ const mapBreadcrumbName = (pathname: string) => {
   };
 };
 
-const fetchProjectName = async (id: number) => {
+const fetchProjectName = async (id: string) => {
   try {
     const response = await fetch(`/api/projects/id/${id}`, {
       method: 'GET',
@@ -93,7 +93,7 @@ const fetchProjectName = async (id: number) => {
   };
 };
 
-const fetchSession = async (id: number) => {
+const fetchSession = async (id: string) => {
   try {
     const response = await fetch(`/api/sessions/id/${id}`, {
       method: 'GET',
@@ -126,10 +126,10 @@ function Header() {
 
   const fetchData = async () => {
     if (location.pathname.includes('/projects/detail/')) {
-      const projectId = Number(location.pathname.split('/')[3]);
+      const projectId = location.pathname.split('/')[3];
       await fetchProjectName(projectId).then((name) => setProjectName(name));
     } else if (location.pathname.includes('/sessions/detail/')) {
-      const sessionId = Number(location.pathname.split('/')[3]);
+      const sessionId = location.pathname.split('/')[3];
       await fetchSession(sessionId).then(async (data) => {
         setSessionName(data.name);
         setProjectId(data.project);

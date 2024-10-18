@@ -1,4 +1,4 @@
-import { IS_PROD } from '../config.js';
+import { IS_PROD } from "../config.js";
 
 export const sleep = (val = 1000): Promise<void> => {
   return new Promise((resolve) => {

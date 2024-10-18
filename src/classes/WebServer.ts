@@ -1,17 +1,17 @@
 /**
  * WebServer
  */
-import { EventEmitter } from 'events';
-import { createServer, Server } from 'http';
-import express, { Express } from 'express';
-import cookieparser from 'cookie-parser';
+import { EventEmitter } from "events";
+import { createServer, Server } from "http";
+import express, { Express } from "express";
+import cookieparser from "cookie-parser";
 import { rateLimit } from 'express-rate-limit'
 
-import { PORT } from '../config.js';
-// import auth from '../middleware/auth.js';
-// import cors from '../middleware/cors.js';
-import routes from '../routes/index.js';
-import cors from '../middleware/cors.js';
+import { PORT } from "../config.js";
+// import auth from "../middleware/auth.js";
+// import cors from "../middleware/cors.js";
+import routes from "../routes/index.js";
+import cors from "../middleware/cors.js";
 
 class WebServer extends EventEmitter {
   public app: Express | null = null;

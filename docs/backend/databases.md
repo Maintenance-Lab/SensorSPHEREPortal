@@ -20,7 +20,7 @@ These models are defined currently.
   hasChangedPassword?: boolean;
   role: "administrator" | "student" | "teacher" | "staff";
   hasAvatar: boolean;
-  pinnedProjects?: string[] | Project[];
+  pinnedProjects?: string[] | ProjectModel[];
 }
 ```
 
@@ -58,7 +58,7 @@ These models are defined currently.
   _id: string;
   name: string;
   description: string;
-  project: string | Project;
+  project: string | ProjectModel;
   meta: object; // Extra info if needed
   createdAt?: Date;
   sensorUnits?: string[];

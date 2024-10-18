@@ -21,10 +21,6 @@
 .env.test.local
 .env.production.local
 
-# databases
-*.sqlite
-*.sqlite3
-
 *.log*
 .vscode
 /node_modules

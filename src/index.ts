@@ -1,21 +1,11 @@
-import cleanup from 'node-cleanup';
-import WebServer from './classes/WebServer.js';
-// import dbConnect from "./mongo.js";
-import { initDb, closeDb, startDb } from './sqlite.js';
-import db from './sequelize.js'
-
+import cleanup from "node-cleanup";
+import WebServer from "./classes/WebServer.js";
+import dbConnect from "./mongo.js";
 
 const ws = new WebServer();
-// const db = require('./sqlite.js');
 
-
-// const db = initDb();
-initDb();
-startDb();
-
+dbConnect();
 
 cleanup(() => {
   ws.close();
-  // closeDb(db);
-  db.close();
 });

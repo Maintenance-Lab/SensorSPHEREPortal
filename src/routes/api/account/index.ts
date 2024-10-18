@@ -1,6 +1,6 @@
-import { Router } from 'express';
-import accountRoutes from './account.js';
-import sessionRoutes from './session.js';
+import { Router } from "express";
+import accountRoutes from "./account.js";
+import sessionRoutes from "./session.js";
 
 const AccountRouter = Router();
 

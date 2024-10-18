@@ -1,5 +1,5 @@
-import mqtt from 'mqtt';
-import { MQTT_URI } from '../config.js';
+import mqtt from "mqtt";
+import { MQTT_URI } from "../config.js";
 
 // Example discover message we might receive
 // {

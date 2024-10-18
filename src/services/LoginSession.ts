@@ -1,17 +1,13 @@
-import LoginSession from '../models/LoginSession.js';
-import { JWT_EXPIRESIN } from '../config.js';
+import LoginSession, { LoginSessionModel } from "../models/LoginSession.js";
+import { JWT_EXPIRESIN } from "../config.js";
 
-export const getLoginSessionsByAccountID = (id: number): Promise<LoginSession[]> => {
+export const getLoginSessionsByAccountID = (id: string): Promise<LoginSessionModel[]> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const doc = await LoginSession.findAll({ where: { Account: id }});
-      const notExpired = doc.filter(({ loginSessionDate }) => {
-        // This casting can be removed if loginSessionDate is correctly a Date during run time.
-        if (!(loginSessionDate instanceof Date)) {
-          loginSessionDate = new Date(loginSessionDate);
-        }
+      const doc = await LoginSession.find({ Account: id });
+      const notExpired = doc.filter(({ date }) => {
         const now = new Date();
-        const diff = now.getTime() - loginSessionDate.getTime();
+        const diff = now.getTime() - date.getTime();
         return (diff * 1000) < JWT_EXPIRESIN;
       });
       return resolve(doc);
@@ -21,7 +17,7 @@ export const getLoginSessionsByAccountID = (id: number): Promise<LoginSession[]>
   });
 };
 
-export const createLoginSession = (item: Partial<LoginSession>): Promise<LoginSession> => {
+export const createLoginSession = (item: Partial<LoginSessionModel>): Promise<LoginSessionModel> => {
   return new Promise(async (resolve, reject) => {
     try {
       const result = await LoginSession.create(item);
@@ -32,13 +28,10 @@ export const createLoginSession = (item: Partial<LoginSession>): Promise<LoginSe
   });
 };
 
-export const deleteLoginSession = (id: number): Promise<LoginSession> => {
+export const deleteLoginSession = (id: string): Promise<LoginSessionModel> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const doc = await LoginSession.findByPk(id);
-      if (!doc) return reject(new Error("LoginSession not found"));
-      await doc.destroy();
-
+      const doc = await LoginSession.findByIdAndDelete(id);
       return resolve(doc);
     } catch (error) {
       reject(error);
@@ -46,10 +39,10 @@ export const deleteLoginSession = (id: number): Promise<LoginSession> => {
   });
 };
 
-export const deleteLoginSessionsByAccountID = (id: number) => {
+export const deleteLoginSessionsByAccountID = (id: string) => {
   return new Promise(async (resolve, reject) => {
     try {
-      await LoginSession.destroy({ where: { Account: id }});
+      await LoginSession.deleteMany({ Account: id });
       return resolve(true);
     } catch (error) {
       reject(error);

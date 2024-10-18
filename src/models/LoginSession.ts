@@ -1,31 +1,22 @@
-import Account from './Account.js';
-import { Sequelize, DataTypes, Model } from 'sequelize';
-import sequelize from '../sequelize.js';
-// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
+import mongoose, { Schema } from "mongoose";
+import { AccountModel } from "./Account";
+const { ObjectId } = Schema.Types;
 
-class LoginSession extends Model {
-  loginSessionId: number;
-  account: number;
-  // Is called LoginSessionDate because otherwise the Date() function will be overwritten
-  loginSessionDate: Date;
+export interface LoginSessionModel {
+  _id?: string;
+  Account: AccountModel | string;
+  date: Date;
   userAgent: string;
   ip: string;
   token: string;
 }
 
-LoginSession.init({
-  loginSessionId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, allowNull: false },
-  account: { type: DataTypes.INTEGER, allowNull: false, references: { model: Account, key: 'AccountId' } },
-  loginSessionDate: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-  userAgent: { type: DataTypes.STRING, allowNull: false },
-  ip: { type: DataTypes.STRING, allowNull: false },
-  token: { type: DataTypes.STRING, allowNull: false },
-},
-{
-  sequelize,
-  modelName: 'LoginSession',
-  tableName: 'LoginSession',
-  timestamps: false,
+const LoginSessionSchema = new mongoose.Schema({
+  date: { type: Date, default: Date.now },
+  Account: { type: ObjectId, ref: "Account" },
+  userAgent: { type: String, required: true },
+  ip: { type: String, required: true },
+  token: { type: String, required: true },
 });
 
-export default LoginSession;
+export default mongoose.models.LoginSession || mongoose.model("LoginSession", LoginSessionSchema);

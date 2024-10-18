@@ -1,7 +1,7 @@
 /**
  * CORS Express Middleware
  */
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 
 const cors = () => {
   return function (_: Request, res: Response, next: NextFunction) {

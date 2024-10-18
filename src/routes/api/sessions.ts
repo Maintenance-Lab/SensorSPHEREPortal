@@ -1,5 +1,5 @@
-import { Router } from 'express';
-import { IS_PROD } from '../../config.js';
+import { Router } from "express";
+import { IS_PROD } from "../../config.js";
 import {
     getSessionById,
     createSession,
@@ -8,30 +8,30 @@ import {
     getActiveSessionsByProject,
     getArchivedSessionsByProject,
     deleteSession
-} from '../../services/Sessions.js';
+} from "../../services/Sessions.js";
 
 const router = Router();
 
 router.get("/id/:id", async (req, res) => {
-    const id = Number(req.params);
+    const { id } = req.params;
     const doc = await getSessionById(id);
     return res.json(doc);
 });
 
 router.get("/project/:projectId", async (req, res) => {
-    const projectId = Number(req.params);
+    const { projectId } = req.params;
     const doc = await getSessionsByProject(projectId);
     return res.json(doc);
 });
 
 router.get("/project/active/:projectId", async (req, res) => {
-    const projectId = Number(req.params);
+    const { projectId } = req.params;
     const doc = await getActiveSessionsByProject(projectId);
     return res.json(doc);
 });
 
 router.get("/project/archived/:projectId", async (req, res) => {
-    const projectId = Number(req.params);
+    const { projectId } = req.params;
     const doc = await getArchivedSessionsByProject(projectId);
     return res.json(doc);
 });
@@ -43,14 +43,14 @@ router.post("/create", async (req, res) => {
 });
 
 router.put("/update/:id", async (req, res) => {
-    const id = Number(req.params);
+    const { id } = req.params;
     const { body } = req;
     const doc = await updateSession(id, body);
     return res.json(doc);
 });
 
 router.delete("/delete/:id", async (req, res) => {
-    const id = Number(req.params);
+    const { id } = req.params;
     const doc = await deleteSession(id);
     return res.json(doc);
 });

@@ -1,20 +1,21 @@
-import { Router } from 'express';
-import { IS_PROD } from '../../config.js';
+import { Router } from "express";
+import { IS_PROD } from "../../config.js";
 import {
   getAllProjects,
   getProjectById,
   getProjectByName,
-  // getProjectsByAccount,
+  getProjectsByAccount,
   createProject,
   createProjects,
   updateProject,
-  // getArchivedProjectsByOwner,
+  getArchivedProjectsByOwner,
+  getActiveProjectsByOwner,
   deleteProjects,
   getActiveProjectsByAccountId,
   getArchivedProjectsByAccountId,
-} from '../../services/Projects.js';
-import { getSession } from '../../utils.js';
-import Project from '../../models/Project.js';
+} from "../../services/Projects.js";
+import { getSession } from "../../utils.js";
+import { ProjectModel } from "src/models/Project.js";
 
 const router = Router();
 
@@ -30,10 +31,10 @@ router.get("/active", async (req, res) => {
   const { account, sessions } = response;
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
 
-  const { accountId } = account;
-  if (!accountId) return res.status(400).json({ message: "Account ID is required" });
+  const { _id } = account;
+  if (!_id) return res.status(400).json({ message: "Account ID is required" });
 
-  const doc = await getActiveProjectsByAccountId(accountId);
+  const doc = await getActiveProjectsByAccountId(_id);
   return res.json(doc);
 });
 
@@ -44,10 +45,10 @@ router.get("/archived", async (req, res) => {
   const { account, sessions } = response;
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
 
-  const { accountId } = account;
-  if (!accountId) return res.status(400).json({ message: "Account ID is required" });
+  const { _id } = account;
+  if (!_id) return res.status(400).json({ message: "Account ID is required" });
 
-  const doc = await getArchivedProjectsByAccountId(accountId);
+  const doc = await getArchivedProjectsByAccountId(_id);
   return res.json(doc);
 });
 
@@ -56,35 +57,32 @@ router.get("/id/:id", async (req, res) => {
     const response = await getSession(req, res);
     if (!response) return;
 
-    const id = Number(req.params);
-    // const doc: any = await getProjectById(id, true);
-    const doc: any = await getProjectById(id);
+    const { id } = req.params;
+    const doc: any = await getProjectById(id, true);
     if (!doc) return res.status(404).json({ message: "Project not found" });
 
-    // // check if user is owner or collaborator
-    // const { account } = response;
-    // if (!account) return res.status(401).json({ message: "Unauthorized" });
-    // const { _id } = account;
+    // check if user is owner or collaborator
+    const { account } = response;
+    if (!account) return res.status(401).json({ message: "Unauthorized" });
+    const { _id } = account;
 
-    // let found = false;
-    // if (doc.owner?._id.toString() === _id) {
-    //   found = true;
-    // } else {
-    //   if (doc.collaborators) {
-    //     for (const collab of doc.collaborators) {
-    //       if (collab._id.toString() === _id) {
-    //         found = true;
-    //         break;
-    //       }
-    //     }
-    //   }
-    // }
+    let found = false;
+    if (doc.owner?._id.toString() === _id) {
+      found = true;
+    } else {
+      if (doc.collaborators) {
+        for (const collab of doc.collaborators) {
+          if (collab._id.toString() === _id) {
+            found = true;
+            break;
+          }
+        }
+      }
+    }
 
-    // if (!found) return res.status(401).json({ message: "Unauthorized" });
-    // else return res.json(doc);
-    return res.json(doc);
-  }
-  catch (error) {
+    if (!found) return res.status(401).json({ message: "Unauthorized" });
+    else return res.json(doc);
+  } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
   }
@@ -111,11 +109,11 @@ router.post("/create", async (req, res) => {
   const { account, sessions } = response;
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
 
-  const { accountId } = account;
-  if (!accountId) return res.status(400).json({ message: "Account ID is required" });
+  const { _id } = account;
+  if (!_id) return res.status(400).json({ message: "Account ID is required" });
 
   const { body } = req;
-  // body.owner = accountId;
+  body.owner = _id;
   const result = await createProject(body);
   return res.json(result);
 });
@@ -128,7 +126,7 @@ router.post("/create", async (req, res) => {
 // });
 
 router.put("/update/:id", async (req, res) => {
-  const id = Number(req.params);
+  const { id } = req.params;
   const { body } = req;
 
   const response = await getSession(req, res);
@@ -137,11 +135,11 @@ router.put("/update/:id", async (req, res) => {
   const { account, sessions } = response;
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
 
-  const { accountId } = account;
+  const { _id } = account;
   const project: any = await getProjectById(id);
   if (!project) return res.status(404).json({ message: "Project not found" });
 
-  if (project.owner?._id.toString() !== accountId) return res.status(401).json({ message: "Unauthorized" });
+  if (project.owner?._id.toString() !== _id) return res.status(401).json({ message: "Unauthorized" });
 
   const cleaned = cleanBody(body);
 
@@ -157,7 +155,7 @@ router.put("/update-many", async (req, res) => {
     const { account, sessions } = response;
     if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
 
-    const { accountId } = account;
+    const { _id } = account;
 
     const { body } = req;
     const toUpdate = [];
@@ -170,7 +168,7 @@ router.put("/update-many", async (req, res) => {
       const project: any = await getProjectById(id);
       if (!project) return res.status(404).json({ message: "Project not found" });
 
-      // if (project.owner?._id.toString() !== accountId) return res.status(401).json({ message: "Unauthorized" });
+      if (project.owner?._id.toString() !== _id) return res.status(401).json({ message: "Unauthorized" });
 
       toUpdate.push({ id, cleaned });
     }
@@ -195,12 +193,12 @@ router.post("/delete", async (req, res) => {
 
   const { account, sessions } = response;
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
-  const { accountId } = account;
+  const { _id } = account;
 
   const project: any = await getProjectById(ids);
   if (!project) return res.status(404).json({ message: "Project not found" });
 
-  // if (project.owner?._id.toString() !== accountId) return res.status(401).json({ message: "Unauthorized" });
+  if (project.owner?._id.toString() !== _id) return res.status(401).json({ message: "Unauthorized" });
 
   const result = await deleteProjects(ids);
   return res.json(result);
@@ -208,12 +206,13 @@ router.post("/delete", async (req, res) => {
 
 export default router;
 
-const cleanBody = (body: Partial<Project>) => {
-  console.log(body);
+const cleanBody = (body: Partial<ProjectModel>) => {
   const cleaned = { ...body };
   if (cleaned.meta) delete cleaned.meta;
   if (cleaned.createdAt) delete cleaned.createdAt;
-  if (cleaned.projectId) delete cleaned.projectId;
-  // if (cleaned.Owner) delete cleaned.Owner;
+  if (cleaned._id) delete cleaned._id;
+  if (cleaned.owner) delete cleaned.owner;
+  if (cleaned.collaborators) delete cleaned.collaborators;
+  // if (cleaned.sensorUnits) delete cleaned.sensorUnits;
   return cleaned;
 };

@@ -5,8 +5,8 @@ import Account from './models/Account.js';
 import { getLoginSessionsByAccountID } from './services/LoginSession.js';
 import LoginSession from './models/LoginSession.js';
 
-const isValidObjectID = (id: string): boolean => {
-  return /^[0-9a-fA-F]{24}$/.test(id);
+const isValidObjectID = (id: number): boolean => {
+  return Number.isInteger(id) && id >= 0 && id <= 100000000;
 };
 
 export const createAccountResponse = (account: Partial<Account>): Partial<Account> => {
@@ -94,34 +94,34 @@ export const getSession = async (req: Request, res: Response): Promise<SessionRe
       return false;
     }
 
-    const { _id } = account;
-    if (!isValidObjectID(_id)) {
+    const { accountId } = account;
+    if (!isValidObjectID(accountId)) {
       res.cookie("token", "", { maxAge: 0 }).status(401).send("Unauthorized");
       return false;
     }
-
+    console.log("komhier")
     // Get the login sessions for the account
-    const sessions = await getLoginSessionsByAccountID(_id);
+    const sessions = await getLoginSessionsByAccountID(accountId);
     if (!sessions) {
       res.cookie("token", "", { maxAge: 0 }).status(401).send("Unauthorized");
       return false;
     }
-
+    
     // Find the session that matches the token
     const session = sessions.find((s) => s.token === cookies.token);
     if (!session) {
       res.cookie("token", "", { maxAge: 0 }).status(401).send("Unauthorized");
       return false;
     }
-
+    
     const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-
+    
     // Check if the IP matches. We do not check user agents as this will be anoying when a browser updates.
     if (session.ip !== ip) {
       res.cookie("token", "", { maxAge: 0 }).status(401).send("Unauthorized");
       return false;
     }
-
+    
     return { account, sessions };
   } catch (error: any) {
     if (!IS_PROD) console.error("Error verifying session", error.message);

@@ -6,6 +6,10 @@ export const getLoginSessionsByAccountID = (id: number): Promise<LoginSession[]>
     try {
       const doc = await LoginSession.findAll({ where: { Account: id }});
       const notExpired = doc.filter(({ loginSessionDate }) => {
+        // This casting can be removed if loginSessionDate is correctly a Date during run time.
+        if (!(loginSessionDate instanceof Date)) {
+          loginSessionDate = new Date(loginSessionDate);
+        }
         const now = new Date();
         const diff = now.getTime() - loginSessionDate.getTime();
         return (diff * 1000) < JWT_EXPIRESIN;

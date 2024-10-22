@@ -97,7 +97,7 @@ export const updateProject = async (id: number, item: Partial<Project>) => {
 
     const { projectId, ...rest } = item;
     const newItem = { ...rest };
-    const query = { _id: projectId };
+    const query = { projectId: projectId };
 
     // const options = {
     //   // Return the document after updates are applied

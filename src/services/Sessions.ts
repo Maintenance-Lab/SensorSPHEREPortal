@@ -44,7 +44,7 @@ export const updateSession = async (id: number, item: Partial<Session>) => {
 
     const { sessionId, ...rest } = item;
     const newItem = { ...rest };
-    const query = { _id: id };
+    const query = { SessionId: id };
 
     // const options = {
     //   // Return the document after updates are applied

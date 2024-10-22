@@ -115,10 +115,6 @@ export const updateAccount = (id: number, item: Partial<Account>): Promise<Accou
     try {
       if (!id) return reject(new Error("User Key not found"));
 
-      const { accountId, ...rest } = item;
-      const newItem = { ...rest };
-      const query = { _id: accountId };
-
       // const options = {
       //   // Return the document after updates are applied
       //   new: true,
@@ -127,9 +123,10 @@ export const updateAccount = (id: number, item: Partial<Account>): Promise<Accou
       // };
       // const result = await Account.findOneAndUpdate(query, newItem, options).populate("createdBy");
 
-      const result = await Account.findOne({ where: query});
+      const result = await Account.findOne({ where: { accountId: id }});
+      console.log("Result", result);
       if (!result) return reject(new Error("Account not found"));
-      result.update(newItem);
+      result.update(item);
       return resolve(result);
     } catch (error) {
       reject(error);

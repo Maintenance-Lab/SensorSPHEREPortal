@@ -3,7 +3,7 @@ import random
 import string
 import datetime
 
-database_path = "fill_in"
+database_path = 'database/db.sqlite3'
 
 # connect to the database
 conn = sqlite3.connect(database_path)
@@ -14,11 +14,10 @@ def delete_all():
     for table in ['AccountProjectMapping', 'DeviceSensorConfiguration', 'DeviceSensorMapping', 'SessionDeviceMapping', 'SensorProperty', 'Sensor', 'Manufacturer', 'SensorCategory', 'Device', 'Session', 'Project', 'Account']:
         c.execute(f'DELETE FROM {table};')
 
-delete_all();
+delete_all()
 
 # Create dummy accounts
 accounts = [
-    (1, 1, "Test", "password123", "admin", "test@example.com", None, "2023-01-01", 0, 1),
     (2, 1, "Bob Smith", "password123", "student", "bob@example.com", None, "2023-01-02", 0, 1),
     (3, 1, "Charlie Brown", "password123", "student", "charlie@example.com", None, "2023-01-03", 0, 0),
     (4, 1, "David Wilson", "password123", "student", "david@example.com", None, "2023-01-04", 0, 1),

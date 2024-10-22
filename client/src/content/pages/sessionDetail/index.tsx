@@ -402,6 +402,7 @@ const SessionDetail = () => {
     setProjectId(data.project);
     setSessionStatus(data.status);
 
+    console.log('Fetching project 3', data.project);
     const projectResponse = await fetch('/api/projects/id/' + data.project, {
       method: 'GET',
       headers: {

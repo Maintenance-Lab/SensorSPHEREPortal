@@ -1,6 +1,6 @@
-import Session from './Session';
-import Device from './Device';
-import SensorProperty from './SensorProperty';
+import Session from './Session.js';
+import Device from './Device.js';
+import SensorProperty from './SensorProperty.js';
 import sequelize from '../sequelize.js';
 
 import { Sequelize, DataTypes, Model } from 'sequelize'

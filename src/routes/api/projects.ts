@@ -24,6 +24,7 @@ TODO:
 */
 
 router.get("/active", async (req, res) => {
+  console.log("in active projects")
   const response = await getSession(req, res);
   if (!response) return;
 
@@ -51,12 +52,16 @@ router.get("/archived", async (req, res) => {
   return res.json(doc);
 });
 
-router.get("/id/:id", async (req, res) => {
+router.get("/id/:projectId", async (req, res) => {
+  console.log("in get id")
   try {
     const response = await getSession(req, res);
     if (!response) return;
 
-    const id = Number(req.params);
+    // const id = Number(req.params.id);
+    const id = Number(req.params.projectId);
+    // const id = Numbeer(req.params)
+    console.log("req params", req.params.projectId)
     // const doc: any = await getProjectById(id, true);
     const doc: any = await getProjectById(id);
     if (!doc) return res.status(404).json({ message: "Project not found" });
@@ -105,6 +110,7 @@ router.get("/id/:id", async (req, res) => {
 // });
 
 router.post("/create", async (req, res) => {
+  console.log("in create project")
   const response = await getSession(req, res);
   if (!response) return;
 
@@ -116,7 +122,9 @@ router.post("/create", async (req, res) => {
 
   const { body } = req;
   // body.owner = accountId;
+  console.log("creating project", body)
   const result = await createProject(body);
+  console.log("project created")
   return res.json(result);
 });
 
@@ -128,6 +136,7 @@ router.post("/create", async (req, res) => {
 // });
 
 router.put("/update/:id", async (req, res) => {
+  console.log("in update project")
   const id = Number(req.params);
   const { body } = req;
 
@@ -150,6 +159,7 @@ router.put("/update/:id", async (req, res) => {
 });
 
 router.put("/update-many", async (req, res) => {
+  console.log("in update many")
   try {
     const response = await getSession(req, res);
     if (!response) return;
@@ -189,6 +199,7 @@ router.put("/update-many", async (req, res) => {
 });
 
 router.post("/delete", async (req, res) => {
+  console.log("in delete project")
   const { ids } = req.body;
   const response = await getSession(req, res);
   if (!response) return;

@@ -1,16 +1,16 @@
 // Import the models
-import Account from '../models/Account';
-import Project from '../models/Project';
-import Session from '../models/Session';
-import Device from '../models/Device';
-import Sensor from '../models/Sensor';
-import Manufacturer from '../models/Manufacturer';
-import SensorProperty from '../models/SensorProperty';
-import SensorCategory from '../models/SensorCategory';
-import DeviceSensorConfiguration from '../models/DeviceSensorConfiguration';
-import AccountProjectMapping from '../models/mappings/AccountProjectMapping';
-import SessionDeviceMapping from '../models/mappings/SessionDeviceMapping';
-import SensorDeviceMapping from '../models/mappings/SessionDeviceMapping';
+import Account from '../models/Account.js';
+import Project from '../models/Project.js';
+import Session from '../models/Session.js';
+import Device from '../models/Device.js';
+import Sensor from '../models/Sensor.js';
+import Manufacturer from '../models/Manufacturer.js';
+import SensorProperty from '../models/SensorProperty.js';
+import SensorCategory from '../models/SensorCategory.js';
+import DeviceSensorConfiguration from '../models/DeviceSensorConfiguration.js';
+import AccountProjectMapping from '../models/mappings/AccountProjectMapping.js';
+import SessionDeviceMapping from '../models/mappings/SessionDeviceMapping.js';
+import SensorDeviceMapping from '../models/mappings/SessionDeviceMapping.js';
 
 export const setupRelations = () => {
     // Set up the many-to-many relationships
@@ -31,10 +31,10 @@ export const setupRelations = () => {
         foreignKey: 'Name',
         as: 'ManufacturerName'
     });
-    
+
     Manufacturer.hasMany(Sensor)
-    
-    
+
+
     Sensor.belongsTo(SensorCategory, {
         foreignKey: 'Name',
         as: 'CategoryName'
@@ -52,7 +52,7 @@ export const setupRelations = () => {
         foreignKey: 'Name',
         as: 'ManufacturerName'
     })
-    
+
     Sensor.hasMany(SensorProperty)
 
 
@@ -70,10 +70,10 @@ export const setupRelations = () => {
         foreignKey: 'Name',
         as: 'PropertyName'
     });
-    
+
     SensorProperty.belongsTo(DeviceSensorConfiguration);
-    
-    
+
+
     DeviceSensorConfiguration.hasMany(SessionDeviceMapping, {
         foreignKey: 'SessionId',
         as: 'SessionId'
@@ -86,7 +86,7 @@ export const setupRelations = () => {
 
     SessionDeviceMapping.belongsTo(DeviceSensorConfiguration);
 
-    
+
     // Device.hasMany(Sensor, {
     //     foreignKey: 'DeviceId',
     //     // as: 'Sensors'
@@ -100,3 +100,6 @@ export const setupRelations = () => {
 
     // Set up the one-to-one relationships
 };
+
+export default setupRelations;
+// module.exports = setupRelations;

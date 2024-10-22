@@ -74,6 +74,7 @@ const mapBreadcrumbName = (pathname: string) => {
 
 const fetchProjectName = async (id: number) => {
   try {
+    console.log('Fetching project 4', id);
     const response = await fetch(`/api/projects/id/${id}`, {
       method: 'GET',
       headers: {

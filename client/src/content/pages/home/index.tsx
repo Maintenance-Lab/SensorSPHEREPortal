@@ -37,6 +37,7 @@ const Home = () => {
     const data = await res.json();
 
     const projects = data.map(async (projectId) => {
+      console.log('Fetching project 1', projectId);
       const projectRes = await fetch('/api/projects/id/' + projectId, {
         method: 'GET',
         headers: {
@@ -80,9 +81,9 @@ const Home = () => {
             </Grid>
           )}
           {pinnedProjects.map((project) => (
-            <Grid item xs={6} lg={4} key={project._id}>
+            <Grid item xs={6} lg={4} key={project.projectId}>
               <Card>
-                <CardActionArea sx={{ p: 2 }} onClick={() => window.location.href = '/projects/detail/' + project._id}>
+                <CardActionArea sx={{ p: 2 }} onClick={() => window.location.href = '/projects/detail/' + project.projectId}>
                   <Stack direction="row" spacing={1} mb={1}>
                     <Chip label="Pinned" icon={<PushPin />} size="small" sx={{ px: 0.5 }} />
                     {project.archived && (

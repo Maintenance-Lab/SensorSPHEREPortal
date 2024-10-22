@@ -42,6 +42,7 @@ Account.init({
 // Account.sync({ force: true });
 // module.exports = Account;
 export default Account;
+// module.exports = Account;
 
 
 

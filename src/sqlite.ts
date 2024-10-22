@@ -3,6 +3,7 @@ import sqlite3 from 'sqlite3';
 import { Database } from 'sqlite3';
 import { SQLITE_PATH } from './config.js';
 import sequelize from './sequelize.js';
+import setupRelations from './relationships/relationships.js';
 
 // const sqlite3 = require('sqlite3').verbose();
 
@@ -133,11 +134,9 @@ const initDb = () => {
                 model TEXT NOT NULL,
                 manufacturerName TEXT NOT NULL,
                 categoryName TEXT NOT NULL,
-                propertyName TEXT NOT NULL,
                 PRIMARY KEY (model, manufacturerName),
                 FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName),
-                FOREIGN KEY (categoryName) REFERENCES SensorCategory(categoryName),
-                FOREIGN KEY (propertyName) REFERENCES SensorProperty(propertyName)
+                FOREIGN KEY (categoryName) REFERENCES SensorCategory(categoryName)
                 );
         `);
 
@@ -192,19 +191,11 @@ const closeDb = (db: Database) => {
     });
 };
 
-
-// (async () => {
-//     await sequelize.sync({force: true});
-//     console.log('All models were synchronized successfully.');
-// })();
-
 const startDb = async () => {
     // Set up associations
-    // TODO: Add associations
-    // console.log('In set up associations');
+    setupRelations();
 
     // Sync models to the database
-    // await sequelize.sync({alter: true});
     await sequelize.sync();
     console.log('All models were synchronized successfully.');
 }

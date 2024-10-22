@@ -78,6 +78,7 @@ const createProject = async (name, description) => {
     throw new Error('Failed to create project');
   }
 
+  
   const data = await response.json();
   return data;
 };
@@ -220,6 +221,7 @@ const Projects = () => {
   };
 
   const fetchData = async () => {
+    console.log('Fetching data');
     try {
       let projects = [];
       switch (currentTab) {

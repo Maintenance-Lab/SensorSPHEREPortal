@@ -553,7 +553,9 @@ function CustomAddDevicesToolbar() {
 }
 
 const ProjectDetail = () => {
-  const projectId = Number(useParams());
+  const projectId = Number(useParams().projectId);
+  console.log('Project ID', projectId);
+  console.log("use params", useParams().projectId);
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [projectSensorUnits, setProjectSensorUnits] = useState([]);
@@ -594,6 +596,7 @@ const ProjectDetail = () => {
   }));
 
   const fetchProject = async () => {
+    console.log('Fetching project 2', projectId);
     const res = await fetch('/api/projects/id/' + projectId, {
       method: 'GET',
       headers: {

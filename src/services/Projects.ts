@@ -14,6 +14,7 @@ export const getProjectById = async (id: number): Promise<Project> => {
 // export const getProjectById = async (id: number, populate = false): Promise<Project> => {
   return new Promise(async (resolve, reject) => {
     // const doc = await Project.findByPk(id, { include: populate ? ["Owner"] : [] });
+    console.log("in getProjectById", id);
     const doc = await Project.findByPk(id)
     if (!doc) return reject(new Error("Project not found"));
     const returnDoc = doc.toJSON();
@@ -48,6 +49,7 @@ export const getActiveProjectsByAccountId = async (accountId: number) => {
   return new Promise(async (resolve) => {
     // const doc = await Project.findAll( { where : { $or: [{ owner: accountId }], archived: false }});
     const doc = await Account.findOne({ where: { AccountId: accountId}, include: { model: Project, where: {archived: false}}})
+    if (!doc) return resolve([]);
     return resolve(doc);
   });
 };
@@ -74,6 +76,7 @@ export const getProjectByName = async (name: string) => {
 };
 
 export const createProject = async (item: Partial<Project>) => {
+  console.log("IN CREATE PROJECT", item);
   return new Promise(async (resolve) => {
     const result = await Project.create(item);
     return resolve(result);
@@ -94,6 +97,8 @@ export const createProjects = async (items: Array<Partial<Project>>) => {
 export const updateProject = async (id: number, item: Partial<Project>) => {
   return new Promise(async (resolve, reject) => {
     if (!id) return reject(new Error("User Key not found"));
+
+    console.log("IN UPDATE PROJECT", id, item);
 
     const { projectId, ...rest } = item;
     const newItem = { ...rest };

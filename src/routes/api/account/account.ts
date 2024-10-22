@@ -113,6 +113,8 @@ router.post("/password", async (req, res) => {
   const updatedAccount = await updateAccount(accountId, { password: newPass, hasChangedPassword: true });
   if (!updatedAccount) return res.status(500).json({ message: "Internal Server Error" });
 
+  console.log("updatedAccount", updatedAccount);
+
   const { name, role, hasAvatar, email, hasChangedPassword } = updatedAccount;
 
   const token = jwt.sign({ accountId, name, role, hasAvatar, email, hasChangedPassword }, JWT_ACCESS_SECRET, {
@@ -123,6 +125,7 @@ router.post("/password", async (req, res) => {
   const ip: any = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
   await createLoginSession({ account: accountId, token, userAgent, ip });
+  console.log("token", token);
 
   return res
     .cookie("token", token, {

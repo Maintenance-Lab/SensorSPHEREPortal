@@ -13,18 +13,21 @@ import SessionDeviceMapping from '../models/mappings/SessionDeviceMapping.js';
 import SensorDeviceMapping from '../models/mappings/SessionDeviceMapping.js';
 
 export const setupRelations = () => {
+    console.log("Setting up relations");
     // Set up the many-to-many relationships
     // Account Project Mapping
-    Account.belongsToMany(Project, { through: AccountProjectMapping });
-    Project.belongsToMany(Account, { through: AccountProjectMapping });
+    Account.belongsToMany(Project, { through: AccountProjectMapping, foreignKey: 'AccountId' });
+    Project.belongsToMany(Account, { through: AccountProjectMapping, foreignKey: 'ProjectId' });
 
     // Session Device Mapping
-    Session.belongsToMany(Device, { through: SessionDeviceMapping });
-    Device.belongsToMany(Session, { through: SessionDeviceMapping });
+    Session.belongsToMany(Device, { through: SessionDeviceMapping, foreignKey: 'SessionId' });
+    Device.belongsToMany(Session, { through: SessionDeviceMapping, foreignKey: 'DeviceId' });
 
     // Device Sensor Mapping
-    Device.belongsToMany(Sensor, {through: SensorDeviceMapping});
-    Sensor.belongsToMany(Device, {through: SensorDeviceMapping});
+    Device.belongsToMany(Sensor, {through: SensorDeviceMapping, foreignKey: 'DeviceId'});
+    Sensor.belongsToMany(Device, {through: SensorDeviceMapping, foreignKey: 'Model'});
+    Sensor.belongsToMany(Device, {through: SensorDeviceMapping, foreignKey: 'ManufacturerName'});
+    // Sensor.belongsToMany(Device, {through: SensorDeviceMapping, foreignKey: 'Model'});
 
     // Set up the one-to-many relationships
     Sensor.belongsTo(Manufacturer, {

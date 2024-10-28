@@ -69,6 +69,7 @@ const initDb = () => {
                 status TEXT,
                 scheduledFrom DATE,
                 scheduledTo DATE,
+                projectId INTEGER,
                 meta TEXT,
                 createdAt DATE,
                 lastActive DATE,
@@ -143,7 +144,7 @@ const initDb = () => {
         // SensorCategory table
         db.run(`
             CREATE TABLE IF NOT EXISTS SensorCategory (
-                CategoryName TEXT PRIMARY KEY
+                categoryName TEXT PRIMARY KEY
             );
         `);
 

@@ -1,5 +1,6 @@
 import { createBaseAccount } from '../utils.js';
 import Project from '../models/Project.js';
+import AccountProjectMapping from '../models/mappings/AccountProjectMapping.js';
 // was import { Project, ProjectModel } from 'src/models/Project.js';
 import Account from '../models/Account.js';
 
@@ -47,8 +48,16 @@ export const getProjectById = async (id: number): Promise<Project> => {
 export const getActiveProjectsByAccountId = async (accountId: number) => {
   // get all accounts where you are the owner or in the collaborators list
   return new Promise(async (resolve) => {
-    // const doc = await Project.findAll( { where : { $or: [{ owner: accountId }], archived: false }});
-    const doc = await Account.findOne({ where: { AccountId: accountId}, include: { model: Project, where: {archived: false}}})
+
+    // finding project through mapping table with account id
+    console.log("ACCOUNT ID333: ", accountId);
+    return resolve([]);
+
+    // Get the project where accountId and projectId in mapping table are linked
+    const doc = await Project.findAll({ include: [{ model: Account, through: { where: { accountId: accountId } } }] });
+    // const doc = await Account.findByPk(accountId, { include: [{model: Project, through: {attributes: []}}]});
+
+    console.log("HALLLOOOOOOO: ", doc);
     if (!doc) return resolve([]);
     return resolve(doc);
   });
@@ -75,11 +84,20 @@ export const getProjectByName = async (name: string) => {
   });
 };
 
-export const createProject = async (item: Partial<Project>) => {
+export const createProject = async (item: Partial<Project>, accountId: number) => {
   console.log("IN CREATE PROJECT", item);
   return new Promise(async (resolve) => {
     const result = await Project.create(item);
-    return resolve(result);
+    const projectId = result.projectId;
+
+    try {
+      const finalResult = await AccountProjectMapping.create({ accountId: accountId, projectId: projectId });
+      // return finalResult;
+      return resolve(finalResult);
+    } catch (error) {
+      console.log("ERROR: ", error);
+    }
+    // return resolve(result);
   });
 };
 

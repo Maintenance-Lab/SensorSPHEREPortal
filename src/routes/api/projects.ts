@@ -34,7 +34,10 @@ router.get("/active", async (req, res) => {
   const { accountId } = account;
   if (!accountId) return res.status(400).json({ message: "Account ID is required" });
 
+  console.log("ACCOUNT ID: ", accountId)
   const doc = await getActiveProjectsByAccountId(accountId);
+  console.log("DOC: ", doc)
+
   return res.json(doc);
 });
 
@@ -58,9 +61,7 @@ router.get("/id/:projectId", async (req, res) => {
     const response = await getSession(req, res);
     if (!response) return;
 
-    // const id = Number(req.params.id);
     const id = Number(req.params.projectId);
-    // const id = Numbeer(req.params)
     console.log("req params", req.params.projectId)
     // const doc: any = await getProjectById(id, true);
     const doc: any = await getProjectById(id);
@@ -123,7 +124,7 @@ router.post("/create", async (req, res) => {
   const { body } = req;
   // body.owner = accountId;
   console.log("creating project", body)
-  const result = await createProject(body);
+  const result = await createProject(body, accountId);
   console.log("project created")
   return res.json(result);
 });
@@ -131,7 +132,7 @@ router.post("/create", async (req, res) => {
 // router.post("/create-many", async (req, res) => {
 //   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
 //   const { body } = req;
-//   const results = await createProjects(body);
+//   const results = await createProjects(body, accountId);
 //   return res.json(results);
 // });
 

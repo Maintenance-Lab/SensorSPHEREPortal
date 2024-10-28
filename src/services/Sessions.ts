@@ -1,4 +1,5 @@
 import Session from '../models/Session.js';
+import Project from '../models/Project.js';
 
 export const getSessionById = async (id: number): Promise<Session> => {
   return new Promise(async (resolve, reject) => {
@@ -12,21 +13,23 @@ export const getSessionById = async (id: number): Promise<Session> => {
 
 export const getSessionsByProject = async (projectId: number) => {
   return new Promise(async (resolve) => {
-    const doc = await Session.findAll({ where: {project: projectId }});
+    console.log(projectId);
+    const doc = await Session.findAll({ where: { projectId: projectId }});
+    console.log("doc", doc);
     return resolve(doc);
   });
 };
 
 export const getActiveSessionsByProject = async (projectId: number) => {
   return new Promise(async (resolve) => {
-    const doc = await Session.findAll({ where: {project: projectId, archived: false }});
+    const doc = await Session.findAll({ where: {projectId: projectId}});
     return resolve(doc);
   });
 };
 
 export const getArchivedSessionsByProject = async (projectId: number) => {
   return new Promise(async (resolve) => {
-    const doc = await Session.findAll({ where: {project: projectId, archived: true }});
+    const doc = await Session.findAll({ where: {projectId: projectId }});
     return resolve(doc);
   });
 };

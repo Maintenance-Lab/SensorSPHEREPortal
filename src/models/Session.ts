@@ -1,5 +1,6 @@
 import { Sequelize, DataTypes, Model } from 'sequelize'
 import sequelize from '../sequelize.js';
+import Project from './Project.js';
 // const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class Session extends Model {
@@ -9,7 +10,7 @@ class Session extends Model {
     status: string;
     scheduledFrom: Date;
     scheduledTo: Date;
-    // ProjectId: number;
+    projectId: number;
     meta: object;
     createdAt: Date;
     lastActive: Date;
@@ -23,7 +24,7 @@ Session.init({
     status: { type: DataTypes.STRING, allowNull: false, validate: { isIn: [['inactive', 'active', 'activeScheduled', 'paused', 'completed', 'error', 'scheduled', 'stopped']] } },
     scheduledFrom: { type: DataTypes.DATE, allowNull: false },
     scheduledTo: { type: DataTypes.DATE, allowNull: false },
-    // ProjectId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Project, key: 'ProjectId' } },
+    projectId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Project, key: 'projectId' } },
     meta: { type: DataTypes.JSON },
     createdAt: { type: DataTypes.DATE },
     lastActive: { type: DataTypes.DATE },

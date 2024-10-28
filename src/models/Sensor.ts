@@ -1,4 +1,4 @@
-import SensorProperty from './SensorProperty';
+import SensorProperty from './SensorProperty.js';
 import SensorCategory from './SensorCategory.js';
 import Manufacturer from './Manufacturer.js';
 
@@ -15,8 +15,8 @@ class Sensor extends Model {
 
 Sensor.init({
     model: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
-    manufacturerName: { type: DataTypes.STRING, primaryKey: true, allowNull: false, references: { model: Manufacturer, key: 'ManufacturerName' } },
-    categoryName: { type: DataTypes.STRING, allowNull: false, references: { model: SensorCategory, key: 'CategoryName' }},
+    manufacturerName: { type: DataTypes.STRING, primaryKey: true, allowNull: false, references: { model: Manufacturer, key: 'manufacturerName' } },
+    categoryName: { type: DataTypes.STRING, allowNull: false, references: { model: SensorCategory, key: 'categoryName' }},
     // propertyName:{ type: DataTypes.STRING, allowNull: false, references: { model: SensorProperty, key: 'PropertyName' }},
 },
 {

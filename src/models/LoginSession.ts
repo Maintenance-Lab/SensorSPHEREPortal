@@ -15,7 +15,7 @@ class LoginSession extends Model {
 
 LoginSession.init({
   loginSessionId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, allowNull: false },
-  account: { type: DataTypes.INTEGER, allowNull: false, references: { model: Account, key: 'AccountId' } },
+  account: { type: DataTypes.INTEGER, allowNull: false, references: { model: Account, key: 'accountId' } },
   loginSessionDate: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   userAgent: { type: DataTypes.STRING, allowNull: false },
   ip: { type: DataTypes.STRING, allowNull: false },

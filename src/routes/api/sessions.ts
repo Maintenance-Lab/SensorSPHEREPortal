@@ -19,19 +19,20 @@ router.get("/id/:id", async (req, res) => {
 });
 
 router.get("/project/:projectId", async (req, res) => {
-    const projectId = Number(req.params);
+    const projectId = Number(req.params.projectId);
+    console.log("project id in api", projectId);
     const doc = await getSessionsByProject(projectId);
     return res.json(doc);
 });
 
 router.get("/project/active/:projectId", async (req, res) => {
-    const projectId = Number(req.params);
+    const projectId = Number(req.params.projectId);
     const doc = await getActiveSessionsByProject(projectId);
     return res.json(doc);
 });
 
 router.get("/project/archived/:projectId", async (req, res) => {
-    const projectId = Number(req.params);
+    const projectId = Number(req.params.projectId);
     const doc = await getArchivedSessionsByProject(projectId);
     return res.json(doc);
 });

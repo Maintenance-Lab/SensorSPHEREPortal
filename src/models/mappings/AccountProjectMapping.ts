@@ -8,12 +8,12 @@ class AccountProjectMapping extends Model {
 }
 
 AccountProjectMapping.init({
-    accountId: { type: DataTypes.INTEGER, references: { model: 'Account', key: 'AccountId' }, allowNull: false },
-    projectId: { type: DataTypes.INTEGER, references: { model: 'Projects', key: 'ProjectId' }, allowNull: false },
+    accountId: { type: DataTypes.INTEGER, references: { model: 'Account', key: 'accountId' }, allowNull: false },
+    projectId: { type: DataTypes.INTEGER, references: { model: 'Projects', key: 'projectId' }, allowNull: false },
 }, {
     sequelize,
-    modelName: 'AccountProject',
-    tableName: 'AccountProject',
+    modelName: 'AccountProjectMapping',
+    tableName: 'AccountProjectMapping',
     timestamps: false,
 });
 

@@ -493,7 +493,7 @@ function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionId
                   This project's devices will be used to collect data:
                 </Typography>
               </ListItem>
-              {sensorUnits.map((macAddress) => (
+              {sensorUnits?.map((macAddress) => (
                 <ListItem key={macAddress} sx={{ px: 0 }}>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Usb />
@@ -554,8 +554,6 @@ function CustomAddDevicesToolbar() {
 
 const ProjectDetail = () => {
   const projectId = Number(useParams().projectId);
-  console.log('Project ID', projectId);
-  console.log("use params", useParams().projectId);
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [projectSensorUnits, setProjectSensorUnits] = useState([]);
@@ -575,24 +573,17 @@ const ProjectDetail = () => {
   const [pinned, setPinned] = useState(false);
   const [activeStep, setActiveStep] = useState(3);
 
-  const deviceRows: GridRowsProp = projectSensorUnits.map((macAddress) => ({
-    id: macAddress,
-    type: devicesPlaceholder[macAddress].type,
-    macAddress: macAddress,
-    battery: devicesPlaceholder[macAddress].battery,
-    project: devicesPlaceholder[macAddress].project,
-    sensors: devicesPlaceholder[macAddress].sensors,
-  }));
-
-  const sessionRows: GridRowsProp = sessions.map((session) => ({
-    id: session._id,
+  const sessionRows: GridRowsProp = sessions?.map((session) => ({
+    id: session.sessionId,
     name: session.name,
-    description: session.description,
-    created: session.createdAt,
-    sensorUnits: session.sensorUnits,
+    status: session.status,
+    scheduledFrom: session.scheduledFrom,
+    scheduledTo: session.scheduledTo,
+    projectId: session.projectId,
+    meta: session.meta,
+    createdAt: session.createdAt,
     lastActive: session.lastActive,
     archived: session.archived,
-    status: session.status,
   }));
 
   const fetchProject = async () => {
@@ -611,10 +602,14 @@ const ProjectDetail = () => {
     }
 
     const data = await res.json();
+    console.log("DATA: ", data);
     setProjectName(data.name);
     setProjectDescription(data.description);
     setProjectSensorUnits(data.sensorUnits);
+    console.log("Sensor Units: ", data.sensorUnits);
     setIsArchived(data.archived);
+
+    console.log("PROJECT ID: ", projectId);
 
     const resSessions = await fetch('/api/sessions/project/' + projectId, {
       method: 'GET',
@@ -630,6 +625,7 @@ const ProjectDetail = () => {
     }
 
     const dataSessions = await resSessions.json();
+    console.log("DATA SESSIONS: ", dataSessions);
     setSessions(dataSessions);
 
     const pinnedProjects = await fetchPinnedProjects();
@@ -944,34 +940,6 @@ const ProjectDetail = () => {
               </Card>
             </Stack>
           )}
-          <Typography variant="h2" sx={{ pt: activeStep != 3 ? 2 : 0 }}>Devices</Typography>
-          <Paper>
-            <DataGrid
-              rows={deviceRows}
-              columns={deviceColumns}
-              initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
-              density="compact"
-              onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
-              checkboxSelection
-              slots={{
-                toolbar: () => <CustomProjectSensorUnitsToolbar
-                  selectedDeviceIds={selectedDeviceIds}
-                  projectId={projectId}
-                  projectName={projectName}
-                  projectDescription={projectDescription}
-                  projectSensorUnits={projectSensorUnits}
-                  isArchived={isArchived}
-                  fetchProject={fetchProject}
-                  handleOpenAddDevices={() => setOpenAddDevices(true)}
-                />,
-              }}
-              sx={{
-                "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus": {
-                  outline: "none",
-                },
-              }}
-            />
-          </Paper>
           <Typography variant="h2" pt={2}>Data Collection Sessions</Typography>
           <Paper>
             <DataGrid

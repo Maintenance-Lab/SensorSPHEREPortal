@@ -87,6 +87,16 @@ const devicesPlaceholder = {
   }
 };
 
+const sessionSensorUnits = [
+  'e4:72:05:0a:fc:66',
+  '94:b7:ab:57:d4:75',
+  '5f:ec:07:db:01:6e',
+  '1e:e7:31:2e:df:7a',
+  '95:8e:53:46:7e:6e'
+];
+
+const sessionDescription = 'This is a test session description.';
+
 const deviceColumns: GridColDef[] = [
   // { field: 'id', headerName: '#' },
   {
@@ -159,7 +169,7 @@ const updateSession = async (sessionId, name, description, archived, sensorUnits
       name: name,
       description: description,
       archived: archived,
-      sensorUnits: sensorUnits,
+      // sensorUnits: sensorUnits,
       status: status
     })
   });
@@ -365,26 +375,30 @@ const SessionStatusCard = ({ sessionId, status }) => {
 
 const SessionDetail = () => {
   const { sessionId } = useParams();
+  console.log("SESSION ID bovenin", sessionId);
+  console.log("USEPARAMS", useParams());
+  console.log("session id from useParams", Number(useParams().sessionId));
   const [sessionName, setSessionName] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
   const [sessionStatus, setSessionStatus] = useState('');
   const [projectId, setProjectId] = useState('');
   const [projectName, setProjectName] = useState('');
   const [isArchived, setIsArchived] = useState(false);
-  const [sessionSensorUnits, setSessionSensorUnits] = useState([]);
+  // const [sessionSensorUnits, setSessionSensorUnits] = useState([]);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
 
-  const deviceRows: GridRowsProp = sessionSensorUnits.map((macAddress) => ({
-    id: macAddress,
-    type: devicesPlaceholder[macAddress].type,
-    macAddress: macAddress,
-    battery: devicesPlaceholder[macAddress].battery,
-    project: devicesPlaceholder[macAddress].project,
-    sensors: devicesPlaceholder[macAddress].sensors,
-  }));
+  // const deviceRows: GridRowsProp = sessionSensorUnits.map((macAddress) => ({
+  //   id: macAddress,
+  //   type: devicesPlaceholder[macAddress].type,
+  //   macAddress: macAddress,
+  //   battery: devicesPlaceholder[macAddress].battery,
+  //   project: devicesPlaceholder[macAddress].project,
+  //   sensors: devicesPlaceholder[macAddress].sensors,
+  // }));
 
   const fetchSession = async () => {
+    console.log("SESSION ID", sessionId);
     const response = await fetch(`/api/sessions/id/${sessionId}`, {
       headers: { credentials: 'include' }
     });
@@ -396,14 +410,12 @@ const SessionDetail = () => {
 
     const data = await response.json();
     setSessionName(data.name);
-    setSessionDescription(data.description);
     setIsArchived(data.archived);
-    setSessionSensorUnits(data.sensorUnits);
     setProjectId(data.project);
     setSessionStatus(data.status);
 
-    console.log('Fetching project 3', data.project);
-    const projectResponse = await fetch('/api/projects/id/' + data.project, {
+    console.log('Fetching project 3', data.projecId);
+    const projectResponse = await fetch('/api/projects/id/' + data.projectId, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -587,7 +599,7 @@ const SessionDetail = () => {
           <Typography variant="h2" sx={{ pt: 2 }}>Devices and Sensors</Typography>
           <Paper>
             <DataGrid
-              rows={deviceRows}
+              // rows={deviceRows}
               columns={deviceColumns}
               density='compact'
               autoHeight
@@ -610,3 +622,31 @@ const SessionDetail = () => {
 };
 
 export default SessionDetail;
+
+
+
+{/* <DataGrid
+  rows={deviceRows}
+  columns={deviceColumns}
+  initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
+  density="compact"
+  onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
+  checkboxSelection
+  slots={{
+    toolbar: () => <CustomProjectSensorUnitsToolbar
+      selectedDeviceIds={selectedDeviceIds}
+      projectId={projectId}
+      projectName={projectName}
+      projectDescription={projectDescription}
+      projectSensorUnits={projectSensorUnits}
+      isArchived={isArchived}
+      fetchProject={fetchProject}
+      handleOpenAddDevices={() => setOpenAddDevices(true)}
+    />,
+  }}
+  sx={{
+    "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus": {
+      outline: "none",
+    },
+  }}
+/> */}

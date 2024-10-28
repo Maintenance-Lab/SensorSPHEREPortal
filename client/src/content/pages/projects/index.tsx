@@ -78,7 +78,7 @@ const createProject = async (name, description) => {
     throw new Error('Failed to create project');
   }
 
-  
+
   const data = await response.json();
   return data;
 };
@@ -250,8 +250,9 @@ const Projects = () => {
     { field: 'lastActive', headerName: 'Last Activity', flex: 1 },
   ];
 
+  console.log("BEIGN");
   const projectsRows: GridRowsProp = sortedProjects.map((project) => ({
-    id: project._id,
+    id: project.projectId,
     name: project.name,
     lastActive: project.lastActive,
   }));

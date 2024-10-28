@@ -13,7 +13,8 @@ import {
 const router = Router();
 
 router.get("/id/:id", async (req, res) => {
-    const id = Number(req.params);
+    const id = Number(req.params.id);
+    console.log("id", req.params.id);
     const doc = await getSessionById(id);
     return res.json(doc);
 });
@@ -22,6 +23,7 @@ router.get("/project/:projectId", async (req, res) => {
     const projectId = Number(req.params.projectId);
     console.log("project id in api", projectId);
     const doc = await getSessionsByProject(projectId);
+    console.log("doc", doc);
     return res.json(doc);
 });
 
@@ -40,6 +42,7 @@ router.get("/project/archived/:projectId", async (req, res) => {
 router.post("/create", async (req, res) => {
     const { body } = req;
     const doc = await createSession(body);
+    console.log("dit wordt gereturnd", doc);
     return res.json(doc);
 });
 

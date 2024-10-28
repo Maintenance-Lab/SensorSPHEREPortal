@@ -51,10 +51,13 @@ export const getActiveProjectsByAccountId = async (accountId: number) => {
 
     // finding project through mapping table with account id
     console.log("ACCOUNT ID333: ", accountId);
-    return resolve([]);
 
     // Get the project where accountId and projectId in mapping table are linked
-    const doc = await Project.findAll({ include: [{ model: Account, through: { where: { accountId: accountId } } }] });
+    // const doc = await Project.findAll({include: [{model: Account, attributes: []}], where: { accountId: accountId }});
+    const doc = await Project.findAll({include: {model: AccountProjectMapping, where: { accountId: accountId }, required: true}});
+
+
+    // const doc = await Project.findAll({ include: [{ model: Account, through: { where: { accountId: accountId } } }] });
     // const doc = await Account.findByPk(accountId, { include: [{model: Project, through: {attributes: []}}]});
 
     console.log("HALLLOOOOOOO: ", doc);

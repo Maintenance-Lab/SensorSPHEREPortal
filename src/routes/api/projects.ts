@@ -36,7 +36,6 @@ router.get("/active", async (req, res) => {
 
   console.log("ACCOUNT ID: ", accountId)
   const doc = await getActiveProjectsByAccountId(accountId);
-  console.log("DOC: ", doc)
 
   return res.json(doc);
 });
@@ -62,7 +61,7 @@ router.get("/id/:projectId", async (req, res) => {
     if (!response) return;
 
     const id = Number(req.params.projectId);
-    console.log("req params", req.params.projectId)
+    console.log("req params", req.params)
     // const doc: any = await getProjectById(id, true);
     const doc: any = await getProjectById(id);
     if (!doc) return res.status(404).json({ message: "Project not found" });
@@ -122,8 +121,6 @@ router.post("/create", async (req, res) => {
   if (!accountId) return res.status(400).json({ message: "Account ID is required" });
 
   const { body } = req;
-  // body.owner = accountId;
-  console.log("creating project", body)
   const result = await createProject(body, accountId);
   console.log("project created")
   return res.json(result);

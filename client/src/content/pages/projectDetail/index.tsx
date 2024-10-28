@@ -320,10 +320,10 @@ const createSession = async (projectId: number, name, description, sensorUnits) 
         credentials: 'include'
       },
       body: JSON.stringify({
-        project: projectId,
+        projectId: projectId,
         name: name,
         description: description,
-        sensorUnits: sensorUnits
+
       })
     });
 
@@ -333,7 +333,7 @@ const createSession = async (projectId: number, name, description, sensorUnits) 
     }
 
     const data = await res.json();
-    window.location.href = `/sessions/detail/${data._id}`;
+    window.location.href = `/sessions/detail/${data.sessionId}`;
   } catch (error) {
     console.error(error);
   };
@@ -519,15 +519,6 @@ function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionId
             fullWidth
             value={name}
             onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && document.getElementById('description-input').focus()}
-          />
-          <TextField
-            id="description-input"
-            margin="dense"
-            label="Session Description"
-            fullWidth
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSubmitCreateSession()}
           />
         </DialogContent>
@@ -605,8 +596,6 @@ const ProjectDetail = () => {
     console.log("DATA: ", data);
     setProjectName(data.name);
     setProjectDescription(data.description);
-    setProjectSensorUnits(data.sensorUnits);
-    console.log("Sensor Units: ", data.sensorUnits);
     setIsArchived(data.archived);
 
     console.log("PROJECT ID: ", projectId);

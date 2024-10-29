@@ -75,7 +75,7 @@ export const getActiveProjectsByAccountId = async (accountId: number) => {
 
 export const getArchivedProjectsByAccountId = async (accountId: number) => {
   return new Promise(async (resolve) => {
-    const doc = await Project.findAll({ where: { $or: [{ AccountId: accountId }], archived: true }});
+    const doc = await Project.findAll({ where: { $or: [{ accountId: accountId }], archived: true }});
     return resolve(doc);
   });
 }
@@ -140,9 +140,24 @@ export const updateProject = async (id: number, item: Partial<Project>) => {
   });
 };
 
-export const deleteProjects = async (id: Array<string>) => {
+// export const deleteProject = async (id: string) => {
+//   console.log("IN DELETE PROJECT", id);
+//   return new Promise(async (resolve) => {
+//     const result = await Project.destroy({ where: { id: id }});
+//     return resolve(result);
+//   });
+// };
+
+export const deleteProjects = async (ids: Array<string>) => {
   return new Promise(async (resolve) => {
-    const result = await Project.destroy({ where: { id: id }});
-    return resolve(result);
+    const results = [];
+    for (const id of ids) {
+      //  *** TODO: Review with group if this is the best solution, 
+      // alternative option: add "ON DELETE CASCADE" to the foreign key in the database ***
+      await AccountProjectMapping.destroy({ where: { projectId: id }});
+      const result = await Project.destroy({ where: { projectId: id }});  
+      results.push(result);
+    }
+    return resolve(results);
   });
 };

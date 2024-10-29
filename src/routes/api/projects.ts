@@ -206,12 +206,20 @@ router.post("/delete", async (req, res) => {
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
   const { accountId } = account;
 
-  const project: any = await getProjectById(ids);
-  if (!project) return res.status(404).json({ message: "Project not found" });
+  // Can contain one or multiple project ids
+  const project: any = [];
+  for (const id of ids) {
+    project.push(await getProjectById(id));
+  }
+
+  // const project: any = await getProjectById(ids);
+  if (!project) return res.status(404).json({ message: "Project(s) not found" });
 
   // if (project.owner?._id.toString() !== accountId) return res.status(401).json({ message: "Unauthorized" });
 
+  // ids can be one or multiple project ids
   const result = await deleteProjects(ids);
+
   return res.json(result);
 });
 

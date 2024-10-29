@@ -250,7 +250,6 @@ const Projects = () => {
     { field: 'lastActive', headerName: 'Last Activity', flex: 1 },
   ];
 
-  console.log("BEIGN");
   const projectsRows: GridRowsProp = sortedProjects.map((project) => ({
     id: project.projectId,
     name: project.name,

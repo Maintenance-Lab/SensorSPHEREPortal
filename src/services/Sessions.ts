@@ -69,7 +69,6 @@ export const deleteSession = async (id: number) => {
   return new Promise(async (resolve, reject) => {
     if (!id) return reject(new Error("Session ID not found"));
 
-    const query = { _id: id };
     const result = await Session.destroy({ where: { sessionId: id } });
     return resolve(result);
   });

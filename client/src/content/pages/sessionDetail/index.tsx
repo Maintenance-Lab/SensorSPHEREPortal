@@ -23,8 +23,6 @@ import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
 import { ArchiveOutlined, DeleteOutline, Devices, Edit, EventNote, InfoOutlined, Inventory, MoreTime, Pause, PlayArrow, Router, Schedule, Stop, UnarchiveOutlined, Usb } from '@mui/icons-material';
 import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
-import { set } from 'date-fns';
-import { error } from 'console';
 
 const devicesPlaceholder = {
   '00:00:00:00:00:00': {
@@ -203,18 +201,20 @@ const updateSessionStatus = async (sessionId, status) => {
 };
 
 const deleteSession = async (sessionId) => {
+  console.log("DELETE SESSION ID", sessionId);
   const res = await fetch('/api/sessions/delete/' + sessionId, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
       credentials: 'include'
     }
-  });
+  }); 
 
   if (!res.ok) {
     console.error('Failed to delete session');
     return;
   }
+  console.log("DELETE SESSION RES", res);
   const data = await res.json();
   return data;
 };
@@ -375,9 +375,10 @@ const SessionStatusCard = ({ sessionId, status }) => {
 
 const SessionDetail = () => {
   const { sessionId } = useParams();
-  console.log("SESSION ID bovenin", sessionId);
+  // console.log("SESSION ID bovenin", sessionId);
   console.log("USEPARAMS", useParams());
   console.log("session id from useParams", Number(useParams().sessionId));
+  // const [sessionId, setSessionId] = useState('');
   const [sessionName, setSessionName] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
   const [sessionStatus, setSessionStatus] = useState('');
@@ -409,12 +410,14 @@ const SessionDetail = () => {
     }
 
     const data = await response.json();
+    // setSessionId(data.sessionId);
+    setProjectId(data.projectId);
     setSessionName(data.name);
     setIsArchived(data.archived);
-    setProjectId(data.project);
     setSessionStatus(data.status);
 
-    console.log('Fetching project 3', data.projecId);
+    console.log('Fetching project 3', data);
+    console.log('Fetching project 3', data.projectId);
     const projectResponse = await fetch('/api/projects/id/' + data.projectId, {
       method: 'GET',
       headers: {
@@ -451,6 +454,9 @@ const SessionDetail = () => {
 
   const handleDeleteSession = async () => {
     await deleteSession(sessionId);
+    if (!projectId) {
+      await fetchSession(); // Ensure `projectId` is loaded before proceeding
+    }
     window.location.href = '/projects/detail/' + projectId;
   };
 

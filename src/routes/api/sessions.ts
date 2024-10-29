@@ -47,14 +47,14 @@ router.post("/create", async (req, res) => {
 });
 
 router.put("/update/:id", async (req, res) => {
-    const id = Number(req.params);
+    const id = Number(req.params.id);
     const { body } = req;
     const doc = await updateSession(id, body);
     return res.json(doc);
 });
 
 router.delete("/delete/:id", async (req, res) => {
-    const id = Number(req.params);
+    const id = Number(req.params.id);
     const doc = await deleteSession(id);
     return res.json(doc);
 });

@@ -34,7 +34,7 @@ import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQu
 import FaceIcon from '@mui/icons-material/Face';
 import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import { Add, ArchiveOutlined, Cancel, DeleteOutline, Devices, InfoOutlined, Inventory, PushPin, PushPinOutlined, Remove, UnarchiveOutlined, Usb } from '@mui/icons-material';
+import { Add, ArchiveOutlined, Cancel, DeleteOutline, Devices, InfoOutlined, Inventory, Remove, UnarchiveOutlined, Usb } from '@mui/icons-material';
 import { is } from 'date-fns/locale';
 
 const DeviceStatus = ({ status, project }) => {
@@ -232,24 +232,6 @@ const addDevicesRows: GridRowsProp = Object.keys(devicesPlaceholder).map((macAdd
   battery: devicesPlaceholder[macAddress].battery,
   sensors: devicesPlaceholder[macAddress].sensors,
 }));
-
-const fetchPinnedProjects = async () => {
-  const res = await fetch('/api/account/pinned', {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      credentials: 'include'
-    }
-  });
-
-  if (!res.ok) {
-    console.error('Failed to fetch pinned projects');
-    return [];
-  };
-
-  const data = await res.json();
-  return data;
-};
 
 const updateProject = async (projectId: number, name: string, description: string, archived: boolean, sensorUnits) => {
   const res = await fetch('/api/projects/update/' + projectId, {
@@ -561,7 +543,6 @@ const ProjectDetail = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [pinned, setPinned] = useState(false);
   const [activeStep, setActiveStep] = useState(3);
 
   const sessionRows: GridRowsProp = sessions?.map((session) => ({
@@ -617,11 +598,6 @@ const ProjectDetail = () => {
     console.log("DATA SESSIONS: ", dataSessions);
     setSessions(dataSessions);
 
-    const pinnedProjects = await fetchPinnedProjects();
-    if (pinnedProjects.includes(projectId)) {
-      setPinned(true);
-    };
-
     if (data.sensorUnits.length === 0) {
       setActiveStep(0);
     } else if (dataSessions.length === 0) {
@@ -643,42 +619,6 @@ const ProjectDetail = () => {
     await updateProject(projectId, projectName, event.target.value, isArchived, projectSensorUnits);
     setIsEditingDescription(false);
     fetchProject();
-  };
-
-  const handlePinProject = async () => {
-    const res = await fetch('/api/account/pin', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        credentials: 'include'
-      },
-      body: JSON.stringify({ projectId })
-    });
-
-    if (!res.ok) {
-      console.error('Failed to pin project');
-      return;
-    };
-
-    setPinned(true);
-  };
-
-  const handleUnpinProject = async () => {
-    const res = await fetch('/api/account/unpin', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        credentials: 'include'
-      },
-      body: JSON.stringify({ projectId })
-    });
-
-    if (!res.ok) {
-      console.error('Failed to unpin project');
-      return;
-    };
-
-    setPinned(false);
   };
 
   const handleArchiveProject = async (archived: boolean) => {
@@ -839,23 +779,6 @@ const ProjectDetail = () => {
             </Stack>
           }
           <Stack direction="row" spacing={1}>
-            {!pinned ? (
-              <Button
-                variant="outlined"
-                startIcon={<PushPinOutlined />}
-                onClick={handlePinProject}
-              >
-                Pin
-              </Button>
-            ) : (
-              <Button
-                variant="outlined"
-                startIcon={<Remove />}
-                onClick={handleUnpinProject}
-              >
-                Unpin
-              </Button>
-            )}
             {!isArchived &&
               <Button
                 variant="outlined"

@@ -152,10 +152,10 @@ export const deleteProjects = async (ids: Array<string>) => {
   return new Promise(async (resolve) => {
     const results = [];
     for (const id of ids) {
-      //  *** TODO: Review with group if this is the best solution, 
+      //  *** TODO: Review with group if this is the best solution,
       // alternative option: add "ON DELETE CASCADE" to the foreign key in the database ***
       await AccountProjectMapping.destroy({ where: { projectId: id }});
-      const result = await Project.destroy({ where: { projectId: id }});  
+      const result = await Project.destroy({ where: { projectId: id }});
       results.push(result);
     }
     return resolve(results);

@@ -28,7 +28,6 @@ import {
   GridToolbarQuickFilter
 } from '@mui/x-data-grid';
 import CreateProjectDialog from './CreateProjectDialog';
-import { PushPin } from '@mui/icons-material';
 
 const fetchActiveProjects = async () => {
   const res = await fetch('/api/projects/active', {
@@ -141,27 +140,6 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
     }
   }, [selectedProjectIds]);
 
-  const handlePinProjects = useCallback(async () => {
-    try {
-      for (const projectId of selectedProjectIds) {
-        const response = await fetch('/api/account/pin', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            credentials: 'include'
-          },
-          body: JSON.stringify({ projectId })
-        });
-
-        if (!response.ok) {
-          console.error('Failed to pin project');
-        }
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }, [selectedProjectIds]);
-
   return (
     <GridToolbarContainer sx={{ padding: 1 }}>
       <Stack direction="row" spacing={1}>
@@ -174,15 +152,6 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
           Create Project
         </Button>
         <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
-        {/* <Button
-          variant="outlined"
-          size="medium"
-          startIcon={<PushPin />}
-          disabled={!activeSelection}
-          onClick={handlePinProjects}
-        >
-          Pin
-        </Button> */}
         <Button
           variant="outlined"
           size="medium"

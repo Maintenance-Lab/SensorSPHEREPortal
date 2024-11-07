@@ -12,16 +12,17 @@ import {
 import { Helmet } from 'react-helmet-async';
 import Card from '@mui/material/Card';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
-import { Add, DesignServices, DesignServicesOutlined, Inventory, PlayCircleOutline, PlusOne, PushPin, Usb } from '@mui/icons-material';
+import { Add, DesignServices, DesignServicesOutlined, Inventory, PlayCircleOutline, PlusOne, Usb, Schedule } from '@mui/icons-material';
 import CreateProjectDialog from '../projects/CreateProjectDialog';
+import { lastDayOfDecade, set } from 'date-fns';
 
 const Home = () => {
-  const [pinnedProjects, setPinnedProjects] = useState([]);
+  const [latestProjects, setLatestProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openCreateProjectDialog, setOpenCreateProjectDialog] = useState(false);
 
-  const fetchPinnedProjects = async () => {
-    const res = await fetch('/api/account/pinned', {
+  const fetchLatestProjects = async () => {
+    const res = await fetch('/api/projects/latest', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -30,7 +31,7 @@ const Home = () => {
     });
 
     if (!res.ok) {
-      console.error('Failed to fetch pinned projects');
+      console.error('Failed to fetch latest projects');
       return [];
     };
 
@@ -56,12 +57,12 @@ const Home = () => {
     });
 
     const projectsData = await Promise.all(projects);
-    setPinnedProjects(projectsData);
+    setLatestProjects(projectsData);
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchPinnedProjects();
+    fetchLatestProjects();
   }, []);
 
   return (
@@ -80,12 +81,12 @@ const Home = () => {
               <Skeleton variant="rounded" height={120} animation="wave" />
             </Grid>
           )}
-          {pinnedProjects.map((project) => (
+          {latestProjects.map((project) => (
             <Grid item xs={6} lg={4} key={project.projectId}>
               <Card>
                 <CardActionArea sx={{ p: 2 }} onClick={() => window.location.href = '/projects/detail/' + project.projectId}>
                   <Stack direction="row" spacing={1} mb={1}>
-                    <Chip label="Pinned" icon={<PushPin />} size="small" sx={{ px: 0.5 }} />
+                    <Chip label="Recent" icon={<Schedule />} size="small" sx={{ px: 0.5 }} />
                     {project.archived && (
                       <Chip label="Archived" icon={<Inventory />} size="small" color="warning" sx={{ px: 0.5 }} />
                     )}
@@ -98,10 +99,10 @@ const Home = () => {
               </Card>
             </Grid>
           ))}
-          {pinnedProjects.length === 0 && !loading && (
+          {latestProjects.length === 0 && !loading && (
             <Grid item xs={6} lg={4} height="130px">
-              <PushPin fontSize="small" sx={{ color: 'gray' }} />
-              <Typography variant="body2" color='gray'>Pinned projects will show up here.</Typography>
+              <Schedule fontSize="small" sx={{ color: 'gray' }} />
+              <Typography variant="body2" color='gray'>Latest projects will show up here.</Typography>
             </Grid>
           )}
         </Grid>

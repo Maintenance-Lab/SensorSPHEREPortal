@@ -13,8 +13,10 @@ import {
   getActiveProjectsByAccountId,
   getArchivedProjectsByAccountId,
 } from '../../services/Projects.js';
+import { getAccountById } from '../../services/Account.js';
 import { getSession } from '../../utils.js';
 import Project from '../../models/Project.js';
+import { Min } from 'sequelize-typescript';
 
 const router = Router();
 
@@ -132,6 +134,31 @@ router.post("/create", async (req, res) => {
 //   const results = await createProjects(body, accountId);
 //   return res.json(results);
 // });
+
+router.get("/latest", async (req, res) => {
+  console.log("in latest projects")
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account } = response;
+  if (!account) return res.status(401).json({ message: "Unauthorized" });
+  if (!account.accountId) return res.status(400).json({ message: "Account ID is required" });
+
+  console.log("account id", account.accountId)
+  const projects = await getActiveProjectsByAccountId(account.accountId) as Project[];
+  console.log("projects", projects)
+
+  // sort by createdAt date, most recent first
+  const sortedProjects = projects.sort((a, b) => {
+    const dateA = new Date(a.createdAt);
+    const dateB = new Date(b.createdAt);
+    return dateB.getTime() - dateA.getTime();
+  });
+
+  const latestProjects = sortedProjects.map((project) => project.projectId);
+
+  return res.json(latestProjects.slice(0, Math.min(4, sortedProjects.length)));
+});
 
 router.put("/update/:id", async (req, res) => {
   console.log("in update project")

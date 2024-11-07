@@ -98,7 +98,7 @@ const Login = () => {
         <form
           className={classes.form}
           onSubmit={handleLogin}
-          action="javascript:void(0);"
+          action="#"
         >
           <TextField id="username" label="Username" fullWidth />
           <TextField id="password" label="Password" type="password" fullWidth />

@@ -118,16 +118,13 @@ const Home = () => {
                     )}
                   </Stack>
                   <Typography variant="h6">{project.name}</Typography>
-                  {project.description && (
-                    <Typography variant="subtitle1">{project.description}</Typography>
-                  )}
                 </CardActionArea>
               </Card>
             </Grid>
           ))}
           {latestProjects.length === 0 && !loading && (
             <Grid item xs={6} lg={4} height="130px">
-              <Schedule fontSize="small" sx={{ color: 'gray' }} />
+              <Schedule fontSize="small" sx={{ color: 'gray' }} />ñ©
               <Typography variant="body2" color='gray'>Latest projects will show up here.</Typography>
             </Grid>
           )}
@@ -151,29 +148,41 @@ const Home = () => {
           </Stack>
         </Stack>
         <Stack direction="row" spacing={2} mt={3}>
-          <Card sx={{ flex: 1 }}>
-            <CardActionArea
-              sx={{ p: 2 }}
-              onClick={() => window.location.href = '/devices'}
-            >
+        <Card 
+            sx={{ 
+            flex: 1, 
+            p: 2, 
+            cursor: 'pointer',
+            transition: 'background-color 0.3s',
+            '&:hover': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)' // Adjust this color to control hover darkness
+            }
+          }} 
+          onClick={() => setOpenCreateProjectDialog(true)}
+          >
               <Stack spacing={1}>
                 <Usb fontSize='large' />
                 <Typography variant="h6">Find Devices</Typography>
                 <Typography variant="subtitle1">Search and find devices, view sensors, and use them in your projects.</Typography>
               </Stack>
-            </CardActionArea>
           </Card>
-          <Card sx={{ flex: 1 }}>
-            <CardActionArea
-              sx={{ p: 2 }}
-              onClick={() => setOpenCreateProjectDialog(true)}
-            >
+          <Card 
+            sx={{ 
+            flex: 1, 
+            p: 2, 
+            cursor: 'pointer',
+            transition: 'background-color 0.3s',
+            '&:hover': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)' // Adjust this color to control hover darkness
+            }
+          }} 
+          onClick={() => setOpenCreateProjectDialog(true)}
+          >
               <Stack spacing={1}>
                 <DesignServices fontSize='large' />
                 <Typography variant="h6">Create a New Project</Typography>
                 <Typography variant="subtitle1">Create a new project, add devices, and start data collection sessions.</Typography>
               </Stack>
-            </CardActionArea>
           </Card>
         </Stack>
       </Container>

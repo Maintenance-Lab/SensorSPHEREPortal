@@ -257,6 +257,7 @@ const Projects = () => {
               rows={projectsRows}
               columns={projectsColumns}
               density="compact"
+              autoHeight
               autosizeOnMount
               autosizeOptions={{ includeOutliers: true }}
               checkboxSelection={true}

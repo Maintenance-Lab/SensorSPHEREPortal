@@ -165,7 +165,7 @@ router.get("/latest", async (req, res) => {
 
   const latestProjects = sortedProjects.map((project) => project.projectId);
 
-  return res.json(latestProjects.slice(0, Math.min(4, sortedProjects.length)));
+  return res.json(latestProjects.slice(0, Math.min(6, sortedProjects.length)));
 });
 
 router.put("/update/:id", async (req, res) => {

@@ -673,9 +673,9 @@ const ProjectDetail = () => {
             rows={addDevicesRows}
             columns={addDevicesColumns}
             density="compact"
+            autoHeight
             autosizeOnMount
             autosizeOptions={{ includeOutliers: true }}
-            autoHeight
             checkboxSelection={true}
             onRowSelectionModelChange={(newSelection) => setSelectedDeviceIdsFromAddDevices(newSelection)}
             slots={{ toolbar: () => <CustomAddDevicesToolbar /> }}
@@ -702,12 +702,23 @@ const ProjectDetail = () => {
                 variant="outlined"
                 size="small"
                 autoFocus
-                onBlur={handleNameChange}
+                onBlur={(event) => {
+                  // Check if the value has changed from the initial value
+                  if (event.target.value !== projectName) {
+                    window.location.reload();
+                  }
+                  handleNameChange(event);
+                }}
                 onFocus={(event) => { event.target.select(); }}
                 sx={{ marginTop: -1, marginLeft: -1, width: '100%' }}
                 inputProps={{ sx: { fontSize: '2rem', fontWeight: 700, lineHeight: 1.167 }, }}
                 onKeyDown={(event) => {
-                  if (event.key === 'Enter') { handleNameChange(event); }
+                  if (event.key === 'Enter') {
+                    const target = event.target as HTMLInputElement;
+                    if (target.value !== projectName) {
+                      window.location.reload();
+                    }
+                    handleNameChange(event); }
                 }}
               />
             </Box>
@@ -735,7 +746,13 @@ const ProjectDetail = () => {
                 variant="outlined"
                 size="small"
                 autoFocus
-                onBlur={handleDescriptionChange}
+                onBlur={(event) => {
+                  // Check if the value has changed from the initial value
+                  if (event.target.value !== projectDescription) {
+                    window.location.reload();
+                  }
+                  handleDescriptionChange(event);
+                }}
                 onFocus={(event) => { event.target.select(); }}
                 sx={{ marginLeft: -1, width: '100%' }}
                 onKeyDown={(event) => {
@@ -857,13 +874,14 @@ const ProjectDetail = () => {
             <DataGrid
               rows={sessionRows}
               columns={sessionColumns}
+              density="compact"
+              autoHeight
               initialState={{
                 pagination: { paginationModel: { pageSize: 25 } },
                 sorting: {
                   sortModel: [{ field: 'id', sort: 'desc' }],
                 },
               }}
-              density="compact"
               checkboxSelection
               onRowSelectionModelChange={(newSelection) => setSelectedSessionIds(newSelection)}
               slots={{

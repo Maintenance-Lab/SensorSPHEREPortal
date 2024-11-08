@@ -247,7 +247,7 @@ const Projects = () => {
             orientation="vertical"
             value={currentTab}
             onChange={handleTabChange}
-            sx={{ flex: '0 0 auto' }}
+            sx={{ minWidth: 150 }}
           >
             <Tab value="2" label="My Projects" sx={{ alignItems: 'start' }} />
             <Tab value="4" label="Archived" sx={{ alignItems: 'start' }} />

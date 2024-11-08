@@ -95,7 +95,8 @@ const deleteProjects = async (projectIds) => {
   });
 };
 
-const archiveProjects = async (projectIds) => {
+const archiveProjects = async (projectIds, tab) => {
+  const archived = tab === '2' ? true : false;
   const response = await fetch('/api/projects/update-many', {
     method: 'PUT',
     headers: {
@@ -104,13 +105,13 @@ const archiveProjects = async (projectIds) => {
     },
     body: JSON.stringify(
       [
-        ...projectIds.map((id) => ({ id, archived: true }))
+        ...projectIds.map((id) => ({ id, archived: archived }))
       ]
     )
   });
 }
 
-function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetchData }) {
+function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetchData, tab }) {
   const [open, setOpen] = useState(false);
   const activeSelection = selectedProjectIds.length > 0;
 
@@ -133,7 +134,8 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
 
   const handleArchiveProjects = useCallback(async () => {
     try {
-      await archiveProjects(selectedProjectIds);
+      await archiveProjects(selectedProjectIds, tab);
+      console.log("fetching data again")
       fetchData();
     } catch (error) {
       console.error(error);
@@ -159,7 +161,7 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
           disabled={!activeSelection}
           onClick={handleArchiveProjects}
         >
-          Archive
+          {tab === '2' ? "Archive" : "Unarchive"}
         </Button>
         <Button
           variant="outlined"
@@ -274,6 +276,7 @@ const Projects = () => {
                   selectedProjectIds={selectedProjectIds}
                   setSelectedProjectIds={setSelectedProjectIds}
                   fetchData={fetchData}
+                  tab={currentTab}
                 />,
               }}
               sx={{

@@ -4,29 +4,34 @@ import AccountProjectMapping from '../models/mappings/AccountProjectMapping.js';
 // was import { Project, ProjectModel } from 'src/models/Project.js';
 import Account from '../models/Account.js';
 
+/* FUNCTIES DIE WERKEN - volgens mij (amber)
+    getAllProjects
+    getProjectById
+    getActiveProjectsByAccountId
+    getArchivedProjectsByAccountId
+
+*/
+
+
+
+
+
 export const getAllProjects = async () => {
   return new Promise(async (resolve) => {
     const results = await Project.findAll();
+
+    // print all ids
+    console.log("ALL PROJECTS: ", results.map((r) => r.projectId));
     return resolve(results);
   });
 };
 
 export const getProjectById = async (id: number): Promise<Project> => {
-// export const getProjectById = async (id: number, populate = false): Promise<Project> => {
   return new Promise(async (resolve, reject) => {
-    // const doc = await Project.findByPk(id, { include: populate ? ["Owner"] : [] });
     console.log("in getProjectById", id);
-    const doc = await Project.findByPk(id)
+    const doc = await Project.findByPk(id);
     if (!doc) return reject(new Error("Project not found"));
-    const returnDoc = doc.toJSON();
-
-    // if (populate) {
-    //   returnDoc.Owner = createBaseAccount(doc.Owner);
-      // if (returnDoc.collaborators)
-      //   returnDoc.collaborators = returnDoc.collaborators.map((c: Account) => createBaseAccount(c));
-    // }
-
-    return resolve(returnDoc);
+    return resolve(doc.toJSON());
   });
 };
 
@@ -49,18 +54,8 @@ export const getActiveProjectsByAccountId = async (accountId: number) => {
   // get all accounts where you are the owner or in the collaborators list
   return new Promise(async (resolve) => {
 
-    // finding project through mapping table with account id
-    console.log("ACCOUNT ID333: ", accountId);
+    const doc = await Project.findAll({include: {model: AccountProjectMapping, where: { accountId: accountId }, required: true}, where: { archived: false }});
 
-    // Get the project where accountId and projectId in mapping table are linked
-    // const doc = await Project.findAll({include: [{model: Account, attributes: []}], where: { accountId: accountId }});
-    const doc = await Project.findAll({include: {model: AccountProjectMapping, where: { accountId: accountId }, required: true}});
-
-
-    // const doc = await Project.findAll({ include: [{ model: Account, through: { where: { accountId: accountId } } }] });
-    // const doc = await Account.findByPk(accountId, { include: [{model: Project, through: {attributes: []}}]});
-
-    console.log("HALLLOOOOOOO: ", doc);
     if (!doc) return resolve([]);
     return resolve(doc);
   });
@@ -75,7 +70,8 @@ export const getActiveProjectsByAccountId = async (accountId: number) => {
 
 export const getArchivedProjectsByAccountId = async (accountId: number) => {
   return new Promise(async (resolve) => {
-    const doc = await Project.findAll({ where: { $or: [{ accountId: accountId }], archived: true }});
+    const projects = await Project.findAll({include: {model: AccountProjectMapping, where: { accountId: accountId }, required: true}});
+    const doc = projects.filter((project) => project.archived === true);
     return resolve(doc);
   });
 }
@@ -123,7 +119,7 @@ export const updateProject = async (id: number, item: Partial<Project>) => {
 
     const { projectId, ...rest } = item;
     const newItem = { ...rest };
-    const query = { projectId: projectId };
+    const query = { projectId: id };
 
     // const options = {
     //   // Return the document after updates are applied

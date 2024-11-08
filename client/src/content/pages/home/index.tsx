@@ -21,6 +21,30 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [openCreateProjectDialog, setOpenCreateProjectDialog] = useState(false);
 
+  // OM FUNCTIES TE TESTEN -----------------------------------------------------
+
+  const test = async () => {
+    const res = await fetch('/api/projects/id/2', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      }
+    });
+
+    if (!res.ok) {
+      console.error('Failed to fetch data');
+      return [];
+    }
+
+    const data = await res.json();
+
+    console.log("TEST", data);
+    return data;
+  }
+
+  // ---------------------------------------------------------------------------
+
   const fetchLatestProjects = async () => {
     const res = await fetch('/api/projects/latest', {
       method: 'GET',
@@ -63,6 +87,8 @@ const Home = () => {
 
   useEffect(() => {
     fetchLatestProjects();
+    test();
+
   }, []);
 
   return (

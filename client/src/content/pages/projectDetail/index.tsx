@@ -598,15 +598,15 @@ const ProjectDetail = () => {
     console.log("DATA SESSIONS: ", dataSessions);
     setSessions(dataSessions);
 
-    if (data.sensorUnits.length === 0) {
-      setActiveStep(0);
-    } else if (dataSessions.length === 0) {
-      setActiveStep(1);
-    } else if (dataSessions.filter((session) => session.status != "inactive").length === 0) {
-      setActiveStep(2);
-    } else {
-      setActiveStep(3);
-    }
+    // if (data.sensorUnits.length === 0) {
+    //   setActiveStep(0);
+    // } else if (dataSessions.length === 0) {
+    //   setActiveStep(1);
+    // } else if (dataSessions.filter((session) => session.status != "inactive").length === 0) {
+    //   setActiveStep(2);
+    // } else {
+    //   setActiveStep(3);
+    // }
   };
 
   const handleNameChange = async (event) => {

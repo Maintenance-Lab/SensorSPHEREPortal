@@ -167,7 +167,6 @@ const updateSession = async (sessionId, name, description, archived, sensorUnits
       name: name,
       description: description,
       archived: archived,
-      // sensorUnits: sensorUnits,
       status: status
     })
   });
@@ -208,7 +207,7 @@ const deleteSession = async (sessionId) => {
       'Content-Type': 'application/json',
       credentials: 'include'
     }
-  }); 
+  });
 
   if (!res.ok) {
     console.error('Failed to delete session');

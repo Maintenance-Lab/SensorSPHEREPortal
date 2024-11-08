@@ -16,9 +16,24 @@ import {
 import { getAccountById } from '../../services/Account.js';
 import { getSession } from '../../utils.js';
 import Project from '../../models/Project.js';
-import { Min } from 'sequelize-typescript';
+import AccountProjectMapping from '../../models/mappings/AccountProjectMapping.js';
 
 const router = Router();
+
+/* APIS DIE WERKEN - volgens mij (amber)
+    /active
+    /all
+    /archived
+    /id/:projectId
+    /create
+    /latest
+    /update/:id
+    /update-many
+
+ */
+
+
+
 
 /*
 TODO:
@@ -26,7 +41,7 @@ TODO:
 */
 
 router.get("/active", async (req, res) => {
-  console.log("in active projects")
+  console.log("in get active")
   const response = await getSession(req, res);
   if (!response) return;
 
@@ -36,13 +51,25 @@ router.get("/active", async (req, res) => {
   const { accountId } = account;
   if (!accountId) return res.status(400).json({ message: "Account ID is required" });
 
-  console.log("ACCOUNT ID: ", accountId)
   const doc = await getActiveProjectsByAccountId(accountId);
 
   return res.json(doc);
 });
 
+router.get("/all", async (req, res) => {
+  console.log("in get all")
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account } = response;
+  if (!account) return res.status(401).json({ message: "Unauthorized" });
+
+  const doc = await getAllProjects();
+  return res.json(doc);
+});
+
 router.get("/archived", async (req, res) => {
+  console.log("in get archived")
   const response = await getSession(req, res);
   if (!response) return;
 
@@ -63,32 +90,15 @@ router.get("/id/:projectId", async (req, res) => {
     if (!response) return;
 
     const id = Number(req.params.projectId);
-    console.log("req params", req.params)
-    // const doc: any = await getProjectById(id, true);
     const doc: any = await getProjectById(id);
     if (!doc) return res.status(404).json({ message: "Project not found" });
 
-    // // check if user is owner or collaborator
-    // const { account } = response;
-    // if (!account) return res.status(401).json({ message: "Unauthorized" });
-    // const { _id } = account;
+    const { account } = response;
+    if (!account) return res.status(401).json({ message: "Unauthorized" });
 
-    // let found = false;
-    // if (doc.owner?._id.toString() === _id) {
-    //   found = true;
-    // } else {
-    //   if (doc.collaborators) {
-    //     for (const collab of doc.collaborators) {
-    //       if (collab._id.toString() === _id) {
-    //         found = true;
-    //         break;
-    //       }
-    //     }
-    //   }
-    // }
+    const mapping = await AccountProjectMapping.findOne({ where: { accountId: account.accountId, projectId: id } });
+    if (!mapping) return res.status(401).json({ message: "Unauthorized" });
 
-    // if (!found) return res.status(401).json({ message: "Unauthorized" });
-    // else return res.json(doc);
     return res.json(doc);
   }
   catch (error) {
@@ -124,7 +134,7 @@ router.post("/create", async (req, res) => {
 
   const { body } = req;
   const result = await createProject(body, accountId);
-  console.log("project created")
+
   return res.json(result);
 });
 
@@ -136,7 +146,7 @@ router.post("/create", async (req, res) => {
 // });
 
 router.get("/latest", async (req, res) => {
-  console.log("in latest projects")
+  console.log("in latest")
   const response = await getSession(req, res);
   if (!response) return;
 
@@ -144,9 +154,7 @@ router.get("/latest", async (req, res) => {
   if (!account) return res.status(401).json({ message: "Unauthorized" });
   if (!account.accountId) return res.status(400).json({ message: "Account ID is required" });
 
-  console.log("account id", account.accountId)
   const projects = await getActiveProjectsByAccountId(account.accountId) as Project[];
-  console.log("projects", projects)
 
   // sort by createdAt date, most recent first
   const sortedProjects = projects.sort((a, b) => {
@@ -161,8 +169,8 @@ router.get("/latest", async (req, res) => {
 });
 
 router.put("/update/:id", async (req, res) => {
-  console.log("in update project")
-  const id = Number(req.params);
+  console.log("in update project ")
+  const id = Number(req.params.id);
   const { body } = req;
 
   const response = await getSession(req, res);
@@ -172,10 +180,12 @@ router.put("/update/:id", async (req, res) => {
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
 
   const { accountId } = account;
+
   const project: any = await getProjectById(id);
   if (!project) return res.status(404).json({ message: "Project not found" });
 
-  if (project.owner?._id.toString() !== accountId) return res.status(401).json({ message: "Unauthorized" });
+  const mapping = await AccountProjectMapping.findOne({ where: { accountId, projectId: id } });
+  if (!mapping) return res.status(401).json({ message: "Unauthorized" });
 
   const cleaned = cleanBody(body);
 
@@ -205,7 +215,8 @@ router.put("/update-many", async (req, res) => {
       const project: any = await getProjectById(id);
       if (!project) return res.status(404).json({ message: "Project not found" });
 
-      // if (project.owner?._id.toString() !== accountId) return res.status(401).json({ message: "Unauthorized" });
+      const mapping = await AccountProjectMapping.findOne({ where: { accountId, projectId: id } });
+      if (!mapping) return res.status(401).json({ message: "Unauthorized" });
 
       toUpdate.push({ id, cleaned });
     }

@@ -4,6 +4,8 @@ import {
   TextField,
   Link,
   Paper,
+  Tabs,
+  Tab,
   Typography,
   Container,
   Box,
@@ -321,6 +323,42 @@ const createSession = async (projectId: number, name, description, sensorUnits) 
   };
 };
 
+const fetchActiveSessions = async (projectId: number) => {
+  console.log('op dit project id zoekt ie pt2', projectId)
+  const res = await fetch('/api/sessions/project/active/' + projectId, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  })
+  console.log('res', res);
+
+  if (!res.ok) {
+    console.error('Failed to fetch data');
+    return [];
+  }
+  const data = await res.json();
+  return data;
+}
+
+const fetchArchivedSessions = async (projectId) => {
+  const res = await fetch('/api/sessions/project/archived/'+ projectId, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
+
+  if (!res.ok) {
+    console.error('Failed to fetch data');
+    return [];
+  }
+  const data = await res.json();
+  return data;
+}
+
 const updateSession = async (sessionId, archived) => {
   const res = await fetch('/api/sessions/update/' + sessionId, {
     method: 'PUT',
@@ -556,8 +594,39 @@ const ProjectDetail = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [activeStep, setActiveStep] = useState(3);
+  const [sortedSessions, setSortedSessions] = useState([]);
+  const [currentTab, setTab] = useState('2');
 
-  const sessionRows: GridRowsProp = sessions?.map((session) => ({
+  const handleTabChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
+    setTab(newCurrentTab);
+  };
+
+  const fetchData = async () => {
+    console.log('Fetching data 2.2 ');
+    try {
+      let sessions = [];
+      switch (currentTab) {
+        case '2':
+          console.log("op dit porjectid zoekt ie",projectId)
+          sessions = await fetchActiveSessions(projectId);
+          console.log('wat is dit', sessions)
+          break;
+        case '4':
+          sessions = await fetchArchivedSessions(projectId);
+          console.log('wat is dit 2', sessions)
+          break;
+        default:
+          sessions = await fetchActiveSessions(projectId);
+          console.log('default', sessions)
+          break;
+      }
+      setSortedSessions(sessions);
+    } catch (error) {
+      console.error('Failed to fetch data', error);
+    }
+  };
+
+  const sessionRows: GridRowsProp = sortedSessions.map((session) => ({
     id: session.sessionId,
     name: session.name,
     status: session.status,
@@ -569,6 +638,7 @@ const ProjectDetail = () => {
     lastActive: session.lastActive,
     archived: session.archived,
   }));
+
 
   const fetchProject = async () => {
     console.log('Fetching project 2', projectId);
@@ -593,22 +663,6 @@ const ProjectDetail = () => {
 
     console.log("PROJECT ID: ", projectId);
 
-    const resSessions = await fetch('/api/sessions/project/' + projectId, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        credentials: 'include'
-      }
-    });
-
-    if (!resSessions.ok) {
-      console.error('Failed to fetch data');
-      return [];
-    }
-
-    const dataSessions = await resSessions.json();
-    console.log("DATA SESSIONS: ", dataSessions);
-    setSessions(dataSessions);
 
     // if (data.sensorUnits.length === 0) {
     //   setActiveStep(0);
@@ -673,6 +727,10 @@ const ProjectDetail = () => {
     fetchProject();
   }, []);
 
+  useEffect(() => {
+    fetchData();
+  }, [currentTab]);
+
   return (
     <div>
       <Helmet>
@@ -681,6 +739,7 @@ const ProjectDetail = () => {
       <Dialog open={openAddDevices} onClose={() => setOpenAddDevices(false)} fullWidth maxWidth="lg">
         <DialogTitle>Add Devices To {projectName}</DialogTitle>
         <DialogContent>
+        
           <DataGrid
             rows={addDevicesRows}
             columns={addDevicesColumns}
@@ -817,7 +876,7 @@ const ProjectDetail = () => {
                 Add Collaborator
               </Button>
             }
-            {!isArchived &&
+            {!isArchived && 
               <Button
                 variant="outlined"
                 startIcon={<ArchiveOutlined />}
@@ -881,37 +940,51 @@ const ProjectDetail = () => {
               </Card>
             </Stack>
           )}
-          <Typography variant="h2" pt={2}>Data Collection Sessions</Typography>
-          <Paper>
-            <DataGrid
-              rows={sessionRows}
-              columns={sessionColumns}
-              density="compact"
-              autoHeight
-              initialState={{
-                pagination: { paginationModel: { pageSize: 25 } },
-                sorting: {
-                  sortModel: [{ field: 'id', sort: 'desc' }],
-                },
-              }}
-              checkboxSelection
-              onRowSelectionModelChange={(newSelection) => setSelectedSessionIds(newSelection)}
-              slots={{
-                toolbar: () => <CustomProjectSessionsToolbar
-                  selectedSessionIds={selectedSessionIds}
-                  setSelectedSessionIds={setSelectedSessionIds}
-                  sensorUnits={projectSensorUnits}
-                  projectId={projectId}
-                  fetchProject={fetchProject}
-                />,
-              }}
-              sx={{
-                "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus": {
-                  outline: "none",
-                },
-              }}
-            />
-          </Paper>
+          <Typography variant="h2" pt={2} sx={{ position: 'relative', left: '40px' }} >Data Collection Sessions</Typography>
+          <Container maxWidth="lg">
+            <Stack direction="row" spacing={2} sx={{ height: '100%' }}>
+              <Tabs
+                orientation="vertical"
+                value={currentTab}
+                onChange={handleTabChange}
+                sx={{ minWidth: 200 }}
+              >
+                <Tab value="2" label="Active Sessions" sx={{ alignItems: 'start' }} />
+                <Tab value="4" label="Archived Sessions" sx={{ alignItems: 'start' }} />
+              </Tabs>
+              <Paper sx={{ width: "100%", height: "100%" }}>
+                <DataGrid
+                  rows={sessionRows}
+                  columns={sessionColumns}
+                  density="compact"
+                  pageSizeOptions={[10, 25, 50]}
+                  autoHeight
+                  initialState={{
+                    pagination: { paginationModel: { pageSize: 10 } },
+                    sorting: {
+                      sortModel: [{ field: 'id', sort: 'desc' }],
+                    },
+                  }}
+                  checkboxSelection
+                  onRowSelectionModelChange={(newSelection) => setSelectedSessionIds(newSelection)}
+                  slots={{
+                    toolbar: () => <CustomProjectSessionsToolbar
+                      selectedSessionIds={selectedSessionIds}
+                      setSelectedSessionIds={setSelectedSessionIds}
+                      sensorUnits={projectSensorUnits}
+                      projectId={projectId}
+                      fetchProject={fetchProject}
+                    />,
+                  }}
+                  sx={{
+                    "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus": {
+                      outline: "none",
+                    },
+                  }}
+                />
+              </Paper>
+            </Stack>
+          </Container>
         </Stack>
       </Container>
       <Dialog open={open} onClose={() => setOpen(false)}>

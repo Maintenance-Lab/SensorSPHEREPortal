@@ -35,15 +35,27 @@ export const getSessionsByProject = async (projectId: number) => {
 };
 
 export const getActiveSessionsByProject = async (projectId: number) => {
-  console.log("in getActiveSessionsByProject", projectId);
   return new Promise(async (resolve) => {
     const doc = await Session.findAll({where: {projectId: projectId, archived: false}});
     // const projects = await Session.findAll({ where: {projectId: projectId, archived: false}});
     if (!doc) return resolve([]);
-
     return resolve(doc);
   });
 };
+
+// export const getActiveSessionsByProject = async (projectId: number) => {
+//   console.log("in getActiveSessionsByProject", projectId);
+//   try {
+//     const doc = await Session.findAll({
+//       where: { projectId: projectId, archived: false },
+//     });
+//     console.log("Resultaat:", doc);
+//     return doc || [];
+//   } catch (error) {
+//     console.error("Error in getActiveSessionsByProject:", error);
+//     throw error; // Hiermee kun je de fout doorgeven aan de caller
+//   }
+// };
 
 export const getArchivedSessionsByProject = async (projectId: number) => {
   console.log("in getArchivedSessionsByProject", projectId);

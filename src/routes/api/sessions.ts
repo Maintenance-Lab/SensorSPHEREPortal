@@ -42,8 +42,11 @@ router.get("/project/:projectId", async (req, res) => {
 });
 
 router.get("/project/active/:projectId", async (req, res) => {
+    console.log("in get active------------------------------")
     const projectId = Number(req.params.projectId);
+    console.log("projectId voor de sessions", projectId)
     const doc = await getActiveSessionsByProject(projectId);
+    console.log("Sessions van het project", doc)
     if (!doc) return res.status(404).json({ message: "Project not found" });
     return res.json(doc);
 });

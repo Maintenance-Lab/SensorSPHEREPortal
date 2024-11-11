@@ -340,12 +340,16 @@ const updateSession = async (sessionId, archived) => {
 };
 
 const deleteSession = async (sessionId) => {
-  const res = await fetch('/api/sessions/delete/' + sessionId, {
+  console.log("in andere delete session");
+  const res = await fetch('/api/sessions/delete', {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
       credentials: 'include'
-    }
+    },
+    body: JSON.stringify({
+      ids: sessionId
+    })
   });
 
   if (!res.ok) {
@@ -422,10 +426,12 @@ function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionId
   };
 
   const handleDeleteSessions = async () => {
+    console.log("in handle delete sessions project detail");
     try {
-      for (const sessionId of selectedSessionIds) {
-        await deleteSession(sessionId);
-      }
+      // for (const sessionId of selectedSessionIds) {
+      //   await deleteSession(sessionId);
+      // }
+      await deleteSession(selectedSessionIds);
       fetchProject();
     } catch (error) {
       console.error(error);

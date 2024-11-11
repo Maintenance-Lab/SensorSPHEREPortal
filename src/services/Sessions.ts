@@ -1,7 +1,15 @@
 import Session from '../models/Session.js';
 import Project from '../models/Project.js';
+import SessionDeviceMapping from '../models/mappings/SessionDeviceMapping.js';
+
+/* FUNCTIES DIE WERKEN - volgens mij (amber)
+
+    getSessionsByProject
+*/
+
 
 export const getSessionById = async (id: number): Promise<Session> => {
+  console.log("in getSessionById", id);
   return new Promise(async (resolve, reject) => {
     const doc = await Session.findByPk(id);
     if (!doc) return reject(new Error("Session not found"));
@@ -12,10 +20,9 @@ export const getSessionById = async (id: number): Promise<Session> => {
 };
 
 export const getSessionsByProject = async (projectId: number) => {
+  console.log("in getSessionsByProject", projectId);
   return new Promise(async (resolve) => {
-    console.log(projectId);
     const doc = await Session.findAll({ where: { projectId: projectId }});
-    console.log("doc", doc);
     return resolve(doc);
   });
 };
@@ -65,11 +72,31 @@ export const updateSession = async (id: number, item: Partial<Session>) => {
   });
 };
 
-export const deleteSession = async (id: number) => {
-  return new Promise(async (resolve, reject) => {
-    if (!id) return reject(new Error("Session ID not found"));
+// export const deleteSession = async (id: number) => {
+//   return new Promise(async (resolve, reject) => {
+//     if (!id) return reject(new Error("Session ID not found"));
 
-    const result = await Session.destroy({ where: { sessionId: id } });
-    return resolve(result);
+//     const result = await Session.destroy({ where: { sessionId: id } });
+//     return resolve(result);
+//   });
+// };
+
+export const deleteSessions = async (ids: Array<number>) => {
+  return new Promise(async (resolve) => {
+    const results = [];
+    console.log("in deleteSessions function", ids);
+    for (const id of ids) {
+      await SessionDeviceMapping.destroy({ where: { sessionId: id }});
+      console.log("SessionDeviceMapping destroyed");
+      const result = await Session.destroy({ where: { sessionId: id }});
+      console.log("Session destroyed");
+
+      results.push(result);
+    }
+
+    // TODO: DELETE DEVICES IF UNUSED
+
+    return resolve(results);
   });
 };
+

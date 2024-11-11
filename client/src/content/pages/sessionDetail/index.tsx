@@ -199,14 +199,17 @@ const updateSessionStatus = async (sessionId, status) => {
   return data;
 };
 
-const deleteSession = async (sessionId) => {
+const deleteSession = async (sessionId: number) => {
   console.log("DELETE SESSION ID", sessionId);
-  const res = await fetch('/api/sessions/delete/' + sessionId, {
+  const res = await fetch('/api/sessions/delete', {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
       credentials: 'include'
-    }
+    },
+    body: JSON.stringify({
+      ids: [sessionId]
+    })
   });
 
   if (!res.ok) {
@@ -373,11 +376,7 @@ const SessionStatusCard = ({ sessionId, status }) => {
 };
 
 const SessionDetail = () => {
-  const { sessionId } = useParams();
-  // console.log("SESSION ID bovenin", sessionId);
-  console.log("USEPARAMS", useParams());
-  console.log("session id from useParams", Number(useParams().sessionId));
-  // const [sessionId, setSessionId] = useState('');
+  const sessionId = Number(useParams().sessionId);
   const [sessionName, setSessionName] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
   const [sessionStatus, setSessionStatus] = useState('');
@@ -452,6 +451,7 @@ const SessionDetail = () => {
   };
 
   const handleDeleteSession = async () => {
+    console.log("project id in delete session detail", projectId);
     await deleteSession(sessionId);
     if (!projectId) {
       await fetchSession(); // Ensure `projectId` is loaded before proceeding

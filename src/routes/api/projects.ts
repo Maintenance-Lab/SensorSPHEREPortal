@@ -3,10 +3,8 @@ import { IS_PROD } from '../../config.js';
 import {
   getAllProjects,
   getProjectById,
-  getProjectByName,
   // getProjectsByAccount,
   createProject,
-  createProjects,
   updateProject,
   // getArchivedProjectsByOwner,
   deleteProjects,
@@ -29,11 +27,10 @@ const router = Router();
     /latest
     /update/:id
     /update-many
+    /delete
 
+    ALLES IS GEDAAN
  */
-
-
-
 
 /*
 TODO:
@@ -107,20 +104,6 @@ router.get("/id/:projectId", async (req, res) => {
   }
 });
 
-// router.get("/account/:accountId", async (req, res) => {
-//   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-//   const { accountId } = req.params;
-//   const doc = await getProjectsByAccount(accountId);
-//   return res.json(doc);
-// });
-
-// router.get("/name/:name", async (req, res) => {
-//   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-//   const { name } = req.params;
-//   const doc = await getProjectByName(name);
-//   return res.json(doc);
-// });
-
 router.post("/create", async (req, res) => {
   console.log("in create project")
   const response = await getSession(req, res);
@@ -156,10 +139,10 @@ router.get("/latest", async (req, res) => {
 
   const projects = await getActiveProjectsByAccountId(account.accountId) as Project[];
 
-  // sort by createdAt date, most recent first
+  // sort by lastActive date, most recent first
   const sortedProjects = projects.sort((a, b) => {
-    const dateA = new Date(a.createdAt);
-    const dateB = new Date(b.createdAt);
+    const dateA = new Date(a.lastActive);
+    const dateB = new Date(b.lastActive);
     return dateB.getTime() - dateA.getTime();
   });
 
@@ -250,14 +233,15 @@ router.post("/delete", async (req, res) => {
     project.push(await getProjectById(id));
   }
 
-  // const project: any = await getProjectById(ids);
   if (!project) return res.status(404).json({ message: "Project(s) not found" });
 
-  // if (project.owner?._id.toString() !== accountId) return res.status(401).json({ message: "Unauthorized" });
+  for (const item of project) {
+    const mapping = await AccountProjectMapping.findOne({ where: { accountId, projectId: item.projectId } });
+    if (!mapping) return res.status(401).json({ message: "Unauthorized" });
+  }
 
   // ids can be one or multiple project ids
   const result = await deleteProjects(ids);
-
   return res.json(result);
 });
 
@@ -269,6 +253,5 @@ const cleanBody = (body: Partial<Project>) => {
   if (cleaned.meta) delete cleaned.meta;
   if (cleaned.createdAt) delete cleaned.createdAt;
   if (cleaned.projectId) delete cleaned.projectId;
-  // if (cleaned.Owner) delete cleaned.Owner;
   return cleaned;
 };

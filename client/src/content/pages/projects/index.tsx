@@ -257,12 +257,14 @@ const Projects = () => {
               rows={projectsRows}
               columns={projectsColumns}
               density="compact"
+              pageSizeOptions={[10, 25, 50]}
               autoHeight
               autosizeOnMount
               autosizeOptions={{ includeOutliers: true }}
               checkboxSelection={true}
               onRowSelectionModelChange={(newSelection) => setSelectedProjectIds(newSelection)}
               initialState={{
+                pagination: { paginationModel: { pageSize: 10 } },
                 columns: {
                   columnVisibilityModel: {
                     lastActive: false

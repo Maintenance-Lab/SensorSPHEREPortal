@@ -7,11 +7,9 @@ class Project extends Model {
     name: string;
     description: string;
     meta: object;
-    // Owner: number[];
     createdAt: Date;
-    // SessionId: number[];
     lastActive: Date;
-    archived: boolean;
+    // archived: boolean;
 }
 
 Project.init({
@@ -20,9 +18,8 @@ Project.init({
     description: { type: DataTypes.STRING(1000)},
     meta: { type: DataTypes.JSON, defaultValue: {} },
     createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-    // SessionId: { type: DataTypes.ARRAY(DataTypes.INTEGER), references: { model: Session, key: 'SessionId' } },
     lastActive: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-    archived: { type: DataTypes.BOOLEAN, defaultValue: false },
+    // archived: { type: DataTypes.BOOLEAN, defaultValue: false },
 },
 {
     sequelize,

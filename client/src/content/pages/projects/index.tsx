@@ -63,6 +63,24 @@ const fetchArchivedProjects = async () => {
   return data;
 }
 
+const fetchPendingProjects = async () => {
+  const res = await fetch('/api/projects/pending', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
+
+  if (!res.ok) {
+    console.error('Failed to fetch data');
+    return [];
+  }
+
+  const data = await res.json();
+  return data;
+}
+
 const createProject = async (name, description) => {
   const response = await fetch('/api/projects/create', {
     method: 'POST',
@@ -135,7 +153,6 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
   const handleArchiveProjects = useCallback(async () => {
     try {
       await archiveProjects(selectedProjectIds, tab);
-      console.log("fetching data again")
       fetchData();
     } catch (error) {
       console.error(error);
@@ -154,15 +171,18 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
           Create Project
         </Button>
         <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
-        <Button
-          variant="outlined"
-          size="medium"
-          startIcon={<ArchiveOutlinedIcon />}
-          disabled={!activeSelection}
-          onClick={handleArchiveProjects}
-        >
-          {tab === '2' ? "Archive" : "Unarchive"}
-        </Button>
+
+        {tab !== '6' && (
+          <Button
+            variant="outlined"
+            size="medium"
+            startIcon={<ArchiveOutlinedIcon />}
+            disabled={!activeSelection}
+            onClick={handleArchiveProjects}
+          >
+            {tab === '2' ? "Archive" : "Unarchive"}
+          </Button>
+        )}
         <Button
           variant="outlined"
           size="medium"
@@ -195,12 +215,17 @@ const Projects = () => {
     console.log('Fetching data');
     try {
       let projects = [];
+      console.log('Current tab:', currentTab);
       switch (currentTab) {
         case '2':
           projects = await fetchActiveProjects();
           break;
         case '4':
           projects = await fetchArchivedProjects();
+          break;
+        case '6':
+          console.log("in correct case");
+          projects = await fetchPendingProjects();
           break;
         default:
           projects = await fetchActiveProjects();
@@ -221,6 +246,7 @@ const Projects = () => {
     { field: 'lastActive', headerName: 'Last Activity', flex: 1 },
   ];
 
+  console.log("Sorted projects:", sortedProjects);
   const projectsRows: GridRowsProp = sortedProjects.map((project) => ({
     id: project.projectId,
     name: project.name,
@@ -251,6 +277,7 @@ const Projects = () => {
           >
             <Tab value="2" label="My Projects" sx={{ alignItems: 'start' }} />
             <Tab value="4" label="Archived" sx={{ alignItems: 'start' }} />
+            <Tab value="6" label="Pending" sx={{ alignItems: 'start' }} />
           </Tabs>
           <Paper sx={{ width: "100%", height: "100%" }}>
             <DataGrid

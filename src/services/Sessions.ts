@@ -38,6 +38,7 @@ export const getActiveSessionsByProject = async (projectId: number) => {
   console.log("in getActiveSessionsByProject", projectId);
   return new Promise(async (resolve) => {
     const doc = await Session.findAll({where: {projectId: projectId, archived: false}});
+    // const projects = await Session.findAll({ where: {projectId: projectId, archived: false}});
     if (!doc) return resolve([]);
 
     return resolve(doc);

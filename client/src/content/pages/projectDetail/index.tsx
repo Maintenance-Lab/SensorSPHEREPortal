@@ -242,8 +242,8 @@ const updateProject = async (projectId: number, name: string, description: strin
     },
     body: JSON.stringify({
       name: name,
-      description: description,
       archived: archived,
+      description: description,
       sensorUnits: sensorUnits
     })
   });
@@ -254,26 +254,26 @@ const updateProject = async (projectId: number, name: string, description: strin
   }
 };
 
-// const addCollaborator = async (projectId, email) => {
-//   const res = await fetch('/api/project/collaborator/add', {
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json',
-//       credentials: 'include'
-//     },
-//     body: JSON.stringify({
-//       projectId: projectId,
-//       email: email
-//     })
-//   });
+const addCollaborator = async (projectId, email) => {
+  const res = await fetch('/api/project/collaborator/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({
+      projectId: projectId,
+      email: email
+    })
+  });
 
-//   if (!res.ok) {
-//     const data = await res.json();
-//     throw new Error(data.message || 'Failed to add collaborator');
-//   }
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.message || 'Failed to add collaborator');
+  }
 
-//   return res.json();
-// };
+  return res.json();
+};
 
 const deleteProject = async (projectId: number) => {
   const res = await fetch('/api/projects/delete', {
@@ -551,7 +551,7 @@ const ProjectDetail = () => {
   const [openAddDevices, setOpenAddDevices] = useState(false);
   const [selectedDeviceIdsFromAddDevices, setSelectedDeviceIdsFromAddDevices] = useState([]);
   const [open, setOpen] = useState(false);
-  // const [collaboratorEmail, setCollaboratorEmail] = useState('');
+  const [collaboratorEmail, setCollaboratorEmail] = useState('');
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -643,20 +643,20 @@ const ProjectDetail = () => {
     window.location.href = '/projects';
   };
 
-  // const handleAddCollaborator = async () => {
-  //   try {
-  //     const { message } = await addCollaborator(projectId, collaboratorEmail);
-  //     setSnackbarMessage(message);
-  //     setSnackbarSeverity('success');
-  //   } catch (error) {
-  //     setSnackbarMessage(error.message);
-  //     setSnackbarSeverity('error');
-  //   } finally {
-  //     setSnackbarOpen(true);
-  //     setOpen(false);
-  //     setCollaboratorEmail('');
-  //   }
-  // };
+  const handleAddCollaborator = async () => {
+    try {
+      const { message } = await addCollaborator(projectId, collaboratorEmail);
+      setSnackbarMessage(message);
+      setSnackbarSeverity('success');
+    } catch (error) {
+      setSnackbarMessage(error.message);
+      setSnackbarSeverity('error');
+    } finally {
+      setSnackbarOpen(true);
+      setOpen(false);
+      setCollaboratorEmail('');
+    }
+  };
 
   const handleAddDevicesToProject = async () => {
     try {
@@ -917,7 +917,7 @@ const ProjectDetail = () => {
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Add Collaborator</DialogTitle>
         <DialogContent>
-          {/* <TextField
+          <TextField
             autoFocus
             margin="dense"
             label="Collaborator Email"
@@ -925,13 +925,13 @@ const ProjectDetail = () => {
             value={collaboratorEmail}
             onChange={(e) => setCollaboratorEmail(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAddCollaborator()}
-          /> */}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
-          {/* <Button onClick={handleAddCollaborator} variant="contained" color="primary">
+          <Button onClick={handleAddCollaborator} variant="contained" color="primary">
             Add
-          </Button> */}
+          </Button>
         </DialogActions>
       </Dialog>
       <Snackbar

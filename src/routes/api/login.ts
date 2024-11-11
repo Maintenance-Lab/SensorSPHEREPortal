@@ -11,7 +11,7 @@ router.post("/", async (req, res) => {
   console.log("login route", req.body);
   const { username, password } = req.body;
 
-  // await createAccount({ name: "Test", email: "admin@admin.com", password: await hash("password123"), role: "admin" })
+  await createAccount({ name: "Test", email: "admin@admin.com", password: await hash("password123"), role: "admin" })
 
   try {
     const account = await getAccountByNameOrEmail(username);

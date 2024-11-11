@@ -10,9 +10,9 @@ class DeviceSensorMapping extends Model {
 }
 
 DeviceSensorMapping.init({
-    deviceId: { type: DataTypes.INTEGER, primaryKey: true, references: { model: 'Device', key: 'DeviceId' }, allowNull: false },
-    sensorModel: { type: DataTypes.INTEGER, primaryKey: true, references: { model: 'Sensor', key: 'Model'}, allowNull: false},
-    manufacturerName: {type: DataTypes.STRING, primaryKey: true, references: { model: 'Manufacturer', key: 'ManufacturerName'}, allowNull: false },
+    deviceId: { type: DataTypes.INTEGER, primaryKey: true, references: { model: 'Device', key: 'deviceId' }, allowNull: false },
+    sensorModel: { type: DataTypes.INTEGER, primaryKey: true, references: { model: 'Sensor', key: 'model'}, allowNull: false},
+    manufacturerName: {type: DataTypes.STRING, primaryKey: true, references: { model: 'Manufacturer', key: 'manufacturerName'}, allowNull: false },
     channel: {type: DataTypes.INTEGER, primaryKey: true},
 }, {
     sequelize,

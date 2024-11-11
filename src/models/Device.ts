@@ -1,5 +1,3 @@
-import Sensor from './Sensor';
-
 import { Sequelize, DataTypes, Model } from 'sequelize'
 import sequelize from '../sequelize.js';
 // const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});

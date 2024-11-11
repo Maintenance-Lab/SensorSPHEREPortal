@@ -1,7 +1,5 @@
-import { useRef, useState } from 'react';
-
-import { NavLink } from 'react-router-dom';
-
+import { useRef, useState, useEffect } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   Avatar,
   Box,
@@ -62,15 +60,9 @@ const UserBoxDescription = styled(Typography)(
 
 function HeaderUserbox() {
   const user = getUser() || null;
-  console.log('header user', user);
-  // const user = {
-  //   name: 'Catherine Pike',
-  //   avatar: '/static/images/avatars/1.jpg',
-  //   jobtitle: 'Project Manager'
-  // };
-
   const ref = useRef<any>(null);
   const [isOpen, setOpen] = useState<boolean>(false);
+  const location = useLocation();
 
   const handleOpen = (): void => {
     setOpen(true);
@@ -79,6 +71,11 @@ function HeaderUserbox() {
   const handleClose = (): void => {
     setOpen(false);
   };
+
+  // Close popover
+  useEffect(() => {
+    setOpen(false);   
+  }, [location]);
 
   const userInfo = user ? (
     <>
@@ -99,11 +96,11 @@ function HeaderUserbox() {
       </MenuUserBox>
       <Divider sx={{ mb: 0 }} />
       <List sx={{ p: 1 }} component="nav">
-        <ListItem button to="/projects" component={NavLink}>
+        <ListItem button to="/projects" component={NavLink} onClick={handleClose}>
           <DesignServicesTwoToneIcon fontSize="small" />
           <ListItemText primary="Projects" />
         </ListItem>
-        <ListItem button to="/account" component={NavLink}>
+        <ListItem button to="/account" component={NavLink} onClick={handleClose}>
           <AccountTreeTwoToneIcon fontSize="small" />
           <ListItemText primary="Account Settings" />
         </ListItem>
@@ -119,7 +116,7 @@ function HeaderUserbox() {
   ) : (
     <>
       <MenuUserBox sx={{ minWidth: 210 }} display="flex">
-      <Avatar variant="rounded" alt={"Guest"} src={''} />
+        <Avatar variant="rounded" alt={"Guest"} src={''} />
         <UserBoxText>{userInfo}</UserBoxText>
       </MenuUserBox>
       <Divider sx={{ mb: 0 }} />

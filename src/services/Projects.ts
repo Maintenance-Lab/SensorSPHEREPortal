@@ -1,30 +1,38 @@
-import { createBaseAccount } from '../utils.js';
+import { createBaseAccount, getSession } from '../utils.js';
 import Project from '../models/Project.js';
+import AccountProjectMapping from '../models/mappings/AccountProjectMapping.js';
+import { getSessionsByProject } from './Sessions.js';
+import { getArchivedSessionsByProject, getActiveSessionsByProject } from './Sessions.js';
+import { deleteSessions } from './Sessions.js';
 // was import { Project, ProjectModel } from 'src/models/Project.js';
 import Account from '../models/Account.js';
+import { get } from 'http';
+import Session from 'src/models/Session.js';
+
+/* FUNCTIES DIE WERKEN - volgens mij (amber)
+    getAllProjects
+    getProjectById
+    getActiveProjectsByAccountId
+    getArchivedProjectsByAccountId
+    createProject
+*/
 
 export const getAllProjects = async () => {
   return new Promise(async (resolve) => {
     const results = await Project.findAll();
+
+    // print all ids
+    console.log("ALL PROJECTS: ", results.map((r) => r.projectId));
     return resolve(results);
   });
 };
 
 export const getProjectById = async (id: number): Promise<Project> => {
-// export const getProjectById = async (id: number, populate = false): Promise<Project> => {
   return new Promise(async (resolve, reject) => {
-    // const doc = await Project.findByPk(id, { include: populate ? ["Owner"] : [] });
-    const doc = await Project.findByPk(id)
+    console.log("in getProjectById", id);
+    const doc = await Project.findByPk(id);
     if (!doc) return reject(new Error("Project not found"));
-    const returnDoc = doc.toJSON();
-
-    // if (populate) {
-    //   returnDoc.Owner = createBaseAccount(doc.Owner);
-      // if (returnDoc.collaborators)
-      //   returnDoc.collaborators = returnDoc.collaborators.map((c: Account) => createBaseAccount(c));
-    // }
-
-    return resolve(returnDoc);
+    return resolve(doc.toJSON());
   });
 };
 
@@ -46,8 +54,10 @@ export const getProjectById = async (id: number): Promise<Project> => {
 export const getActiveProjectsByAccountId = async (accountId: number) => {
   // get all accounts where you are the owner or in the collaborators list
   return new Promise(async (resolve) => {
-    // const doc = await Project.findAll( { where : { $or: [{ owner: accountId }], archived: false }});
-    const doc = await Account.findOne({ where: { AccountId: accountId}, include: { model: Project, where: {archived: false}}})
+
+    const doc = await Project.findAll({include: {model: AccountProjectMapping, where: { accountId: accountId }, required: true}, where: { archived: false }});
+
+    if (!doc) return resolve([]);
     return resolve(doc);
   });
 };
@@ -61,62 +71,83 @@ export const getActiveProjectsByAccountId = async (accountId: number) => {
 
 export const getArchivedProjectsByAccountId = async (accountId: number) => {
   return new Promise(async (resolve) => {
-    const doc = await Project.findAll({ where: { $or: [{ AccountId: accountId }], archived: true }});
-    return resolve(doc);
-  });
-}
-
-export const getProjectByName = async (name: string) => {
-  return new Promise(async (resolve) => {
-    const doc = await Project.findAll({ where: { name }});
+    const projects = await Project.findAll({include: {model: AccountProjectMapping, where: { accountId: accountId }, required: true}});
+    const doc = projects.filter((project) => project.archived === true);
     return resolve(doc);
   });
 };
 
-export const createProject = async (item: Partial<Project>) => {
+export const createProject = async (item: Partial<Project>, accountId: number) => {
+  console.log("'in createProject", item, accountId);
   return new Promise(async (resolve) => {
     const result = await Project.create(item);
-    return resolve(result);
+    const projectId = result.projectId;
+
+    try {
+      const finalResult = await AccountProjectMapping.create({ accountId: accountId, projectId: projectId });
+      return resolve(finalResult);
+    } catch (error) {
+      console.log("ERROR: ", error);
+    }
   });
 };
 
-export const createProjects = async (items: Array<Partial<Project>>) => {
-  return new Promise(async (resolve) => {
-    const results = [];
-    for (const item of items) {
-      const result = await Project.create(item);
-      results.push(result);
-    }
-    return resolve(results);
-  });
-};
+// DEZE MOET MISSCHIEN GEBRUIKT WORDEN VOOR EEN ADMIN, NOG NIET NAAR GEKEKEN
+// export const createProjects = async (items: Array<Partial<Project>>) => {
+//   return new Promise(async (resolve) => {
+//     const results = [];
+//     for (const item of items) {
+//       const result = await Project.create(item);
+//       results.push(result);
+//     }
+//     return resolve(results);
+//   });
+// };
 
 export const updateProject = async (id: number, item: Partial<Project>) => {
   return new Promise(async (resolve, reject) => {
     if (!id) return reject(new Error("User Key not found"));
 
+    console.log("in update project", id, item);
+
     const { projectId, ...rest } = item;
     const newItem = { ...rest };
-    const query = { projectId: projectId };
 
-    // const options = {
-    //   // Return the document after updates are applied
-    //   new: true,
-    //   // Create a document if one isn't found.
-    //   upsert: false,
-    // };
-    // const result = await Project.findOneAndUpdate(query, newItem, options);
-
-    const result = await Project.findOne({ where: query});
+    const result = await Project.findOne({ where: { projectId: id }});
     if (!result) return reject(new Error("Project not found"));
     result.update(newItem);
     return resolve(result);
   });
 };
 
-export const deleteProjects = async (id: Array<string>) => {
+// export const deleteProject = async (id: string) => {
+//   console.log("IN DELETE PROJECT", id);
+//   return new Promise(async (resolve) => {
+//     const result = await Project.destroy({ where: { id: id }});
+//     return resolve(result);
+//   });
+// };
+
+export const deleteProjects = async (ids: Array<number>) => {
   return new Promise(async (resolve) => {
-    const result = await Project.destroy({ where: { id: id }});
-    return resolve(result);
+    const results = [];
+    for (const id of ids) {
+      //  *** TODO: Review with group if this is the best solution,
+      // alternative option: add "ON DELETE CASCADE" to the foreign key in the database ***
+      await AccountProjectMapping.destroy({ where: { projectId: id }});
+      const result = await Project.destroy({ where: { projectId: id }});
+
+      results.push(result);
+    }
+
+    // delete sessions
+    const sessions = [];
+    for (const id of ids) {
+      const doc = await getSessionsByProject(id) as Session[];
+      sessions.push(...doc.map((s) => s.dataValues.sessionId));
+    }
+
+    await deleteSessions(sessions);
+    return resolve(results);
   });
 };

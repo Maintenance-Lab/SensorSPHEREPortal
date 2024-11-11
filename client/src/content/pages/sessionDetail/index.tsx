@@ -23,8 +23,6 @@ import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
 import { ArchiveOutlined, DeleteOutline, Devices, Edit, EventNote, InfoOutlined, Inventory, MoreTime, Pause, PlayArrow, Router, Schedule, Stop, UnarchiveOutlined, Usb } from '@mui/icons-material';
 import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
-import { set } from 'date-fns';
-import { error } from 'console';
 
 const devicesPlaceholder = {
   '00:00:00:00:00:00': {
@@ -86,6 +84,14 @@ const devicesPlaceholder = {
     sensors: []
   }
 };
+
+const sessionSensorUnits = [
+  'e4:72:05:0a:fc:66',
+  '94:b7:ab:57:d4:75',
+  '5f:ec:07:db:01:6e',
+  '1e:e7:31:2e:df:7a',
+  '95:8e:53:46:7e:6e'
+];
 
 const deviceColumns: GridColDef[] = [
   // { field: 'id', headerName: '#' },
@@ -159,7 +165,6 @@ const updateSession = async (sessionId, name, description, archived, sensorUnits
       name: name,
       description: description,
       archived: archived,
-      sensorUnits: sensorUnits,
       status: status
     })
   });
@@ -192,19 +197,24 @@ const updateSessionStatus = async (sessionId, status) => {
   return data;
 };
 
-const deleteSession = async (sessionId) => {
-  const res = await fetch('/api/sessions/delete/' + sessionId, {
+const deleteSession = async (sessionId: number) => {
+  console.log("DELETE SESSION ID", sessionId);
+  const res = await fetch('/api/sessions/delete', {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
       credentials: 'include'
-    }
+    },
+    body: JSON.stringify({
+      ids: [sessionId]
+    })
   });
 
   if (!res.ok) {
     console.error('Failed to delete session');
     return;
   }
+  console.log("DELETE SESSION RES", res);
   const data = await res.json();
   return data;
 };
@@ -364,27 +374,28 @@ const SessionStatusCard = ({ sessionId, status }) => {
 };
 
 const SessionDetail = () => {
-  const { sessionId } = useParams();
+  const sessionId = Number(useParams().sessionId);
   const [sessionName, setSessionName] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
   const [sessionStatus, setSessionStatus] = useState('');
   const [projectId, setProjectId] = useState('');
   const [projectName, setProjectName] = useState('');
   const [isArchived, setIsArchived] = useState(false);
-  const [sessionSensorUnits, setSessionSensorUnits] = useState([]);
+  // const [sessionSensorUnits, setSessionSensorUnits] = useState([]);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
 
-  const deviceRows: GridRowsProp = sessionSensorUnits.map((macAddress) => ({
-    id: macAddress,
-    type: devicesPlaceholder[macAddress].type,
-    macAddress: macAddress,
-    battery: devicesPlaceholder[macAddress].battery,
-    project: devicesPlaceholder[macAddress].project,
-    sensors: devicesPlaceholder[macAddress].sensors,
-  }));
+  // const deviceRows: GridRowsProp = sessionSensorUnits.map((macAddress) => ({
+  //   id: macAddress,
+  //   type: devicesPlaceholder[macAddress].type,
+  //   macAddress: macAddress,
+  //   battery: devicesPlaceholder[macAddress].battery,
+  //   project: devicesPlaceholder[macAddress].project,
+  //   sensors: devicesPlaceholder[macAddress].sensors,
+  // }));
 
   const fetchSession = async () => {
+    console.log("SESSION ID", sessionId);
     const response = await fetch(`/api/sessions/id/${sessionId}`, {
       headers: { credentials: 'include' }
     });
@@ -395,14 +406,15 @@ const SessionDetail = () => {
     }
 
     const data = await response.json();
+    // setSessionId(data.sessionId);
+    setProjectId(data.projectId);
     setSessionName(data.name);
-    setSessionDescription(data.description);
     setIsArchived(data.archived);
-    setSessionSensorUnits(data.sensorUnits);
-    setProjectId(data.project);
     setSessionStatus(data.status);
+    setSessionDescription(data.description);
 
-    const projectResponse = await fetch('/api/projects/id/' + data.project, {
+    console.log('Fetching project 3', data.projectId);
+    const projectResponse = await fetch('/api/projects/id/' + data.projectId, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -437,7 +449,11 @@ const SessionDetail = () => {
   };
 
   const handleDeleteSession = async () => {
+    console.log("project id in delete session detail", projectId);
     await deleteSession(sessionId);
+    if (!projectId) {
+      await fetchSession(); // Ensure `projectId` is loaded before proceeding
+    }
     window.location.href = '/projects/detail/' + projectId;
   };
 
@@ -586,7 +602,7 @@ const SessionDetail = () => {
           <Typography variant="h2" sx={{ pt: 2 }}>Devices and Sensors</Typography>
           <Paper>
             <DataGrid
-              rows={deviceRows}
+              // rows={deviceRows}
               columns={deviceColumns}
               density='compact'
               autoHeight
@@ -609,3 +625,31 @@ const SessionDetail = () => {
 };
 
 export default SessionDetail;
+
+
+
+{/* <DataGrid
+  rows={deviceRows}
+  columns={deviceColumns}
+  initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
+  density="compact"
+  onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
+  checkboxSelection
+  slots={{
+    toolbar: () => <CustomProjectSensorUnitsToolbar
+      selectedDeviceIds={selectedDeviceIds}
+      projectId={projectId}
+      projectName={projectName}
+      projectDescription={projectDescription}
+      projectSensorUnits={projectSensorUnits}
+      isArchived={isArchived}
+      fetchProject={fetchProject}
+      handleOpenAddDevices={() => setOpenAddDevices(true)}
+    />,
+  }}
+  sx={{
+    "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus": {
+      outline: "none",
+    },
+  }}
+/> */}

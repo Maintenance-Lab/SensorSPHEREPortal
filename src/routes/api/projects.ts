@@ -3,20 +3,34 @@ import { IS_PROD } from '../../config.js';
 import {
   getAllProjects,
   getProjectById,
-  getProjectByName,
   // getProjectsByAccount,
   createProject,
-  createProjects,
   updateProject,
   // getArchivedProjectsByOwner,
   deleteProjects,
   getActiveProjectsByAccountId,
   getArchivedProjectsByAccountId,
 } from '../../services/Projects.js';
+import { getAccountById } from '../../services/Account.js';
 import { getSession } from '../../utils.js';
 import Project from '../../models/Project.js';
+import AccountProjectMapping from '../../models/mappings/AccountProjectMapping.js';
 
 const router = Router();
+
+/* APIS DIE WERKEN - volgens mij (amber)
+    /active
+    /all
+    /archived
+    /id/:projectId
+    /create
+    /latest
+    /update/:id
+    /update-many
+    /delete
+
+    ALLES IS GEDAAN
+ */
 
 /*
 TODO:
@@ -24,6 +38,7 @@ TODO:
 */
 
 router.get("/active", async (req, res) => {
+  console.log("in get active")
   const response = await getSession(req, res);
   if (!response) return;
 
@@ -34,10 +49,24 @@ router.get("/active", async (req, res) => {
   if (!accountId) return res.status(400).json({ message: "Account ID is required" });
 
   const doc = await getActiveProjectsByAccountId(accountId);
+
+  return res.json(doc);
+});
+
+router.get("/all", async (req, res) => {
+  console.log("in get all")
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account } = response;
+  if (!account) return res.status(401).json({ message: "Unauthorized" });
+
+  const doc = await getAllProjects();
   return res.json(doc);
 });
 
 router.get("/archived", async (req, res) => {
+  console.log("in get archived")
   const response = await getSession(req, res);
   if (!response) return;
 
@@ -51,37 +80,22 @@ router.get("/archived", async (req, res) => {
   return res.json(doc);
 });
 
-router.get("/id/:id", async (req, res) => {
+router.get("/id/:projectId", async (req, res) => {
+  console.log("in get id")
   try {
     const response = await getSession(req, res);
     if (!response) return;
 
-    const id = Number(req.params);
-    // const doc: any = await getProjectById(id, true);
+    const id = Number(req.params.projectId);
     const doc: any = await getProjectById(id);
     if (!doc) return res.status(404).json({ message: "Project not found" });
 
-    // // check if user is owner or collaborator
-    // const { account } = response;
-    // if (!account) return res.status(401).json({ message: "Unauthorized" });
-    // const { _id } = account;
+    const { account } = response;
+    if (!account) return res.status(401).json({ message: "Unauthorized" });
 
-    // let found = false;
-    // if (doc.owner?._id.toString() === _id) {
-    //   found = true;
-    // } else {
-    //   if (doc.collaborators) {
-    //     for (const collab of doc.collaborators) {
-    //       if (collab._id.toString() === _id) {
-    //         found = true;
-    //         break;
-    //       }
-    //     }
-    //   }
-    // }
+    const mapping = await AccountProjectMapping.findOne({ where: { accountId: account.accountId, projectId: id } });
+    if (!mapping) return res.status(401).json({ message: "Unauthorized" });
 
-    // if (!found) return res.status(401).json({ message: "Unauthorized" });
-    // else return res.json(doc);
     return res.json(doc);
   }
   catch (error) {
@@ -90,21 +104,8 @@ router.get("/id/:id", async (req, res) => {
   }
 });
 
-// router.get("/account/:accountId", async (req, res) => {
-//   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-//   const { accountId } = req.params;
-//   const doc = await getProjectsByAccount(accountId);
-//   return res.json(doc);
-// });
-
-// router.get("/name/:name", async (req, res) => {
-//   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
-//   const { name } = req.params;
-//   const doc = await getProjectByName(name);
-//   return res.json(doc);
-// });
-
 router.post("/create", async (req, res) => {
+  console.log("in create project")
   const response = await getSession(req, res);
   if (!response) return;
 
@@ -115,20 +116,44 @@ router.post("/create", async (req, res) => {
   if (!accountId) return res.status(400).json({ message: "Account ID is required" });
 
   const { body } = req;
-  // body.owner = accountId;
-  const result = await createProject(body);
+  const result = await createProject(body, accountId);
+
   return res.json(result);
 });
 
 // router.post("/create-many", async (req, res) => {
 //   if (IS_PROD) return res.status(403).json({ message: "This server has not been setup for production yet" });
 //   const { body } = req;
-//   const results = await createProjects(body);
+//   const results = await createProjects(body, accountId);
 //   return res.json(results);
 // });
 
+router.get("/latest", async (req, res) => {
+  console.log("in latest")
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account } = response;
+  if (!account) return res.status(401).json({ message: "Unauthorized" });
+  if (!account.accountId) return res.status(400).json({ message: "Account ID is required" });
+
+  const projects = await getActiveProjectsByAccountId(account.accountId) as Project[];
+
+  // sort by lastActive date, most recent first
+  const sortedProjects = projects.sort((a, b) => {
+    const dateA = new Date(a.lastActive);
+    const dateB = new Date(b.lastActive);
+    return dateB.getTime() - dateA.getTime();
+  });
+
+  const latestProjects = sortedProjects.map((project) => project.projectId);
+
+  return res.json(latestProjects.slice(0, Math.min(6, sortedProjects.length)));
+});
+
 router.put("/update/:id", async (req, res) => {
-  const id = Number(req.params);
+  console.log("in update project ")
+  const id = Number(req.params.id);
   const { body } = req;
 
   const response = await getSession(req, res);
@@ -138,10 +163,12 @@ router.put("/update/:id", async (req, res) => {
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
 
   const { accountId } = account;
+
   const project: any = await getProjectById(id);
   if (!project) return res.status(404).json({ message: "Project not found" });
 
-  if (project.owner?._id.toString() !== accountId) return res.status(401).json({ message: "Unauthorized" });
+  const mapping = await AccountProjectMapping.findOne({ where: { accountId, projectId: id } });
+  if (!mapping) return res.status(401).json({ message: "Unauthorized" });
 
   const cleaned = cleanBody(body);
 
@@ -150,6 +177,7 @@ router.put("/update/:id", async (req, res) => {
 });
 
 router.put("/update-many", async (req, res) => {
+  console.log("in update many")
   try {
     const response = await getSession(req, res);
     if (!response) return;
@@ -170,7 +198,8 @@ router.put("/update-many", async (req, res) => {
       const project: any = await getProjectById(id);
       if (!project) return res.status(404).json({ message: "Project not found" });
 
-      // if (project.owner?._id.toString() !== accountId) return res.status(401).json({ message: "Unauthorized" });
+      const mapping = await AccountProjectMapping.findOne({ where: { accountId, projectId: id } });
+      if (!mapping) return res.status(401).json({ message: "Unauthorized" });
 
       toUpdate.push({ id, cleaned });
     }
@@ -189,6 +218,7 @@ router.put("/update-many", async (req, res) => {
 });
 
 router.post("/delete", async (req, res) => {
+  console.log("in delete project")
   const { ids } = req.body;
   const response = await getSession(req, res);
   if (!response) return;
@@ -197,11 +227,20 @@ router.post("/delete", async (req, res) => {
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
   const { accountId } = account;
 
-  const project: any = await getProjectById(ids);
-  if (!project) return res.status(404).json({ message: "Project not found" });
+  // Can contain one or multiple project ids
+  const project: any = [];
+  for (const id of ids) {
+    project.push(await getProjectById(id));
+  }
 
-  // if (project.owner?._id.toString() !== accountId) return res.status(401).json({ message: "Unauthorized" });
+  if (!project) return res.status(404).json({ message: "Project(s) not found" });
 
+  for (const item of project) {
+    const mapping = await AccountProjectMapping.findOne({ where: { accountId, projectId: item.projectId } });
+    if (!mapping) return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  // ids can be one or multiple project ids
   const result = await deleteProjects(ids);
   return res.json(result);
 });
@@ -214,6 +253,5 @@ const cleanBody = (body: Partial<Project>) => {
   if (cleaned.meta) delete cleaned.meta;
   if (cleaned.createdAt) delete cleaned.createdAt;
   if (cleaned.projectId) delete cleaned.projectId;
-  // if (cleaned.Owner) delete cleaned.Owner;
   return cleaned;
 };

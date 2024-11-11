@@ -16,6 +16,7 @@ const CreateProjectDialog = ({ open, setOpen }) => {
   const [description, setDescription] = useState('');
 
   const handleSubmitCreateProject = useCallback(async () => {
+    console.log('Creating project', name, description);
     try {
       const response = await fetch('/api/projects/create', {
         method: 'POST',
@@ -26,13 +27,17 @@ const CreateProjectDialog = ({ open, setOpen }) => {
         body: JSON.stringify({ name, description })
       });
 
+      console.log('Response', response);
+
       if (!response.ok) {
         throw new Error('Failed to create project');
       }
 
       const data = await response.json();
-      window.location.href = `/projects/detail/${data._id}`;
+      console.log('Created project', data);
+      window.location.href = `/projects/detail/${data.projectId}`;
     } catch (error) {
+      console.log("ERROR");
       console.error(error);
     };
   }, [name, description]);

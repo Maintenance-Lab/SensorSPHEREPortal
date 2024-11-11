@@ -105,22 +105,22 @@ export const getSession = async (req: Request, res: Response): Promise<SessionRe
       res.cookie("token", "", { maxAge: 0 }).status(401).send("Unauthorized");
       return false;
     }
-    
+
     // Find the session that matches the token
     const session = sessions.find((s) => s.token === cookies.token);
     if (!session) {
       res.cookie("token", "", { maxAge: 0 }).status(401).send("Unauthorized");
       return false;
     }
-    
+
     const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-    
+
     // Check if the IP matches. We do not check user agents as this will be anoying when a browser updates.
     if (session.ip !== ip) {
       res.cookie("token", "", { maxAge: 0 }).status(401).send("Unauthorized");
       return false;
     }
-    
+
     return { account, sessions };
   } catch (error: any) {
     if (!IS_PROD) console.error("Error verifying session", error.message);

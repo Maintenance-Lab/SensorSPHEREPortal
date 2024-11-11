@@ -74,6 +74,7 @@ const mapBreadcrumbName = (pathname: string) => {
 
 const fetchProjectName = async (id: number) => {
   try {
+    console.log('Fetching project 4', id);
     const response = await fetch(`/api/projects/id/${id}`, {
       method: 'GET',
       headers: {
@@ -94,6 +95,7 @@ const fetchProjectName = async (id: number) => {
 };
 
 const fetchSession = async (id: number) => {
+  console.log("ID VAN SESSION", id);
   try {
     const response = await fetch(`/api/sessions/id/${id}`, {
       method: 'GET',
@@ -130,10 +132,12 @@ function Header() {
       await fetchProjectName(projectId).then((name) => setProjectName(name));
     } else if (location.pathname.includes('/sessions/detail/')) {
       const sessionId = Number(location.pathname.split('/')[3]);
+      console.log("SESSION ID", sessionId);
       await fetchSession(sessionId).then(async (data) => {
         setSessionName(data.name);
-        setProjectId(data.project);
-        await fetchProjectName(data.project).then((name) => setProjectName(name));
+        setProjectId(data.projectId);
+        console.log("DATA", data.projectId);
+        await fetchProjectName(data.projectId).then((name) => setProjectName(name));
       });
     };
     setLoading(false);

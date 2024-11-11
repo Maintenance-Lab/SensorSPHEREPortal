@@ -45,16 +45,16 @@ c.executemany('''
 
 # Create dummy sessions
 sessions = [
-    (1, "Session 1", "Scheduled", "2023-06-01", "2023-06-10", None, "2023-01-01", "2023-09-01", 0),
-    (2, "Session 2", "Completed", "2023-07-01", "2023-07-10", None, "2023-01-02", "2023-09-02", 0),
-    (3, "Session 3", "Cancelled", "2023-08-01", "2023-08-10", None, "2023-01-03", "2023-09-03", 1),
-    (4, "Session 4", "Scheduled", "2023-09-01", "2023-09-10", None, "2023-01-04", "2023-09-04", 0),
-    (5, "Session 5", "Scheduled", "2023-10-01", "2023-10-10", None, "2023-01-05", "2023-09-05", 0)
+    (1, "Session 1", "Scheduled", "2023-06-01", "2023-06-10", 2, None, "2023-01-01", "2023-09-01", 0),
+    (2, "Session 2", "Completed", "2023-07-01", "2023-07-10", 2, None, "2023-01-02", "2023-09-02", 0),
+    (3, "Session 3", "Cancelled", "2023-08-01", "2023-08-10", 1, None, "2023-01-03", "2023-09-03", 1),
+    (4, "Session 4", "Scheduled", "2023-09-01", "2023-09-10", 5, None, "2023-01-04", "2023-09-04", 0),
+    (5, "Session 5", "Scheduled", "2023-10-01", "2023-10-10", 4, None, "2023-01-05", "2023-09-05", 0)
 ]
 
 c.executemany('''
-    INSERT INTO Session (sessionId, name, status, scheduledFrom, scheduledTo, meta, createdAt, lastActive, archived)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO Session (sessionId, name, status, scheduledFrom, scheduledTo, projectId, meta, createdAt, lastActive, archived)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ''', sessions)
 
 # Create dummy devices
@@ -97,14 +97,14 @@ c.executemany('''
 
 # Create dummy sensors
 sensors = [
-    ("TempSensor", "SensorCo", "Temperature", "Temperature"),
-    ("PressureSensor", "DeviceInc", "Pressure", "Pressure"),
-    ("HumiditySensor", "GadgetWorks", "Humidity", "Humidity")
+    ("TempSensor", "SensorCo", "Temperature"),
+    ("PressureSensor", "DeviceInc", "Pressure"),
+    ("HumiditySensor", "GadgetWorks", "Humidity")
 ]
 
 c.executemany('''
-    INSERT INTO Sensor (model, manufacturerName, categoryName, propertyName)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO Sensor (model, manufacturerName, categoryName)
+    VALUES (?, ?, ?)
 ''', sensors)
 
 # Create dummy sensor properties

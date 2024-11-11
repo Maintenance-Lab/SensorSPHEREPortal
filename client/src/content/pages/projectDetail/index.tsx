@@ -34,7 +34,7 @@ import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQu
 import FaceIcon from '@mui/icons-material/Face';
 import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import { Add, ArchiveOutlined, Cancel, DeleteOutline, Devices, InfoOutlined, Inventory, PushPin, PushPinOutlined, Remove, UnarchiveOutlined, Usb } from '@mui/icons-material';
+import { Add, ArchiveOutlined, Cancel, DeleteOutline, Devices, InfoOutlined, Inventory, Remove, UnarchiveOutlined, Usb } from '@mui/icons-material';
 import { is } from 'date-fns/locale';
 
 const DeviceStatus = ({ status, project }) => {
@@ -233,24 +233,6 @@ const addDevicesRows: GridRowsProp = Object.keys(devicesPlaceholder).map((macAdd
   sensors: devicesPlaceholder[macAddress].sensors,
 }));
 
-const fetchPinnedProjects = async () => {
-  const res = await fetch('/api/account/pinned', {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      credentials: 'include'
-    }
-  });
-
-  if (!res.ok) {
-    console.error('Failed to fetch pinned projects');
-    return [];
-  };
-
-  const data = await res.json();
-  return data;
-};
-
 const updateProject = async (projectId: number, name: string, description: string, archived: boolean, sensorUnits) => {
   const res = await fetch('/api/projects/update/' + projectId, {
     method: 'PUT',
@@ -320,10 +302,10 @@ const createSession = async (projectId: number, name, description, sensorUnits) 
         credentials: 'include'
       },
       body: JSON.stringify({
-        project: projectId,
+        projectId: projectId,
         name: name,
         description: description,
-        sensorUnits: sensorUnits
+
       })
     });
 
@@ -333,7 +315,7 @@ const createSession = async (projectId: number, name, description, sensorUnits) 
     }
 
     const data = await res.json();
-    window.location.href = `/sessions/detail/${data._id}`;
+    window.location.href = `/sessions/detail/${data.sessionId}`;
   } catch (error) {
     console.error(error);
   };
@@ -358,12 +340,16 @@ const updateSession = async (sessionId, archived) => {
 };
 
 const deleteSession = async (sessionId) => {
-  const res = await fetch('/api/sessions/delete/' + sessionId, {
+  console.log("in andere delete session");
+  const res = await fetch('/api/sessions/delete', {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
       credentials: 'include'
-    }
+    },
+    body: JSON.stringify({
+      ids: sessionId
+    })
   });
 
   if (!res.ok) {
@@ -440,10 +426,9 @@ function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionId
   };
 
   const handleDeleteSessions = async () => {
+    console.log("in handle delete sessions project detail");
     try {
-      for (const sessionId of selectedSessionIds) {
-        await deleteSession(sessionId);
-      }
+      await deleteSession(selectedSessionIds);
       fetchProject();
     } catch (error) {
       console.error(error);
@@ -493,7 +478,7 @@ function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionId
                   This project's devices will be used to collect data:
                 </Typography>
               </ListItem>
-              {sensorUnits.map((macAddress) => (
+              {sensorUnits?.map((macAddress) => (
                 <ListItem key={macAddress} sx={{ px: 0 }}>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Usb />
@@ -553,7 +538,7 @@ function CustomAddDevicesToolbar() {
 }
 
 const ProjectDetail = () => {
-  const projectId = Number(useParams());
+  const projectId = Number(useParams().projectId);
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [projectSensorUnits, setProjectSensorUnits] = useState([]);
@@ -570,30 +555,23 @@ const ProjectDetail = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [pinned, setPinned] = useState(false);
   const [activeStep, setActiveStep] = useState(3);
 
-  const deviceRows: GridRowsProp = projectSensorUnits.map((macAddress) => ({
-    id: macAddress,
-    type: devicesPlaceholder[macAddress].type,
-    macAddress: macAddress,
-    battery: devicesPlaceholder[macAddress].battery,
-    project: devicesPlaceholder[macAddress].project,
-    sensors: devicesPlaceholder[macAddress].sensors,
-  }));
-
-  const sessionRows: GridRowsProp = sessions.map((session) => ({
-    id: session._id,
+  const sessionRows: GridRowsProp = sessions?.map((session) => ({
+    id: session.sessionId,
     name: session.name,
-    description: session.description,
-    created: session.createdAt,
-    sensorUnits: session.sensorUnits,
+    status: session.status,
+    scheduledFrom: session.scheduledFrom,
+    scheduledTo: session.scheduledTo,
+    projectId: session.projectId,
+    meta: session.meta,
+    createdAt: session.createdAt,
     lastActive: session.lastActive,
     archived: session.archived,
-    status: session.status,
   }));
 
   const fetchProject = async () => {
+    console.log('Fetching project 2', projectId);
     const res = await fetch('/api/projects/id/' + projectId, {
       method: 'GET',
       headers: {
@@ -608,10 +586,12 @@ const ProjectDetail = () => {
     }
 
     const data = await res.json();
+    console.log("DATA: ", data);
     setProjectName(data.name);
     setProjectDescription(data.description);
-    setProjectSensorUnits(data.sensorUnits);
     setIsArchived(data.archived);
+
+    console.log("PROJECT ID: ", projectId);
 
     const resSessions = await fetch('/api/sessions/project/' + projectId, {
       method: 'GET',
@@ -627,22 +607,18 @@ const ProjectDetail = () => {
     }
 
     const dataSessions = await resSessions.json();
+    console.log("DATA SESSIONS: ", dataSessions);
     setSessions(dataSessions);
 
-    const pinnedProjects = await fetchPinnedProjects();
-    if (pinnedProjects.includes(projectId)) {
-      setPinned(true);
-    };
-
-    if (data.sensorUnits.length === 0) {
-      setActiveStep(0);
-    } else if (dataSessions.length === 0) {
-      setActiveStep(1);
-    } else if (dataSessions.filter((session) => session.status != "inactive").length === 0) {
-      setActiveStep(2);
-    } else {
-      setActiveStep(3);
-    }
+    // if (data.sensorUnits.length === 0) {
+    //   setActiveStep(0);
+    // } else if (dataSessions.length === 0) {
+    //   setActiveStep(1);
+    // } else if (dataSessions.filter((session) => session.status != "inactive").length === 0) {
+    //   setActiveStep(2);
+    // } else {
+    //   setActiveStep(3);
+    // }
   };
 
   const handleNameChange = async (event) => {
@@ -655,42 +631,6 @@ const ProjectDetail = () => {
     await updateProject(projectId, projectName, event.target.value, isArchived, projectSensorUnits);
     setIsEditingDescription(false);
     fetchProject();
-  };
-
-  const handlePinProject = async () => {
-    const res = await fetch('/api/account/pin', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        credentials: 'include'
-      },
-      body: JSON.stringify({ projectId })
-    });
-
-    if (!res.ok) {
-      console.error('Failed to pin project');
-      return;
-    };
-
-    setPinned(true);
-  };
-
-  const handleUnpinProject = async () => {
-    const res = await fetch('/api/account/unpin', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        credentials: 'include'
-      },
-      body: JSON.stringify({ projectId })
-    });
-
-    if (!res.ok) {
-      console.error('Failed to unpin project');
-      return;
-    };
-
-    setPinned(false);
   };
 
   const handleArchiveProject = async (archived: boolean) => {
@@ -745,9 +685,9 @@ const ProjectDetail = () => {
             rows={addDevicesRows}
             columns={addDevicesColumns}
             density="compact"
+            autoHeight
             autosizeOnMount
             autosizeOptions={{ includeOutliers: true }}
-            autoHeight
             checkboxSelection={true}
             onRowSelectionModelChange={(newSelection) => setSelectedDeviceIdsFromAddDevices(newSelection)}
             slots={{ toolbar: () => <CustomAddDevicesToolbar /> }}
@@ -774,12 +714,23 @@ const ProjectDetail = () => {
                 variant="outlined"
                 size="small"
                 autoFocus
-                onBlur={handleNameChange}
+                onBlur={(event) => {
+                  // Check if the value has changed from the initial value
+                  if (event.target.value !== projectName) {
+                    window.location.reload();
+                  }
+                  handleNameChange(event);
+                }}
                 onFocus={(event) => { event.target.select(); }}
                 sx={{ marginTop: -1, marginLeft: -1, width: '100%' }}
                 inputProps={{ sx: { fontSize: '2rem', fontWeight: 700, lineHeight: 1.167 }, }}
                 onKeyDown={(event) => {
-                  if (event.key === 'Enter') { handleNameChange(event); }
+                  if (event.key === 'Enter') {
+                    const target = event.target as HTMLInputElement;
+                    if (target.value !== projectName) {
+                      window.location.reload();
+                    }
+                    handleNameChange(event); }
                 }}
               />
             </Box>
@@ -807,7 +758,13 @@ const ProjectDetail = () => {
                 variant="outlined"
                 size="small"
                 autoFocus
-                onBlur={handleDescriptionChange}
+                onBlur={(event) => {
+                  // Check if the value has changed from the initial value
+                  if (event.target.value !== projectDescription) {
+                    window.location.reload();
+                  }
+                  handleDescriptionChange(event);
+                }}
                 onFocus={(event) => { event.target.select(); }}
                 sx={{ marginLeft: -1, width: '100%' }}
                 onKeyDown={(event) => {
@@ -851,23 +808,6 @@ const ProjectDetail = () => {
             </Stack>
           }
           <Stack direction="row" spacing={1}>
-            {!pinned ? (
-              <Button
-                variant="outlined"
-                startIcon={<PushPinOutlined />}
-                onClick={handlePinProject}
-              >
-                Pin
-              </Button>
-            ) : (
-              <Button
-                variant="outlined"
-                startIcon={<Remove />}
-                onClick={handleUnpinProject}
-              >
-                Unpin
-              </Button>
-            )}
             {!isArchived &&
               <Button
                 variant="outlined"
@@ -941,46 +881,19 @@ const ProjectDetail = () => {
               </Card>
             </Stack>
           )}
-          <Typography variant="h2" sx={{ pt: activeStep != 3 ? 2 : 0 }}>Devices</Typography>
-          <Paper>
-            <DataGrid
-              rows={deviceRows}
-              columns={deviceColumns}
-              initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
-              density="compact"
-              onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
-              checkboxSelection
-              slots={{
-                toolbar: () => <CustomProjectSensorUnitsToolbar
-                  selectedDeviceIds={selectedDeviceIds}
-                  projectId={projectId}
-                  projectName={projectName}
-                  projectDescription={projectDescription}
-                  projectSensorUnits={projectSensorUnits}
-                  isArchived={isArchived}
-                  fetchProject={fetchProject}
-                  handleOpenAddDevices={() => setOpenAddDevices(true)}
-                />,
-              }}
-              sx={{
-                "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus": {
-                  outline: "none",
-                },
-              }}
-            />
-          </Paper>
           <Typography variant="h2" pt={2}>Data Collection Sessions</Typography>
           <Paper>
             <DataGrid
               rows={sessionRows}
               columns={sessionColumns}
+              density="compact"
+              autoHeight
               initialState={{
                 pagination: { paginationModel: { pageSize: 25 } },
                 sorting: {
                   sortModel: [{ field: 'id', sort: 'desc' }],
                 },
               }}
-              density="compact"
               checkboxSelection
               onRowSelectionModelChange={(newSelection) => setSelectedSessionIds(newSelection)}
               slots={{

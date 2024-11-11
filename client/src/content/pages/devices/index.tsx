@@ -237,6 +237,7 @@ const Devices = () => {
     const macAddresses = selectedDeviceIds.map((id) => devicesPlaceholder.find((device) => device.id === id).macAddress);
     await updateProject(projectId, macAddresses);
     setOpenAddToProjects(false);
+    console.log(" we gaan naar project id", projectId);
     window.location.href = '/projects/detail/' + projectId;
   }
 

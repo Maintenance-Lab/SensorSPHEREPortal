@@ -28,7 +28,6 @@ import {
   GridToolbarQuickFilter
 } from '@mui/x-data-grid';
 import CreateProjectDialog from './CreateProjectDialog';
-import { PushPin } from '@mui/icons-material';
 
 const fetchActiveProjects = async () => {
   const res = await fetch('/api/projects/active', {
@@ -78,6 +77,7 @@ const createProject = async (name, description) => {
     throw new Error('Failed to create project');
   }
 
+
   const data = await response.json();
   return data;
 };
@@ -95,7 +95,8 @@ const deleteProjects = async (projectIds) => {
   });
 };
 
-const archiveProjects = async (projectIds) => {
+const archiveProjects = async (projectIds, tab) => {
+  const archived = tab === '2' ? true : false;
   const response = await fetch('/api/projects/update-many', {
     method: 'PUT',
     headers: {
@@ -104,13 +105,13 @@ const archiveProjects = async (projectIds) => {
     },
     body: JSON.stringify(
       [
-        ...projectIds.map((id) => ({ id, archived: true }))
+        ...projectIds.map((id) => ({ id, archived: archived }))
       ]
     )
   });
 }
 
-function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetchData }) {
+function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetchData, tab }) {
   const [open, setOpen] = useState(false);
   const activeSelection = selectedProjectIds.length > 0;
 
@@ -133,29 +134,9 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
 
   const handleArchiveProjects = useCallback(async () => {
     try {
-      await archiveProjects(selectedProjectIds);
+      await archiveProjects(selectedProjectIds, tab);
+      console.log("fetching data again")
       fetchData();
-    } catch (error) {
-      console.error(error);
-    }
-  }, [selectedProjectIds]);
-
-  const handlePinProjects = useCallback(async () => {
-    try {
-      for (const projectId of selectedProjectIds) {
-        const response = await fetch('/api/account/pin', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            credentials: 'include'
-          },
-          body: JSON.stringify({ projectId })
-        });
-
-        if (!response.ok) {
-          console.error('Failed to pin project');
-        }
-      }
     } catch (error) {
       console.error(error);
     }
@@ -173,15 +154,6 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
           Create Project
         </Button>
         <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
-        {/* <Button
-          variant="outlined"
-          size="medium"
-          startIcon={<PushPin />}
-          disabled={!activeSelection}
-          onClick={handlePinProjects}
-        >
-          Pin
-        </Button> */}
         <Button
           variant="outlined"
           size="medium"
@@ -189,7 +161,7 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
           disabled={!activeSelection}
           onClick={handleArchiveProjects}
         >
-          Archive
+          {tab === '2' ? "Archive" : "Unarchive"}
         </Button>
         <Button
           variant="outlined"
@@ -220,6 +192,7 @@ const Projects = () => {
   };
 
   const fetchData = async () => {
+    console.log('Fetching data');
     try {
       let projects = [];
       switch (currentTab) {
@@ -249,7 +222,7 @@ const Projects = () => {
   ];
 
   const projectsRows: GridRowsProp = sortedProjects.map((project) => ({
-    id: project._id,
+    id: project.projectId,
     name: project.name,
     lastActive: project.lastActive,
   }));
@@ -274,7 +247,7 @@ const Projects = () => {
             orientation="vertical"
             value={currentTab}
             onChange={handleTabChange}
-            sx={{ flex: '0 0 auto' }}
+            sx={{ minWidth: 150 }}
           >
             <Tab value="2" label="My Projects" sx={{ alignItems: 'start' }} />
             <Tab value="4" label="Archived" sx={{ alignItems: 'start' }} />
@@ -284,6 +257,7 @@ const Projects = () => {
               rows={projectsRows}
               columns={projectsColumns}
               density="compact"
+              autoHeight
               autosizeOnMount
               autosizeOptions={{ includeOutliers: true }}
               checkboxSelection={true}
@@ -303,6 +277,7 @@ const Projects = () => {
                   selectedProjectIds={selectedProjectIds}
                   setSelectedProjectIds={setSelectedProjectIds}
                   fetchData={fetchData}
+                  tab={currentTab}
                 />,
               }}
               sx={{

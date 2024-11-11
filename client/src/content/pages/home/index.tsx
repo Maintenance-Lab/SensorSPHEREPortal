@@ -12,16 +12,19 @@ import {
 import { Helmet } from 'react-helmet-async';
 import Card from '@mui/material/Card';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
-import { Add, DesignServices, DesignServicesOutlined, Inventory, PlayCircleOutline, PlusOne, PushPin, Usb } from '@mui/icons-material';
+import { Add, DesignServices, DesignServicesOutlined, Inventory, PlayCircleOutline, PlusOne, Usb, Schedule } from '@mui/icons-material';
 import CreateProjectDialog from '../projects/CreateProjectDialog';
+import { lastDayOfDecade, set } from 'date-fns';
 
 const Home = () => {
-  const [pinnedProjects, setPinnedProjects] = useState([]);
+  const [latestProjects, setLatestProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openCreateProjectDialog, setOpenCreateProjectDialog] = useState(false);
 
-  const fetchPinnedProjects = async () => {
-    const res = await fetch('/api/account/pinned', {
+  // OM FUNCTIES TE TESTEN -----------------------------------------------------
+
+  const test = async () => {
+    const res = await fetch('/api/sessions/project/active/21', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -30,13 +33,36 @@ const Home = () => {
     });
 
     if (!res.ok) {
-      console.error('Failed to fetch pinned projects');
+      console.error('Failed to fetch data');
+      return [];
+    }
+
+    const data = await res.json();
+
+    console.log("TEST", data);
+    return data;
+  }
+
+  // ---------------------------------------------------------------------------
+
+  const fetchLatestProjects = async () => {
+    const res = await fetch('/api/projects/latest', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      }
+    });
+
+    if (!res.ok) {
+      console.error('Failed to fetch latest projects');
       return [];
     };
 
     const data = await res.json();
 
     const projects = data.map(async (projectId) => {
+      console.log('Fetching project 1', projectId);
       const projectRes = await fetch('/api/projects/id/' + projectId, {
         method: 'GET',
         headers: {
@@ -55,12 +81,14 @@ const Home = () => {
     });
 
     const projectsData = await Promise.all(projects);
-    setPinnedProjects(projectsData);
+    setLatestProjects(projectsData);
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchPinnedProjects();
+    fetchLatestProjects();
+    test();
+
   }, []);
 
   return (
@@ -79,28 +107,25 @@ const Home = () => {
               <Skeleton variant="rounded" height={120} animation="wave" />
             </Grid>
           )}
-          {pinnedProjects.map((project) => (
-            <Grid item xs={6} lg={4} key={project._id}>
+          {latestProjects.map((project) => (
+            <Grid item xs={6} lg={4} key={project.projectId}>
               <Card>
-                <CardActionArea sx={{ p: 2 }} onClick={() => window.location.href = '/projects/detail/' + project._id}>
+                <CardActionArea sx={{ p: 2 }} onClick={() => window.location.href = '/projects/detail/' + project.projectId}>
                   <Stack direction="row" spacing={1} mb={1}>
-                    <Chip label="Pinned" icon={<PushPin />} size="small" sx={{ px: 0.5 }} />
+                    <Chip label="Recent" icon={<Schedule />} size="small" sx={{ px: 0.5 }} />
                     {project.archived && (
                       <Chip label="Archived" icon={<Inventory />} size="small" color="warning" sx={{ px: 0.5 }} />
                     )}
                   </Stack>
                   <Typography variant="h6">{project.name}</Typography>
-                  {project.description && (
-                    <Typography variant="subtitle1">{project.description}</Typography>
-                  )}
                 </CardActionArea>
               </Card>
             </Grid>
           ))}
-          {pinnedProjects.length === 0 && !loading && (
+          {latestProjects.length === 0 && !loading && (
             <Grid item xs={6} lg={4} height="130px">
-              <PushPin fontSize="small" sx={{ color: 'gray' }} />
-              <Typography variant="body2" color='gray'>Pinned projects will show up here.</Typography>
+              <Schedule fontSize="small" sx={{ color: 'gray' }} />ñ©
+              <Typography variant="body2" color='gray'>Latest projects will show up here.</Typography>
             </Grid>
           )}
         </Grid>
@@ -123,29 +148,41 @@ const Home = () => {
           </Stack>
         </Stack>
         <Stack direction="row" spacing={2} mt={3}>
-          <Card sx={{ flex: 1 }}>
-            <CardActionArea
-              sx={{ p: 2 }}
-              onClick={() => window.location.href = '/devices'}
-            >
+        <Card
+            sx={{
+            flex: 1,
+            p: 2,
+            cursor: 'pointer',
+            transition: 'background-color 0.3s',
+            '&:hover': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)' // Adjust this color to control hover darkness
+            }
+          }}
+          onClick={() => setOpenCreateProjectDialog(true)}
+          >
               <Stack spacing={1}>
                 <Usb fontSize='large' />
                 <Typography variant="h6">Find Devices</Typography>
                 <Typography variant="subtitle1">Search and find devices, view sensors, and use them in your projects.</Typography>
               </Stack>
-            </CardActionArea>
           </Card>
-          <Card sx={{ flex: 1 }}>
-            <CardActionArea
-              sx={{ p: 2 }}
-              onClick={() => setOpenCreateProjectDialog(true)}
-            >
+          <Card
+            sx={{
+            flex: 1,
+            p: 2,
+            cursor: 'pointer',
+            transition: 'background-color 0.3s',
+            '&:hover': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)' // Adjust this color to control hover darkness
+            }
+          }}
+          onClick={() => setOpenCreateProjectDialog(true)}
+          >
               <Stack spacing={1}>
                 <DesignServices fontSize='large' />
                 <Typography variant="h6">Create a New Project</Typography>
                 <Typography variant="subtitle1">Create a new project, add devices, and start data collection sessions.</Typography>
               </Stack>
-            </CardActionArea>
           </Card>
         </Stack>
       </Container>

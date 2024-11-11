@@ -7,6 +7,7 @@ class Session extends Model {
     sessionId: number;
     // DeviceId: number;
     name: string;
+    description: string;
     status: string;
     scheduledFrom: Date;
     scheduledTo: Date;
@@ -21,6 +22,7 @@ Session.init({
     sessionId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     // DeviceId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Device, key: 'DeviceId' } },
     name: { type: DataTypes.STRING, allowNull: false },
+    description: { type: DataTypes.STRING},
     status: { type: DataTypes.STRING, allowNull: false, validate: { isIn: [['inactive', 'active', 'activeScheduled', 'paused', 'completed', 'error', 'scheduled', 'stopped']] }, defaultValue: 'inactive' },
     scheduledFrom: { type: DataTypes.DATE},
     scheduledTo: { type: DataTypes.DATE},

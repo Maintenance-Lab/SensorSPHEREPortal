@@ -66,6 +66,7 @@ const initDb = () => {
             CREATE TABLE IF NOT EXISTS Session (
                 sessionId INTEGER,
                 name TEXT NOT NULL,
+                description TEXT,
                 status TEXT,
                 scheduledFrom DATE,
                 scheduledTo DATE,

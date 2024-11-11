@@ -1,9 +1,13 @@
-import { createBaseAccount } from '../utils.js';
+import { createBaseAccount, getSession } from '../utils.js';
 import Project from '../models/Project.js';
 import AccountProjectMapping from '../models/mappings/AccountProjectMapping.js';
+import { getSessionsByProject } from './Sessions.js';
+import { getArchivedSessionsByProject, getActiveSessionsByProject } from './Sessions.js';
 import { deleteSessions } from './Sessions.js';
 // was import { Project, ProjectModel } from 'src/models/Project.js';
 import Account from '../models/Account.js';
+import { get } from 'http';
+import Session from 'src/models/Session.js';
 
 /* FUNCTIES DIE WERKEN - volgens mij (amber)
     getAllProjects
@@ -11,7 +15,6 @@ import Account from '../models/Account.js';
     getActiveProjectsByAccountId
     getArchivedProjectsByAccountId
     createProject
-
 */
 
 export const getAllProjects = async () => {
@@ -138,8 +141,13 @@ export const deleteProjects = async (ids: Array<number>) => {
     }
 
     // delete sessions
-    await deleteSessions(ids);
+    const sessions = [];
+    for (const id of ids) {
+      const doc = await getSessionsByProject(id) as Session[];
+      sessions.push(...doc.map((s) => s.dataValues.sessionId));
+    }
 
+    await deleteSessions(sessions);
     return resolve(results);
   });
 };

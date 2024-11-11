@@ -24,7 +24,7 @@ const Home = () => {
   // OM FUNCTIES TE TESTEN -----------------------------------------------------
 
   const test = async () => {
-    const res = await fetch('/api/projects/id/2', {
+    const res = await fetch('/api/sessions/project/active/21', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -148,16 +148,16 @@ const Home = () => {
           </Stack>
         </Stack>
         <Stack direction="row" spacing={2} mt={3}>
-        <Card 
-            sx={{ 
-            flex: 1, 
-            p: 2, 
+        <Card
+            sx={{
+            flex: 1,
+            p: 2,
             cursor: 'pointer',
             transition: 'background-color 0.3s',
             '&:hover': {
               backgroundColor: 'rgba(0, 0, 0, 0.04)' // Adjust this color to control hover darkness
             }
-          }} 
+          }}
           onClick={() => setOpenCreateProjectDialog(true)}
           >
               <Stack spacing={1}>
@@ -166,16 +166,16 @@ const Home = () => {
                 <Typography variant="subtitle1">Search and find devices, view sensors, and use them in your projects.</Typography>
               </Stack>
           </Card>
-          <Card 
-            sx={{ 
-            flex: 1, 
-            p: 2, 
+          <Card
+            sx={{
+            flex: 1,
+            p: 2,
             cursor: 'pointer',
             transition: 'background-color 0.3s',
             '&:hover': {
               backgroundColor: 'rgba(0, 0, 0, 0.04)' // Adjust this color to control hover darkness
             }
-          }} 
+          }}
           onClick={() => setOpenCreateProjectDialog(true)}
           >
               <Stack spacing={1}>

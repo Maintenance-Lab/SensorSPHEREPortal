@@ -3,8 +3,13 @@ import Project from '../models/Project.js';
 import SessionDeviceMapping from '../models/mappings/SessionDeviceMapping.js';
 
 /* FUNCTIES DIE WERKEN - volgens mij (amber)
-
+    getSessionById
     getSessionsByProject
+    getActiveSessionsByProject
+    getArchivedSessionsByProject
+    createSession
+    updateSession
+    deleteSessions
 */
 
 
@@ -23,48 +28,51 @@ export const getSessionsByProject = async (projectId: number) => {
   console.log("in getSessionsByProject", projectId);
   return new Promise(async (resolve) => {
     const doc = await Session.findAll({ where: { projectId: projectId }});
+    if (!doc) return resolve([]);
+
     return resolve(doc);
   });
 };
 
 export const getActiveSessionsByProject = async (projectId: number) => {
+  console.log("in getActiveSessionsByProject", projectId);
   return new Promise(async (resolve) => {
-    const doc = await Session.findAll({ where: {projectId: projectId}});
+    const doc = await Session.findAll({where: {projectId: projectId, archived: false}});
+    if (!doc) return resolve([]);
+
     return resolve(doc);
   });
 };
 
 export const getArchivedSessionsByProject = async (projectId: number) => {
+  console.log("in getArchivedSessionsByProject", projectId);
   return new Promise(async (resolve) => {
-    const doc = await Session.findAll({ where: {projectId: projectId }});
+    const doc = await Session.findAll({ where: {projectId: projectId, archived: true}});
+    if (!doc) return resolve([]);
+
     return resolve(doc);
   });
 };
 
 export const createSession = async (item: Partial<Session>) => {
+  console.log("in createSession", item);
   return new Promise(async (resolve) => {
     const result = await Session.create(item);
+    if (!result) return resolve(null);
+
     return resolve(result);
   });
 };
 
 export const updateSession = async (id: number, item: Partial<Session>) => {
+  console.log("in updateSession", id, item);
   return new Promise(async (resolve, reject) => {
     if (!id) return reject(new Error("Session ID not found"));
 
     const { sessionId, ...rest } = item;
     const newItem = { ...rest };
-    const query = { SessionId: id };
 
-    // const options = {
-    //   // Return the document after updates are applied
-    //   new: true,
-    //   // Create a document if one isn't found.
-    //   upsert: false,
-    // };
-    // const result = await Session.findOneAndUpdate(query, newItem, options);
-
-    const result = await Session.findOne({ where: query });
+    const result = await Session.findOne({ where: { SessionId: id }});
     if (!result) return reject(new Error("Session not found"));
     result.update(newItem);
 
@@ -72,29 +80,15 @@ export const updateSession = async (id: number, item: Partial<Session>) => {
   });
 };
 
-// export const deleteSession = async (id: number) => {
-//   return new Promise(async (resolve, reject) => {
-//     if (!id) return reject(new Error("Session ID not found"));
-
-//     const result = await Session.destroy({ where: { sessionId: id } });
-//     return resolve(result);
-//   });
-// };
-
 export const deleteSessions = async (ids: Array<number>) => {
+  console.log("in deleteSessions function", ids);
   return new Promise(async (resolve) => {
     const results = [];
-    console.log("in deleteSessions function", ids);
     for (const id of ids) {
       await SessionDeviceMapping.destroy({ where: { sessionId: id }});
-      console.log("SessionDeviceMapping destroyed");
       const result = await Session.destroy({ where: { sessionId: id }});
-      console.log("Session destroyed");
-
       results.push(result);
     }
-
-    // TODO: DELETE DEVICES IF UNUSED
 
     return resolve(results);
   });

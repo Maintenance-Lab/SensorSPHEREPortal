@@ -428,9 +428,6 @@ function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionId
   const handleDeleteSessions = async () => {
     console.log("in handle delete sessions project detail");
     try {
-      // for (const sessionId of selectedSessionIds) {
-      //   await deleteSession(sessionId);
-      // }
       await deleteSession(selectedSessionIds);
       fetchProject();
     } catch (error) {
@@ -507,6 +504,15 @@ function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionId
             fullWidth
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && document.getElementById('description-input').focus()}
+          />
+          <TextField
+            id="description-input"
+            margin="dense"
+            label="Session Description"
+            fullWidth
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSubmitCreateSession()}
           />
         </DialogContent>

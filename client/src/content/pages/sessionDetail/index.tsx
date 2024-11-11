@@ -93,8 +93,6 @@ const sessionSensorUnits = [
   '95:8e:53:46:7e:6e'
 ];
 
-const sessionDescription = 'This is a test session description.';
-
 const deviceColumns: GridColDef[] = [
   // { field: 'id', headerName: '#' },
   {
@@ -413,8 +411,8 @@ const SessionDetail = () => {
     setSessionName(data.name);
     setIsArchived(data.archived);
     setSessionStatus(data.status);
+    setSessionDescription(data.description);
 
-    console.log('Fetching project 3', data);
     console.log('Fetching project 3', data.projectId);
     const projectResponse = await fetch('/api/projects/id/' + data.projectId, {
       method: 'GET',

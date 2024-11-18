@@ -26,7 +26,10 @@ const CreateSessionDialog = ({ open, setOpen }) => {
           'Content-Type': 'application/json',
           credentials: 'include'
         },
-        body: JSON.stringify({ name, description, projectId })
+        body: JSON.stringify({
+          name,
+          description,
+          projectId })
       });
 
       console.log('Response', response);
@@ -71,7 +74,7 @@ const CreateSessionDialog = ({ open, setOpen }) => {
           fullWidth
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSubmitCreateSession()}
+          onKeyDown={(e) => e.key === 'Enter' && handleSubmitCreateSession}
         />
       </DialogContent>
       <DialogActions>

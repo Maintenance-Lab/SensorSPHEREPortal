@@ -60,6 +60,7 @@ router.get("/project/archived/:projectId", async (req, res) => {
 
 router.post("/create", async (req, res) => {
     const { body } = req;
+    console.log("in create api", body);
     const doc = await createSession(body);
     if (!doc) return res.status(400).json({ message: "Failed to create session" });
     return res.json(doc);

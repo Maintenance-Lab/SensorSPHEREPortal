@@ -162,6 +162,10 @@ const handleDecline = async (projectId) => {
 function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetchData, tab }) {
   const [open, setOpen] = useState(false);
   const activeSelection = selectedProjectIds.length > 0;
+  const [isDialogOpen, setDialogOpen] = useState(false);
+
+  const handleOpenDialog = () => setDialogOpen(true);
+  const handleCloseDialog = () => setDialogOpen(false);
 
   const handleCreateProject = useCallback(async () => {
     try {
@@ -219,11 +223,21 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
             color="error"
             startIcon={<DeleteOutlineOutlinedIcon />}
             disabled={!activeSelection}
-            onClick={handleDeleteProjects}
+            onClick={handleOpenDialog}
           >
             Delete
           </Button>
-          </>
+          <ConfirmationDialog
+            open={isDialogOpen}
+            onClose={handleCloseDialog}
+            onConfirm={async (projectIds) => {
+              await deleteProjects(projectIds);
+              setSelectedProjectIds([]); // Optioneel: selectie wissen
+              fetchData(); // Herlaad data na verwijdering
+            }}
+            projectIds={selectedProjectIds}
+          />
+          </> 
         )}
 
       </Stack>
@@ -234,6 +248,33 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
     </GridToolbarContainer>
   );
 };
+
+const ConfirmationDialog = ({ open, onClose, onConfirm, projectIds }) => (
+  <Dialog open={open} onClose={onClose}>
+    <DialogTitle>Confirm Deletion</DialogTitle>
+    <DialogContent>
+      <Typography>
+        Are you sure you want to delete the selected project(s)? This action cannot be undone.
+      </Typography>
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={onClose} color="primary">
+        Cancel
+      </Button>
+      <Button
+        onClick={() => {
+          onConfirm(projectIds);
+          onClose();
+        }}
+        color="error"
+        variant="contained"
+      >
+        Delete
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
+
 
 const Projects = () => {
   const [sortedProjects, setSortedProjects] = useState([]);

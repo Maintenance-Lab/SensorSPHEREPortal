@@ -397,7 +397,7 @@ const updateSession = async (sessionId, archived) => {
   }
 };
 
-const deleteSession = async (sessionId) => {
+const deleteSessions = async (sessionIds) => {
   console.log("in andere delete session");
   const res = await fetch('/api/sessions/delete', {
     method: 'DELETE',
@@ -406,7 +406,7 @@ const deleteSession = async (sessionId) => {
       credentials: 'include'
     },
     body: JSON.stringify({
-      ids: sessionId
+      ids: sessionIds
     })
   });
 
@@ -460,7 +460,12 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, sens
   const [open, setOpen] = useState(false);
   const activeSelection = selectedSessionIds.length > 0;
   const [name, setName] = useState(`Session ${new Date().toDateString()}`)
+
   const [description, setDescription] = useState('');
+  const [isDialogOpen, setDialogOpen] = useState(false);
+
+  const handleOpenDialog = () => setDialogOpen(true);
+  const handleCloseDialog = () => setDialogOpen(false);
 
   const handleCreateProject = useCallback(async () => {
     try {
@@ -544,10 +549,20 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, sens
           color="error"
           startIcon={<DeleteOutlineOutlinedIcon />}
           disabled={!activeSelection}
-          onClick={handleDeleteProjects}
+          onClick={handleOpenDialog}
         >
           Delete
         </Button>
+        <ConfirmationDialog
+            open={isDialogOpen}
+            onClose={handleCloseDialog}
+            onConfirm={async (sessionsIds) => {
+              await deleteSessions(sessionsIds);
+              setSelectedSessionIds([]); // Optioneel: selectie wissen
+              fetchData(); // Herlaad data na verwijdering
+            }}
+            projectIds={selectedSessionIds}
+          />
         </Stack>
        <Dialog open={open} onClose={() => setOpen(false)}>
          <DialogTitle>Create New Session</DialogTitle>
@@ -747,6 +762,33 @@ function CustomAddDevicesToolbar() {
     </GridToolbarContainer>
   );
 }
+
+const ConfirmationDialog = ({ open, onClose, onConfirm, projectIds }) => (
+  <Dialog open={open} onClose={onClose}>
+    <DialogTitle>Confirm Deletion</DialogTitle>
+    <DialogContent>
+      <Typography>
+        Are you sure you want to delete the selected project(s)? This action cannot be undone.
+      </Typography>
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={onClose} color="primary">
+        Cancel
+      </Button>
+      <Button
+        onClick={() => {
+          onConfirm(projectIds);
+          onClose();
+        }}
+        color="error"
+        variant="contained"
+      >
+        Delete
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
+
 
 const ProjectDetail = () => {
   const projectId = Number(useParams().projectId);

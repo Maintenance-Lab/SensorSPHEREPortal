@@ -78,10 +78,10 @@ router.put("/update-many", async (req, res) => {
     try {
       const response = await getSession(req, res);
       if (!response) return;
-  
-      const { account, sessions } = response;  
+
+      const { account, sessions } = response;
       const { accountId } = account;
-  
+
       const { body } = req;
       const toUpdate = [];
       const results = [];
@@ -89,22 +89,22 @@ router.put("/update-many", async (req, res) => {
       for (const item of body) {
         const { id, ...rest } = item;
         const cleaned = cleanBody(rest);
-  
+
         const project: any = await getSessionById(id);
-        
+
         if (!project) return res.status(404).json({ message: "Project not found" });
-  
+
         const mapping = await AccountProjectMapping.findOne({ where: { accountId, projectId: id } });
-  
+
         toUpdate.push({ id, cleaned });
       }
-  
+
       // Apply updates
       for (const { id, cleaned } of toUpdate) {
         const result = await updateSession(id, cleaned);
         results.push(result);
       }
-  
+
       return res.json(results);
     } catch (error) {
       console.error(error);
@@ -151,4 +151,3 @@ const cleanBody = (body: Partial<Session>) => {
     if (cleaned.projectId) delete cleaned.projectId;
     return cleaned;
   };
-  

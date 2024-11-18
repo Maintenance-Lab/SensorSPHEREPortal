@@ -39,6 +39,28 @@ TODO:
 - Handle auth middleware and check for correct permissions
 */
 
+router.post("/accept", async (req, res) => {
+  console.log("in accept")
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account, sessions } = response;
+  if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
+
+  const { accountId } = account;
+  if (!accountId) return res.status(400).json({ message: "Account ID is required" });
+
+  const { body } = req;
+  const { projectId } = body;
+
+  const mapping = await AccountProjectMapping.findOne({ where: { accountId: accountId, projectId: projectId, status: "pending" } });
+  if (!mapping) return res.status(401).json({ message: "Unauthorized" });
+
+  await mapping.update({ status: "active" });
+
+  return res.json({ message: "Accepted" });
+});
+
 router.get("/active", async (req, res) => {
   console.log("in get active")
   const response = await getSession(req, res);
@@ -129,6 +151,29 @@ router.post("/create", async (req, res) => {
 //   const results = await createProjects(body, accountId);
 //   return res.json(results);
 // });
+
+router.post("/decline", async (req, res) => {
+  console.log("in decline")
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account, sessions } = response;
+  if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
+
+  const { accountId } = account;
+  if (!accountId) return res.status(400).json({ message: "Account ID is required" });
+
+  const { body } = req;
+  const { projectId } = body;
+
+  const mapping = await AccountProjectMapping.findOne({ where: { accountId: accountId, projectId: projectId } });
+  if (!mapping) return res.status(401).json({ message: "Unauthorized" });
+
+  // delete mapping
+  await mapping.destroy();
+
+  return res.json({ message: "Declined" });
+});
 
 router.get("/latest", async (req, res) => {
   console.log("in latest")

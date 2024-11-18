@@ -129,6 +129,36 @@ const archiveProjects = async (projectIds, tab) => {
   });
 }
 
+const handleAccept = async (projectId) => {
+  const response = await fetch('/api/projects/accept', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({ projectId })
+  });
+
+  if (!response.ok) {
+    console.error('Failed to accept project');
+  }
+}
+
+const handleDecline = async (projectId) => {
+  const response = await fetch('/api/projects/decline', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({ projectId })
+  });
+
+  if (!response.ok) {
+    console.error('Failed to decline project');
+  }
+}
+
 function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetchData, tab }) {
   const [open, setOpen] = useState(false);
   const activeSelection = selectedProjectIds.length > 0;
@@ -173,6 +203,7 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
         <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
 
         {tab !== '6' && (
+          <>
           <Button
             variant="outlined"
             size="medium"
@@ -182,17 +213,19 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
           >
             {tab === '2' ? "Archive" : "Unarchive"}
           </Button>
+          <Button
+            variant="outlined"
+            size="medium"
+            color="error"
+            startIcon={<DeleteOutlineOutlinedIcon />}
+            disabled={!activeSelection}
+            onClick={handleDeleteProjects}
+          >
+            Delete
+          </Button>
+          </>
         )}
-        <Button
-          variant="outlined"
-          size="medium"
-          color="error"
-          startIcon={<DeleteOutlineOutlinedIcon />}
-          disabled={!activeSelection}
-          onClick={handleDeleteProjects}
-        >
-          Delete
-        </Button>
+
       </Stack>
       <CreateProjectDialog
         open={open}
@@ -244,9 +277,36 @@ const Projects = () => {
       )
     },
     { field: 'lastActive', headerName: 'Last Activity', flex: 1 },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      flex: 1,
+      sortable: false,
+      renderCell: (params) => (
+        currentTab === '6' ? (
+          <Box display="flex" justifyContent="flex-end" gap={1}>
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={() => handleAccept(params.id)}
+            >
+              Accept
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              size="small"
+              onClick={() => handleDecline(params.id)}
+            >
+              Decline
+            </Button>
+          </Box>
+        ) : null
+      ),
+    },
   ];
 
-  console.log("Sorted projects:", sortedProjects);
   const projectsRows: GridRowsProp = sortedProjects.map((project) => ({
     id: project.projectId,
     name: project.name,
@@ -284,14 +344,12 @@ const Projects = () => {
               rows={projectsRows}
               columns={projectsColumns}
               density="compact"
-              pageSizeOptions={[10, 25, 50]}
               autoHeight
               autosizeOnMount
               autosizeOptions={{ includeOutliers: true }}
               checkboxSelection={true}
               onRowSelectionModelChange={(newSelection) => setSelectedProjectIds(newSelection)}
               initialState={{
-                pagination: { paginationModel: { pageSize: 10 } },
                 columns: {
                   columnVisibilityModel: {
                     lastActive: false

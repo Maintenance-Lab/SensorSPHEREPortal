@@ -11,6 +11,8 @@ import {
 } from '@mui/material';
 import { Info, InfoOutlined } from '@mui/icons-material';
 
+const projectId = window.location.href.split('/').pop();
+
 const CreateSessionDialog = ({ open, setOpen }) => {
   const [name, setName] = useState(`Session ${new Date().toDateString()}`);
   const [description, setDescription] = useState('');
@@ -18,13 +20,13 @@ const CreateSessionDialog = ({ open, setOpen }) => {
   const handleSubmitCreateSession = useCallback(async () => {
     console.log('Creating session', name, description);
     try {
-      const response = await fetch('/api/session/create', {
+      const response = await fetch('/api/sessions/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           credentials: 'include'
         },
-        body: JSON.stringify({ name, description })
+        body: JSON.stringify({ name, description, projectId })
       });
 
       console.log('Response', response);

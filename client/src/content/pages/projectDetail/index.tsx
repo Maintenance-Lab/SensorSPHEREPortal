@@ -456,9 +456,11 @@ function CustomProjectSensorUnitsToolbar({ selectedDeviceIds, projectId, project
   );
 };
 
-function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, projectId, fetchData, tab }) {
+function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, sensorUnits, projectId, fetchData, fetchProject, tab }) {
   const [open, setOpen] = useState(false);
   const activeSelection = selectedSessionIds.length > 0;
+  const [name, setName] = useState(`Session ${new Date().toDateString()}`)
+  const [description, setDescription] = useState('');
 
   const handleCreateProject = useCallback(async () => {
     try {
@@ -467,6 +469,17 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, proj
       console.error(error);
     }
   }, []);
+
+    const handleSubmitCreateSession = async () => {
+    try {
+      await createSession(projectId, name, description, sensorUnits);
+      setOpen(false);
+      fetchProject();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
 
   const archiveSessions = async (sessionIds, tab) => {
     const archived = tab === '2' ? true : false;
@@ -510,10 +523,10 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, proj
         <Button
           variant="contained"
           color="primary"
-          onClick={handleCreateProject}
+          onClick={() => setOpen(true)}
           startIcon={<AddIcon />}
         >
-          Create New Session
+          Create New Session...
         </Button>
         <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
         <Button
@@ -535,11 +548,63 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, proj
         >
           Delete
         </Button>
-      </Stack>
-      <CreateSessionDialog
-        open={open}
-        setOpen={setOpen}
-      />
+        </Stack>
+       <Dialog open={open} onClose={() => setOpen(false)}>
+         <DialogTitle>Create New Session</DialogTitle>
+         <DialogContent>
+           <Stack direction="row" spacing={1} mb={2} color="secondary.main">
+             <InfoOutlined />
+             <List sx={{ p: 0 }}>
+               <ListItem sx={{ px: 0, pt: 0 }}>
+                 <Typography variant="body1">
+                   This project's devices will be used to collect data:
+                 </Typography>
+               </ListItem>
+               {sensorUnits?.map((macAddress) => (
+                <ListItem key={macAddress} sx={{ px: 0 }}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Usb />
+                    <Typography variant="body1" fontWeight="500">
+                      {devicesPlaceholder[macAddress].type}
+                    </Typography>
+                    <Typography variant="body2">
+                      {macAddress}
+                    </Typography>
+                    <Typography variant="body2">
+                      {devicesPlaceholder[macAddress].sensors.map((sensor) => sensor.name).join(', ')}
+                    </Typography>
+                  </Stack>
+                </ListItem>
+              ))}
+            </List>
+          </Stack>
+          <TextField
+            autoFocus
+            onFocus={(event) => { event.target.select(); }}
+            margin="dense"
+            label="Session Name"
+            fullWidth
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && document.getElementById('description-input').focus()}
+          />
+          <TextField
+            id="description-input"
+            margin="dense"
+            label="Session Description"
+            fullWidth
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmitCreateSession()}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={handleSubmitCreateSession} variant="contained" color="primary">
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
     </GridToolbarContainer>
   );
 };
@@ -704,6 +769,7 @@ const ProjectDetail = () => {
   const [activeStep, setActiveStep] = useState(3);
   const [sortedSessions, setSortedSessions] = useState([]);
   const [currentTab, setTab] = useState('2');
+  
 
   const handleTabChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
     setTab(newCurrentTab);
@@ -1081,6 +1147,8 @@ const ProjectDetail = () => {
                       setSelectedSessionIds={setSelectedSessionIds}
                       projectId={projectId}
                       fetchData={fetchData}
+                      fetchProject={fetchProject}
+                      sensorUnits={projectSensorUnits}
                       tab={currentTab}
                     />,
                   }}

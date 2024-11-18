@@ -18,13 +18,16 @@ const CreateSessionDialog = ({ open, setOpen }) => {
   const handleSubmitCreateSession = useCallback(async () => {
     console.log('Creating session', name, description);
     try {
-      const response = await fetch('/api/session/create', {
+      const response = await fetch('/api/sessions/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           credentials: 'include'
         },
-        body: JSON.stringify({ name, description })
+        body: JSON.stringify({
+          name,
+          description,
+         })
       });
 
       console.log('Response', response);
@@ -69,7 +72,7 @@ const CreateSessionDialog = ({ open, setOpen }) => {
           fullWidth
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSubmitCreateSession()}
+          onKeyDown={(e) => e.key === 'Enter' && handleSubmitCreateSession}
         />
       </DialogContent>
       <DialogActions>

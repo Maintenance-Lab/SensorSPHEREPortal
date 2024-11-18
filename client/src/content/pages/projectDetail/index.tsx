@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Button,
   TextField,
@@ -35,9 +35,13 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';
 import FaceIcon from '@mui/icons-material/Face';
 import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
+import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { Add, ArchiveOutlined, Cancel, DeleteOutline, Devices, InfoOutlined, Inventory, Remove, UnarchiveOutlined, Usb } from '@mui/icons-material';
 import { is } from 'date-fns/locale';
+import CreateSessionDialog from './CreateSessionDialog';
+
 
 const DeviceStatus = ({ status, project }) => {
   let statusColor = '';
@@ -256,6 +260,22 @@ const updateProject = async (projectId: number, name: string, description: strin
   }
 };
 
+const archiveSessions = async (sessionIds, tab) => {
+  const archived = tab === '2' ? true : false;
+  const response = await fetch('/api/session/update-many', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify(
+      [
+        ...sessionIds.map((id) => ({ id, archived: archived }))
+      ]
+    )
+  });
+}
+
 const addCollaborator = async (projectId, email) => {
   const res = await fetch('/api/project/collaborator/add', {
     method: 'POST',
@@ -436,134 +456,222 @@ function CustomProjectSensorUnitsToolbar({ selectedDeviceIds, projectId, project
   );
 };
 
-function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, sensorUnits, projectId, fetchProject }) {
-  const activeSelection = selectedSessionIds.length > 0;
+function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, projectId, fetchData, tab }) {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState(`Session ${new Date().toDateString()}`)
-  const [description, setDescription] = useState('');
+  const activeSelection = selectedSessionIds.length > 0;
 
-  const handleSubmitCreateSession = async () => {
+  const handleCreateProject = useCallback(async () => {
     try {
-      await createSession(projectId, name, description, sensorUnits);
-      setOpen(false);
-      fetchProject();
+      setOpen(true);
     } catch (error) {
       console.error(error);
     }
-  };
+  }, []);
 
-  const handleArchiveSessions = async () => {
+  const archiveSessions = async (sessionIds, tab) => {
+    const archived = tab === '2' ? true : false;
+    const response = await fetch('/api/sessions/update-many', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      },
+      body: JSON.stringify(
+        [
+          ...sessionIds.map((id) => ({ id, archived: archived }))
+        ]
+      )
+    });
+  }
+
+  const handleDeleteProjects = useCallback(async () => {
     try {
-      for (const sessionId of selectedSessionIds) {
-        await updateSession(sessionId, true);
-      }
-      fetchProject();
+      // await deleteSessions(selectedSessionIds);
+      fetchData();
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [selectedSessionIds]);
 
-  const handleDeleteSessions = async () => {
-    console.log("in handle delete sessions project detail");
+  const handleArchiveProjects = useCallback(async () => {
     try {
-      await deleteSession(selectedSessionIds);
-      fetchProject();
+      await archiveSessions(selectedSessionIds, tab);
+      console.log("fetching data again")
+      fetchData();
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [selectedSessionIds]);
 
+  
   return (
     <GridToolbarContainer sx={{ padding: 1 }}>
       <Stack direction="row" spacing={1}>
         <Button
           variant="contained"
           color="primary"
-          onClick={() => setOpen(true)}
+          onClick={handleCreateProject}
           startIcon={<AddIcon />}
         >
-          Create New Session...
+          Create New Session
         </Button>
         <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
         <Button
           variant="outlined"
           size="medium"
-          startIcon={<ArchiveOutlined />}
+          startIcon={<ArchiveOutlinedIcon />}
           disabled={!activeSelection}
-          onClick={handleArchiveSessions}
+          onClick={handleArchiveProjects}
         >
-          Archive
+          {tab === '2' ? "Archive" : "Unarchive"}
         </Button>
         <Button
           variant="outlined"
           size="medium"
           color="error"
-          startIcon={<DeleteOutline />}
+          startIcon={<DeleteOutlineOutlinedIcon />}
           disabled={!activeSelection}
-          onClick={handleDeleteSessions}
+          onClick={handleDeleteProjects}
         >
           Delete
         </Button>
       </Stack>
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Create New Session</DialogTitle>
-        <DialogContent>
-          <Stack direction="row" spacing={1} mb={2} color="secondary.main">
-            <InfoOutlined />
-            <List sx={{ p: 0 }}>
-              <ListItem sx={{ px: 0, pt: 0 }}>
-                <Typography variant="body1">
-                  This project's devices will be used to collect data:
-                </Typography>
-              </ListItem>
-              {sensorUnits?.map((macAddress) => (
-                <ListItem key={macAddress} sx={{ px: 0 }}>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Usb />
-                    <Typography variant="body1" fontWeight="500">
-                      {devicesPlaceholder[macAddress].type}
-                    </Typography>
-                    <Typography variant="body2">
-                      {macAddress}
-                    </Typography>
-                    <Typography variant="body2">
-                      {devicesPlaceholder[macAddress].sensors.map((sensor) => sensor.name).join(', ')}
-                    </Typography>
-                  </Stack>
-                </ListItem>
-              ))}
-            </List>
-          </Stack>
-          <TextField
-            autoFocus
-            onFocus={(event) => { event.target.select(); }}
-            margin="dense"
-            label="Session Name"
-            fullWidth
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && document.getElementById('description-input').focus()}
-          />
-          <TextField
-            id="description-input"
-            margin="dense"
-            label="Session Description"
-            fullWidth
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSubmitCreateSession()}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleSubmitCreateSession} variant="contained" color="primary">
-            Create
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <CreateSessionDialog
+        open={open}
+        setOpen={setOpen}
+      />
     </GridToolbarContainer>
   );
-}
+};
+
+// function CustomProjectSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, sensorUnits, projectId, fetchProject }) {
+//   const activeSelection = selectedSessionIds.length > 0;
+//   const [open, setOpen] = useState(false);
+//   const [name, setName] = useState(`Session ${new Date().toDateString()}`)
+//   const [description, setDescription] = useState('');
+
+//   const handleSubmitCreateSession = async () => {
+//     try {
+//       await createSession(projectId, name, description, sensorUnits);
+//       setOpen(false);
+//       fetchProject();
+//     } catch (error) {
+//       console.error(error);
+//     }
+//   };
+
+//   const handleArchiveSessions = async () => {
+//     try {
+//       for (const sessionId of selectedSessionIds) {
+//         await updateSession(sessionId, true);
+//       }
+//       fetchProject();
+//     } catch (error) {
+//       console.error(error);
+//     }
+//   };
+
+//   const handleDeleteSessions = async () => {
+//     console.log("in handle delete sessions project detail");
+//     try {
+//       await deleteSession(selectedSessionIds);
+//       fetchProject();
+//     } catch (error) {
+//       console.error(error);
+//     }
+//   };
+
+//   return (
+//     <GridToolbarContainer sx={{ padding: 1 }}>
+//       <Stack direction="row" spacing={1}>
+//         <Button
+//           variant="contained"
+//           color="primary"
+//           onClick={() => setOpen(true)}
+//           startIcon={<AddIcon />}
+//         >
+//           Create New Session...
+//         </Button>
+//         <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
+//         <Button
+//           variant="outlined"
+//           size="medium"
+//           startIcon={<ArchiveOutlined />}
+//           disabled={!activeSelection}
+//           onClick={handleArchiveSessions}
+//         >
+//           Archive
+//         </Button>
+//         <Button
+//           variant="outlined"
+//           size="medium"
+//           color="error"
+//           startIcon={<DeleteOutline />}
+//           disabled={!activeSelection}
+//           onClick={handleDeleteSessions}
+//         >
+//           Delete
+//         </Button>
+//       </Stack>
+//       <Dialog open={open} onClose={() => setOpen(false)}>
+//         <DialogTitle>Create New Session</DialogTitle>
+//         <DialogContent>
+//           <Stack direction="row" spacing={1} mb={2} color="secondary.main">
+//             <InfoOutlined />
+//             <List sx={{ p: 0 }}>
+//               <ListItem sx={{ px: 0, pt: 0 }}>
+//                 <Typography variant="body1">
+//                   This project's devices will be used to collect data:
+//                 </Typography>
+//               </ListItem>
+//               {sensorUnits?.map((macAddress) => (
+//                 <ListItem key={macAddress} sx={{ px: 0 }}>
+//                   <Stack direction="row" spacing={1} alignItems="center">
+//                     <Usb />
+//                     <Typography variant="body1" fontWeight="500">
+//                       {devicesPlaceholder[macAddress].type}
+//                     </Typography>
+//                     <Typography variant="body2">
+//                       {macAddress}
+//                     </Typography>
+//                     <Typography variant="body2">
+//                       {devicesPlaceholder[macAddress].sensors.map((sensor) => sensor.name).join(', ')}
+//                     </Typography>
+//                   </Stack>
+//                 </ListItem>
+//               ))}
+//             </List>
+//           </Stack>
+//           <TextField
+//             autoFocus
+//             onFocus={(event) => { event.target.select(); }}
+//             margin="dense"
+//             label="Session Name"
+//             fullWidth
+//             value={name}
+//             onChange={(e) => setName(e.target.value)}
+//             onKeyDown={(e) => e.key === 'Enter' && document.getElementById('description-input').focus()}
+//           />
+//           <TextField
+//             id="description-input"
+//             margin="dense"
+//             label="Session Description"
+//             fullWidth
+//             value={description}
+//             onChange={(e) => setDescription(e.target.value)}
+//             onKeyDown={(e) => e.key === 'Enter' && handleSubmitCreateSession()}
+//           />
+//         </DialogContent>
+//         <DialogActions>
+//           <Button onClick={() => setOpen(false)}>Cancel</Button>
+//           <Button onClick={handleSubmitCreateSession} variant="contained" color="primary">
+//             Create
+//           </Button>
+//         </DialogActions>
+//       </Dialog>
+//     </GridToolbarContainer>
+//   );
+// }
 
 function CustomAddDevicesToolbar() {
   return (
@@ -968,12 +1076,12 @@ const ProjectDetail = () => {
                   checkboxSelection
                   onRowSelectionModelChange={(newSelection) => setSelectedSessionIds(newSelection)}
                   slots={{
-                    toolbar: () => <CustomProjectSessionsToolbar
+                    toolbar: () => <CustomSessionsToolbar
                       selectedSessionIds={selectedSessionIds}
                       setSelectedSessionIds={setSelectedSessionIds}
-                      sensorUnits={projectSensorUnits}
                       projectId={projectId}
-                      fetchProject={fetchProject}
+                      fetchData={fetchData}
+                      tab={currentTab}
                     />,
                   }}
                   sx={{

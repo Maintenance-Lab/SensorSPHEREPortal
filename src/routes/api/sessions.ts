@@ -10,7 +10,7 @@ import {
     deleteSessions
 } from '../../services/Sessions.js';
 import { getSession } from '../../utils.js';
-import { Session } from 'inspector';
+import Session from '../../models/Session.js';
 import AccountProjectMapping from '../../models/mappings/AccountProjectMapping.js';
 
 /* APIS DIE WERKEN - volgens mij (amber)
@@ -42,7 +42,7 @@ router.get("/project/:projectId", async (req, res) => {
 });
 
 router.get("/project/active/:projectId", async (req, res) => {
-    console.log("in get active------------------------------")
+    console.log("in get active")
     const projectId = Number(req.params.projectId);
     console.log("projectId voor de sessions", projectId)
     const doc = await getActiveSessionsByProject(projectId);
@@ -72,6 +72,45 @@ router.put("/update/:id", async (req, res) => {
     if (!doc) return res.status(400).json({ message: "Failed to update session" });
     return res.json(doc);
 });
+
+router.put("/update-many", async (req, res) => {
+    console.log("in update many van sessions")
+    try {
+      const response = await getSession(req, res);
+      if (!response) return;
+  
+      const { account, sessions } = response;  
+      const { accountId } = account;
+  
+      const { body } = req;
+      const toUpdate = [];
+      const results = [];
+      // create cleaned update body and check if you are the owner
+      for (const item of body) {
+        const { id, ...rest } = item;
+        const cleaned = cleanBody(rest);
+  
+        const project: any = await getSessionById(id);
+        
+        if (!project) return res.status(404).json({ message: "Project not found" });
+  
+        const mapping = await AccountProjectMapping.findOne({ where: { accountId, projectId: id } });
+  
+        toUpdate.push({ id, cleaned });
+      }
+  
+      // Apply updates
+      for (const { id, cleaned } of toUpdate) {
+        const result = await updateSession(id, cleaned);
+        results.push(result);
+      }
+  
+      return res.json(results);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
 router.delete("/delete", async (req, res) => {
     console.log("in delete session");
@@ -103,3 +142,13 @@ router.delete("/delete", async (req, res) => {
 });
 
 export default router;
+
+const cleanBody = (body: Partial<Session>) => {
+    console.log(body);
+    const cleaned = { ...body };
+    if (cleaned.meta) delete cleaned.meta;
+    if (cleaned.createdAt) delete cleaned.createdAt;
+    if (cleaned.projectId) delete cleaned.projectId;
+    return cleaned;
+  };
+  

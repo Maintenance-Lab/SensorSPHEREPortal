@@ -33,48 +33,12 @@ const useStyles = makeStyles((theme: Theme) => ({
   }
 }));
 
-// const data: GridRowsProp = sortedProjects.map((project) => ({
-// interface DataProps {
-//   id: number;
-//   title: string;
-//   author_id: number;
-//   published_year: number;
-// }
 
 export const Overview = () => {
-  // export const bookData = () => {
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-      fetchTest()
-    }, [])
-
-  const fetchTest = async () => {
-    const res = await fetch('/api/test/testing/', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        credentials: 'include'
-      }
-    });
-
-    if (!res.ok) {
-      console.error('Failed to fetch data');
-      return [];
-    }
-    const data = await res.json();
-    setData(data);
-    console.log(data);
-    // return data.title;
-  }
-
-
   const classes = useStyles();
   const user = getUser();
   const navigate = useNavigate();
   // const data = fetchTest();
-  // data = fetchTest();
 
   const redirectToLogin = () => navigate('/login');
   const redirectToProjects = () => navigate('/projects');

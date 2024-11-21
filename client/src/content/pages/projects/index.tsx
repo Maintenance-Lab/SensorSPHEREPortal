@@ -240,7 +240,7 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
             }}
             projectIds={selectedProjectIds}
           />
-          </> 
+          </>
         )}
 
       </Stack>

@@ -8,6 +8,7 @@ import {
   updateProject,
   // getArchivedProjectsByOwner,
   deleteProjects,
+  deleteProjectsForAll,
   getActiveProjectsByAccountId,
   getArchivedProjectsByAccountId,
 } from '../../services/Projects.js';
@@ -329,14 +330,14 @@ router.put("/update-many", async (req, res) => {
 // });
 
 router.post("/delete", async (req, res) => {
-  console.log("in delete project")
   const { ids } = req.body;
+  console.log("in delete project ", ids);
   const response = await getSession(req, res);
   if (!response) return;
 
   const { account, sessions } = response;
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
-  const { accountId } = account;
+  const accountId : number = account.accountId!;
 
   // Can contain one or multiple project ids
   const project: any = [];
@@ -352,7 +353,28 @@ router.post("/delete", async (req, res) => {
   }
 
   // ids can be one or multiple project ids
-  const result = await deleteProjects(ids);
+  const result = await deleteProjects(ids, accountId);
+  return res.json(result);
+});
+
+router.post("/delete-for-all", async (req, res) => {
+  const { ids } = req.body;
+  console.log("in delete for all ", ids)
+
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account, sessions } = response;
+  if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
+  const accountId : number = account.accountId!;
+
+  for (const id of ids) {
+    const mapping = await AccountProjectMapping.findOne({ where: { accountId, projectId: id } });
+    if (!mapping) return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  // ids can be one or multiple project ids
+  const result = await deleteProjectsForAll(ids);
   return res.json(result);
 });
 

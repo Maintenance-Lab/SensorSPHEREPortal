@@ -69,6 +69,19 @@ router.post("/create", async (req, res) => {
 router.put("/update/:id", async (req, res) => {
     const id = Number(req.params.id);
     const { body } = req;
+
+    const response = await getSession(req, res);
+    if (!response) return;
+
+    const { account, sessions } = response;
+    if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
+
+    const project = await getSessionById(id);
+    if (!project) return res.status(404).json({ message: "Project not found" });
+
+    const mapping = await AccountProjectMapping.findOne({ where: { accountId: account.accountId, projectId: project.projectId } });
+    if (!mapping) return res.status(401).json({ message: "Unauthorized" });
+
     const doc = await updateSession(id, body);
     if (!doc) return res.status(400).json({ message: "Failed to update session" });
     return res.json(doc);
@@ -86,6 +99,7 @@ router.put("/update-many", async (req, res) => {
       const { body } = req;
       const toUpdate = [];
       const results = [];
+
       // create cleaned update body and check if you are the owner
       for (const item of body) {
         const { id, ...rest } = item;
@@ -96,6 +110,7 @@ router.put("/update-many", async (req, res) => {
         if (!project) return res.status(404).json({ message: "Project not found" });
 
         const mapping = await AccountProjectMapping.findOne({ where: { accountId, projectId: id } });
+        if (!mapping) return res.status(401).json({ message: "Unauthorized" });
 
         toUpdate.push({ id, cleaned });
       }

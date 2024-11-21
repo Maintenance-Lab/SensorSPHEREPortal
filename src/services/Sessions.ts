@@ -12,6 +12,15 @@ import SessionDeviceMapping from '../models/mappings/SessionDeviceMapping.js';
     deleteSessions
 */
 
+const updateProjectLastActive = async (projectId: number) => {
+  const project = await Project.findByPk(projectId);
+  if (!project) return null;
+  project.lastActive = new Date();
+  project.save();
+
+  return project;
+}
+
 
 export const getSessionById = async (id: number): Promise<Session> => {
   console.log("in getSessionById", id);
@@ -73,6 +82,11 @@ export const createSession = async (item: Partial<Session>) => {
     const result = await Session.create(item);
     if (!result) return resolve(null);
 
+    // update the lastActive field of the project
+    const project = await Project.findByPk(result.projectId);
+    if (!project) return resolve(null);
+    updateProjectLastActive(project.projectId);
+
     return resolve(result);
   });
 };
@@ -84,10 +98,16 @@ export const updateSession = async (id: number, item: Partial<Session>) => {
 
     const { sessionId, ...rest } = item;
     const newItem = { ...rest };
+    newItem.lastActive = new Date();
 
     const result = await Session.findOne({ where: { SessionId: id }});
     if (!result) return reject(new Error("Session not found"));
     result.update(newItem);
+
+    // update the lastActive field of the project too;
+    const project = await Project.findByPk(result.projectId);
+    if (!project) return reject(new Error("Project not found"));
+    updateProjectLastActive(project.projectId);
 
     return resolve(result);
   });
@@ -95,9 +115,16 @@ export const updateSession = async (id: number, item: Partial<Session>) => {
 
 export const deleteSessions = async (ids: Array<number>) => {
   console.log("in deleteSessions function", ids);
-  return new Promise(async (resolve) => {
+  return new Promise(async (resolve, reject) => {
     const results = [];
     for (const id of ids) {
+      const session = await Session.findByPk(id);
+      if (!session) return reject(new Error("Session not found"));
+
+      const project = await Project.findByPk(session.projectId);
+      if (!project) return reject(new Error("Project not found"));
+      updateProjectLastActive(project.projectId);
+
       await SessionDeviceMapping.destroy({ where: { sessionId: id }});
       const result = await Session.destroy({ where: { sessionId: id }});
       results.push(result);

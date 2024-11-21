@@ -15,6 +15,8 @@ import Session from 'src/models/Session.js';
     getActiveProjectsByAccountId
     getArchivedProjectsByAccountId
     createProject
+    deleteProjects
+    deleteProjectsForAll
 */
 
 export const getAllProjects = async () => {
@@ -106,6 +108,7 @@ export const updateProject = async (id: number, item: Partial<Project>) => {
 
     const { projectId, ...rest } = item;
     const newItem = { ...rest };
+    newItem.lastActive = new Date();
 
     const result = await Project.findOne({ where: { projectId: id }});
     if (!result) return reject(new Error("Project not found"));
@@ -123,26 +126,61 @@ export const updateAccountProjectMapping = async (accountId: number, projectId: 
   });
 }
 
-export const deleteProjects = async (ids: Array<number>) => {
+export const deleteProjects = async (ids: Array<number>, accountId: number) => {
   return new Promise(async (resolve) => {
     const results = [];
     for (const id of ids) {
       //  *** TODO: Review with group if this is the best solution,
       // alternative option: add "ON DELETE CASCADE" to the foreign key in the database ***
-      await AccountProjectMapping.destroy({ where: { projectId: id }});
-      const result = await Project.destroy({ where: { projectId: id }});
 
-      results.push(result);
+      const mappings = await AccountProjectMapping.findAll({ where: { projectId: id }});
+      if (!mappings) return resolve([]);
+
+      await AccountProjectMapping.destroy({ where: { projectId: id, accountId: accountId }});
+
+      // if project is not linked to any other account or only pending projects exist, delete project
+      // if (mappings.length == 1) {
+      if (mappings.length == 1 || mappings.every((m) => m.status == 'pending')) {
+        const result = await Project.destroy({ where: { projectId: id }});
+        results.push(result);
+
+        // delete sessions
+        const sessions = [];
+        for (const id of ids) {
+          const doc = await getSessionsByProject(id) as Session[];
+          sessions.push(...doc.map((s) => s.dataValues.sessionId));
+        }
+
+        await deleteSessions(sessions);
+      }
     }
 
-    // delete sessions
-    const sessions = [];
+    return resolve(results);
+  });
+}
+
+// for future use maybe
+export const deleteProjectsForAll = async (ids: Array<number>) => {
+  return new Promise(async (resolve) => {
+    const results = [];
     for (const id of ids) {
-      const doc = await getSessionsByProject(id) as Session[];
-      sessions.push(...doc.map((s) => s.dataValues.sessionId));
+      //  *** TODO: Review with group if this is the best solution,
+      // alternative option: add "ON DELETE CASCADE" to the foreign key in the database ***
+
+      await AccountProjectMapping.destroy({ where: { projectId: id}});
+      const result = await Project.destroy({ where: { projectId: id }});
+      results.push(result);
+
+      // delete sessions
+      const sessions = [];
+      for (const id of ids) {
+        const doc = await getSessionsByProject(id) as Session[];
+        sessions.push(...doc.map((s) => s.dataValues.sessionId));
+      }
+
+      await deleteSessions(sessions);
     }
 
-    await deleteSessions(sessions);
     return resolve(results);
   });
 };

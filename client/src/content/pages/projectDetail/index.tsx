@@ -42,7 +42,6 @@ import { Add, ArchiveOutlined, Cancel, DeleteOutline, Devices, InfoOutlined, Inv
 import { is } from 'date-fns/locale';
 import CreateSessionDialog from './CreateSessionDialog';
 
-
 const DeviceStatus = ({ status, project }) => {
   let statusColor = '';
   let statusLabel = '';
@@ -521,7 +520,7 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, sens
     }
   }, [selectedSessionIds]);
 
-  
+
   return (
     <GridToolbarContainer sx={{ padding: 1 }}>
       <Stack direction="row" spacing={1}>
@@ -811,7 +810,7 @@ const ProjectDetail = () => {
   const [activeStep, setActiveStep] = useState(3);
   const [sortedSessions, setSortedSessions] = useState([]);
   const [currentTab, setTab] = useState('2');
-  
+
 
   const handleTabChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
     setTab(newCurrentTab);
@@ -955,7 +954,7 @@ const ProjectDetail = () => {
       <Dialog open={openAddDevices} onClose={() => setOpenAddDevices(false)} fullWidth maxWidth="lg">
         <DialogTitle>Add Devices To {projectName}</DialogTitle>
         <DialogContent>
-        
+
           <DataGrid
             rows={addDevicesRows}
             columns={addDevicesColumns}
@@ -1092,7 +1091,7 @@ const ProjectDetail = () => {
                 Add Collaborator
               </Button>
             }
-            {!isArchived && 
+            {!isArchived &&
               <Button
                 variant="outlined"
                 startIcon={<ArchiveOutlined />}

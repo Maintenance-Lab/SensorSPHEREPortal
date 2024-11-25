@@ -767,7 +767,7 @@ const ConfirmationDialog = ({ open, onClose, onConfirm, projectIds }) => (
     <DialogTitle>Confirm Deletion</DialogTitle>
     <DialogContent>
       <Typography>
-        Are you sure you want to delete the selected project(s)? This action cannot be undone.
+        Are you sure you want to delete the selected session(s)? This action cannot be undone.
       </Typography>
     </DialogContent>
     <DialogActions>
@@ -1097,7 +1097,7 @@ const ProjectDetail = () => {
                 startIcon={<ArchiveOutlined />}
                 onClick={() => handleArchiveProject(true)}
               >
-                Archive
+                Archive Project
               </Button>
             }
             {isArchived &&
@@ -1106,7 +1106,7 @@ const ProjectDetail = () => {
                 startIcon={<UnarchiveOutlined />}
                 onClick={() => handleArchiveProject(false)}
               >
-                Unarchive
+                Unarchive Project
               </Button>
             }
             <Button
@@ -1121,7 +1121,7 @@ const ProjectDetail = () => {
               }}
               onClick={handleDeleteProject}
             >
-              Delete
+              Delete Project
             </Button>
           </Stack>
         </Stack>

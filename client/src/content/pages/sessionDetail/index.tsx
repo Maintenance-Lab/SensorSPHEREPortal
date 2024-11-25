@@ -566,7 +566,7 @@ const SessionDetail = () => {
                 startIcon={<ArchiveOutlined />}
                 onClick={() => handleArchiveSession(true)}
               >
-                Archive
+                Archive Session
               </Button>
             }
             {isArchived &&
@@ -575,7 +575,7 @@ const SessionDetail = () => {
                 startIcon={<UnarchiveOutlined />}
                 onClick={() => handleArchiveSession(false)}
               >
-                Unarchive
+                Unarchive Session
               </Button>
             }
             <Button
@@ -590,7 +590,7 @@ const SessionDetail = () => {
               }}
               onClick={handleDeleteSession}
             >
-              Delete
+              Delete Session
             </Button>
           </Stack>
         </Stack>

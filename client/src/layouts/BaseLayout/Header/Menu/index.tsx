@@ -16,13 +16,13 @@ const ListWrapper = styled(Box)(
         .MuiTouchRipple-root {
             display: none;
         }
-        
+
         .MuiListItem-root {
             transition: ${theme.transitions.create(['color', 'fill'])};
-            
+
             &.MuiListItem-indicators {
                 padding: ${theme.spacing(1, 2)};
-            
+
                 .MuiListItemText-root {
                     .MuiTypography-root {
                         &:before {
@@ -44,9 +44,9 @@ const ListWrapper = styled(Box)(
                 &.active,
                 &:active,
                 &:hover {
-                
+
                     background: transparent;
-                
+
                     .MuiListItemText-root {
                         .MuiTypography-root {
                             &:before {
@@ -96,46 +96,6 @@ function HeaderMenu() {
               }}
             />
           </ListItem>
-          <ListItem
-            classes={{ root: 'MuiListItem-indicators' }}
-            button
-            component={NavLink}
-            to="/projects"
-          >
-            <ListItemText
-              primaryTypographyProps={{ noWrap: true }}
-              primary="Projects"
-            />
-          </ListItem>
-          <ListItem
-            classes={{ root: 'MuiListItem-indicators' }}
-            button
-            component={NavLink}
-            to="/contact"
-          >
-            <ListItemText
-              primaryTypographyProps={{ noWrap: true }}
-              primary="Contact Us"
-            />
-          </ListItem>
-          {/* <ListItem
-            classes={{ root: 'MuiListItem-indicators' }}
-            button
-            ref={ref}
-            onClick={handleOpen}
-          >
-            <ListItemText
-              primaryTypographyProps={{ noWrap: true }}
-              primary={
-                <Box display="flex" alignItems="center">
-                  Others
-                  <Box display="flex" alignItems="center" pl={0.3}>
-                    <ExpandMoreTwoToneIcon fontSize="small" />
-                  </Box>
-                </Box>
-              }
-            />
-          </ListItem> */}
         </List>
       </ListWrapper>
     </>

@@ -44,8 +44,7 @@ const initDb = () => {
                 description TEXT,
                 meta TEXT,
                 createdAt DATE,
-                lastActive DATE,
-                archived INTEGER
+                lastActive DATE
             );
         `);
 
@@ -54,6 +53,7 @@ const initDb = () => {
             CREATE TABLE IF NOT EXISTS AccountProjectMapping (
                 accountId INTEGER,
                 projectId INTEGER,
+                status TEXT,
                 PRIMARY KEY (accountId, projectId),
                 FOREIGN KEY (accountId) REFERENCES Account(accountId),
                 FOREIGN KEY (projectId) REFERENCES Project(projectId)

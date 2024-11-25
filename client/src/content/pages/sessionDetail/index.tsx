@@ -13,7 +13,11 @@ import {
   ListItemButton,
   Checkbox,
   Switch,
-  LinearProgress
+  LinearProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
@@ -385,6 +389,11 @@ const SessionDetail = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
 
+  const [open, setOpen] = useState(false);
+  const [isDialogOpen, setDialogOpen] = useState(false);
+  const handleOpenDialog = () => setDialogOpen(true);
+  const handleCloseDialog = () => setDialogOpen(false);
+
   // const deviceRows: GridRowsProp = sessionSensorUnits.map((macAddress) => ({
   //   id: macAddress,
   //   type: devicesPlaceholder[macAddress].type,
@@ -448,7 +457,7 @@ const SessionDetail = () => {
     fetchSession();
   };
 
-  const handleDeleteSession = async () => {
+  const handleDeleteSession = async (sessionId) => {
     console.log("project id in delete session detail", projectId);
     await deleteSession(sessionId);
     if (!projectId) {
@@ -460,6 +469,32 @@ const SessionDetail = () => {
   useEffect(() => {
     fetchSession();
   }, []);
+
+  const ConfirmationDialog = ({ open, onClose, onConfirm, sessionId }) => (
+    <Dialog open={open} onClose={onClose}>
+      <DialogTitle>Confirm Deletion</DialogTitle>
+      <DialogContent>
+        <Typography>
+          Are you sure you want to delete this session? This action cannot be undone.
+        </Typography>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="primary">
+          Cancel
+        </Button>
+        <Button
+          onClick={() => {
+            onConfirm(sessionId);
+            onClose();
+          }}
+          color="error"
+          variant="contained"
+        >
+          Delete
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
 
   return (
     <div>
@@ -566,7 +601,7 @@ const SessionDetail = () => {
                 startIcon={<ArchiveOutlined />}
                 onClick={() => handleArchiveSession(true)}
               >
-                Archive
+                Archive Session
               </Button>
             }
             {isArchived &&
@@ -575,7 +610,7 @@ const SessionDetail = () => {
                 startIcon={<UnarchiveOutlined />}
                 onClick={() => handleArchiveSession(false)}
               >
-                Unarchive
+                Unarchive Session
               </Button>
             }
             <Button
@@ -588,10 +623,18 @@ const SessionDetail = () => {
                   backgroundColor: 'error.main'
                 }
               }}
-              onClick={handleDeleteSession}
+              onClick={handleOpenDialog}
             >
-              Delete
+              Delete Session
             </Button>
+            <ConfirmationDialog
+            open={isDialogOpen}
+            onClose={handleCloseDialog}
+            onConfirm={async (sessionId) => {
+              await handleDeleteSession(sessionId);
+            }}
+            sessionId={sessionId}
+          />
           </Stack>
         </Stack>
       </PageTitleWrapper>

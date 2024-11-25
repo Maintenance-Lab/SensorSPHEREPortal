@@ -28,6 +28,9 @@ import {
   GridToolbarQuickFilter
 } from '@mui/x-data-grid';
 import CreateProjectDialog from './CreateProjectDialog';
+import { GridColumnVisibilityModel } from '@mui/x-data-grid';
+import { set } from 'date-fns';
+
 
 const fetchActiveProjects = async () => {
   const res = await fetch('/api/projects/active', {
@@ -59,6 +62,24 @@ const fetchArchivedProjects = async () => {
     console.error('Failed to fetch data');
     return [];
   }
+  const data = await res.json();
+  return data;
+}
+
+const fetchPendingProjects = async () => {
+  const res = await fetch('/api/projects/pending', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
+
+  if (!res.ok) {
+    console.error('Failed to fetch data');
+    return [];
+  }
+
   const data = await res.json();
   return data;
 }
@@ -111,9 +132,43 @@ const archiveProjects = async (projectIds, tab) => {
   });
 }
 
+const accept = async (projectId) => {
+  const response = await fetch('/api/projects/accept', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({ projectId })
+  });
+
+  if (!response.ok) {
+    console.error('Failed to accept project');
+  }
+}
+
+const decline = async (projectId) => {
+  const response = await fetch('/api/projects/decline', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({ projectId })
+  });
+
+  if (!response.ok) {
+    console.error('Failed to decline project');
+  }
+}
+
 function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetchData, tab }) {
   const [open, setOpen] = useState(false);
   const activeSelection = selectedProjectIds.length > 0;
+  const [isDialogOpen, setDialogOpen] = useState(false);
+
+  const handleOpenDialog = () => setDialogOpen(true);
+  const handleCloseDialog = () => setDialogOpen(false);
 
   const handleCreateProject = useCallback(async () => {
     try {
@@ -135,7 +190,6 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
   const handleArchiveProjects = useCallback(async () => {
     try {
       await archiveProjects(selectedProjectIds, tab);
-      console.log("fetching data again")
       fetchData();
     } catch (error) {
       console.error(error);
@@ -154,25 +208,41 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
           Create Project
         </Button>
         <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
-        <Button
-          variant="outlined"
-          size="medium"
-          startIcon={<ArchiveOutlinedIcon />}
-          disabled={!activeSelection}
-          onClick={handleArchiveProjects}
-        >
-          {tab === '2' ? "Archive" : "Unarchive"}
-        </Button>
-        <Button
-          variant="outlined"
-          size="medium"
-          color="error"
-          startIcon={<DeleteOutlineOutlinedIcon />}
-          disabled={!activeSelection}
-          onClick={handleDeleteProjects}
-        >
-          Delete
-        </Button>
+
+        {tab !== '6' && (
+          <>
+          <Button
+            variant="outlined"
+            size="medium"
+            startIcon={<ArchiveOutlinedIcon />}
+            disabled={!activeSelection}
+            onClick={handleArchiveProjects}
+          >
+            {tab === '2' ? "Archive" : "Unarchive"}
+          </Button>
+          <Button
+            variant="outlined"
+            size="medium"
+            color="error"
+            startIcon={<DeleteOutlineOutlinedIcon />}
+            disabled={!activeSelection}
+            onClick={handleOpenDialog}
+          >
+            Delete
+          </Button>
+          <ConfirmationDialog
+            open={isDialogOpen}
+            onClose={handleCloseDialog}
+            onConfirm={async (projectIds) => {
+              await deleteProjects(projectIds);
+              setSelectedProjectIds([]); // Optioneel: selectie wissen
+              fetchData(); // Herlaad data na verwijdering
+            }}
+            projectIds={selectedProjectIds}
+          />
+          </>
+        )}
+
       </Stack>
       <CreateProjectDialog
         open={open}
@@ -182,19 +252,75 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
   );
 };
 
+const ConfirmationDialog = ({ open, onClose, onConfirm, projectIds }) => (
+  <Dialog open={open} onClose={onClose}>
+    <DialogTitle>Confirm Deletion</DialogTitle>
+    <DialogContent>
+      <Typography>
+        Are you sure you want to delete the selected project(s)? This action cannot be undone.
+      </Typography>
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={onClose} color="primary">
+        Cancel
+      </Button>
+      <Button
+        onClick={() => {
+          onConfirm(projectIds);
+          onClose();
+        }}
+        color="error"
+        variant="contained"
+      >
+        Delete
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
+
+
 const Projects = () => {
   const [sortedProjects, setSortedProjects] = useState([]);
   const [selectedProjectIds, setSelectedProjectIds] = useState([]);
   const [currentTab, setTab] = useState('2');
+  const [loading, setLoading] = useState(true);
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({lastActive: false, actions: false});
 
   const handleTabChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
     setTab(newCurrentTab);
+    setLoading(true);
+
+    // Only show actions column for pending projects
+    if (newCurrentTab === '6') {
+      setColumnVisibilityModel((prev) => ({ ...prev, actions: true }));
+    } else {
+      setColumnVisibilityModel((prev) => ({ ...prev, actions: false }));
+    }
   };
+
+  const handleAccept = async (projectId) => {
+    try {
+      await accept(projectId);
+      fetchData();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const handleDecline = async (projectId) => {
+    try {
+      await decline(projectId);
+      fetchData();
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   const fetchData = async () => {
     console.log('Fetching data');
     try {
       let projects = [];
+      console.log('Current tab:', currentTab);
       switch (currentTab) {
         case '2':
           projects = await fetchActiveProjects();
@@ -202,13 +328,19 @@ const Projects = () => {
         case '4':
           projects = await fetchArchivedProjects();
           break;
+        case '6':
+          projects = await fetchPendingProjects();
+          break;
         default:
           projects = await fetchActiveProjects();
           break;
       }
       setSortedProjects(projects);
+
+      setLoading(false);
     } catch (error) {
       console.error('Failed to fetch data', error);
+      setLoading(false);
     }
   };
 
@@ -219,6 +351,38 @@ const Projects = () => {
       )
     },
     { field: 'lastActive', headerName: 'Last Activity', flex: 1 },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      flex: 1,
+      sortable: false,
+
+      renderCell: (params) => {
+        if (currentTab === '6' && params.row && !loading) {
+          return (
+            <Box display="flex" gap={1}>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={() => handleAccept(params.id)}
+              >
+                Accept
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                onClick={() => handleDecline(params.id)}
+              >
+                Decline
+              </Button>
+            </Box>
+          );
+        }
+        return null;
+      },
+    },
   ];
 
   const projectsRows: GridRowsProp = sortedProjects.map((project) => ({
@@ -251,6 +415,7 @@ const Projects = () => {
           >
             <Tab value="2" label="My Projects" sx={{ alignItems: 'start' }} />
             <Tab value="4" label="Archived" sx={{ alignItems: 'start' }} />
+            <Tab value="6" label="Pending" sx={{ alignItems: 'start' }} />
           </Tabs>
           <Paper sx={{ width: "100%", height: "100%" }}>
             <DataGrid
@@ -261,11 +426,14 @@ const Projects = () => {
               autosizeOnMount
               autosizeOptions={{ includeOutliers: true }}
               checkboxSelection={true}
+              columnVisibilityModel={columnVisibilityModel}
+              onColumnVisibilityModelChange={(newModel) => setColumnVisibilityModel(newModel)}
               onRowSelectionModelChange={(newSelection) => setSelectedProjectIds(newSelection)}
               initialState={{
                 columns: {
                   columnVisibilityModel: {
-                    lastActive: false
+                    lastActive: false,
+                    actions: false,
                   },
                 },
                 sorting: {

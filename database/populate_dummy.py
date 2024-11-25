@@ -31,16 +31,16 @@ c.executemany('''
 
 # Create dummy projects
 projects = [
-    (1, "Project Alpha", "Description for project Alpha", None, "2023-01-01", "2023-09-01", 0),
-    (2, "Project Beta", "Description for project Beta", None, "2023-02-01", "2023-09-02", 0),
-    (3, "Project Gamma", "Description for project Gamma", None, "2023-03-01", "2023-09-03", 1),
-    (4, "Project Delta", "Description for project Delta", None, "2023-04-01", "2023-09-04", 0),
-    (5, "Project Epsilon", "Description for project Epsilon", None, "2023-05-01", "2023-09-05", 0)
+    (1, "Project Alpha", "Description for project Alpha", None, "2023-01-01", "2023-09-01"),
+    (2, "Project Beta", "Description for project Beta", None, "2023-02-01", "2023-09-02"),
+    (3, "Project Gamma", "Description for project Gamma", None, "2023-03-01", "2023-09-03"),
+    (4, "Project Delta", "Description for project Delta", None, "2023-04-01", "2023-09-04"),
+    (5, "Project Epsilon", "Description for project Epsilon", None, "2023-05-01", "2023-09-05")
 ]
 
 c.executemany('''
-    INSERT INTO Project (projectId, name, description, meta, createdAt, lastActive, archived)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO Project (projectId, name, description, meta, createdAt, lastActive)
+    VALUES (?, ?, ?, ?, ?, ?)
 ''', projects)
 
 # Create dummy sessions
@@ -153,18 +153,18 @@ c.executemany('''
 
 # Create mappings between accounts and projects
 account_project_mappings = [
-    (1, 1),
-    (1, 2),
-    (2, 1),
-    (2, 3),
-    (3, 4),
-    (4, 5),
-    (5, 1)
+    (1, 1, 'active'),
+    (1, 2, 'active'),
+    (2, 1, 'archived'),
+    (2, 3, 'active'),
+    (3, 4, 'active'),
+    (4, 5, 'pending'),
+    (5, 1, 'pending')
 ]
 
 c.executemany('''
-    INSERT INTO AccountProjectMapping (accountId, projectId)
-    VALUES (?, ?)
+    INSERT INTO AccountProjectMapping (accountId, projectId, status)
+    VALUES (?, ?, ?)
 ''', account_project_mappings)
 
 # Device sensor configurations

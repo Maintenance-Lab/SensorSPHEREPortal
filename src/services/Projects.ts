@@ -15,6 +15,8 @@ import Session from 'src/models/Session.js';
     getActiveProjectsByAccountId
     getArchivedProjectsByAccountId
     createProject
+    deleteProjects
+    deleteProjectsForAll
 */
 
 export const getAllProjects = async () => {
@@ -36,46 +38,41 @@ export const getProjectById = async (id: number): Promise<Project> => {
   });
 };
 
-// export const getProjectsByAccount = async (accountId: number) => {
-//   return new Promise(async (resolve) => {
-//     // const doc = await Project.findAll({ where: { owner: accountId }});
-//     const doc = await Project.findAll({ where: {}})
-//     return resolve(doc);
-//   });
-// };
+export const getProjectsByAccountId = async (accountId: number) => {
+  return new Promise(async (resolve) => {
+    const doc = await Project.findAll({include: {model: AccountProjectMapping, where: { accountId: accountId }, required: true }});
+    if (!doc) return resolve([]);
 
-// export const getActiveProjectsByOwner = async (accountId: number) => {
-//   return new Promise(async (resolve) => {
-//     const doc = await Project.findAll({ where: { owner: accountId, archived: false }});
-//     return resolve(doc);
-//   });
-// };
+    return resolve(doc);
+  });
+}
 
 export const getActiveProjectsByAccountId = async (accountId: number) => {
-  // get all accounts where you are the owner or in the collaborators list
   return new Promise(async (resolve) => {
-
-    const doc = await Project.findAll({include: {model: AccountProjectMapping, where: { accountId: accountId }, required: true}, where: { archived: false }});
-
+    const doc = await Project.findAll({include: {model: AccountProjectMapping, where: { accountId: accountId, status: 'active' }, required: true}});
     if (!doc) return resolve([]);
+
     return resolve(doc);
   });
 };
-
-// export const getArchivedProjectsByOwner = async (accountId: number) => {
-//   return new Promise(async (resolve) => {
-//     const doc = await Project.findAll( {where : { owner: accountId, archived: true }});
-//     return resolve(doc);
-//   });
-// };
 
 export const getArchivedProjectsByAccountId = async (accountId: number) => {
   return new Promise(async (resolve) => {
-    const projects = await Project.findAll({include: {model: AccountProjectMapping, where: { accountId: accountId }, required: true}});
-    const doc = projects.filter((project) => project.archived === true);
+    const doc = await Project.findAll({include: {model: AccountProjectMapping, where: { accountId: accountId, status: 'archived' }, required: true}});
+    if (!doc) return resolve([]);
+
     return resolve(doc);
   });
 };
+
+export const getPendingProjectsByAccountId = async (accountId: number) => {
+  return new Promise(async (resolve) => {
+    const doc = await Project.findAll({include: {model: AccountProjectMapping, where: { accountId: accountId, status: 'pending' }, required: true}});
+    if (!doc) return resolve([]);
+
+    return resolve(doc);
+  });
+}
 
 export const createProject = async (item: Partial<Project>, accountId: number) => {
   console.log("'in createProject", item, accountId);
@@ -105,13 +102,13 @@ export const createProject = async (item: Partial<Project>, accountId: number) =
 // };
 
 export const updateProject = async (id: number, item: Partial<Project>) => {
+  console.log("in update project", id, item);
   return new Promise(async (resolve, reject) => {
     if (!id) return reject(new Error("User Key not found"));
 
-    console.log("in update project", id, item);
-
     const { projectId, ...rest } = item;
     const newItem = { ...rest };
+    newItem.lastActive = new Date();
 
     const result = await Project.findOne({ where: { projectId: id }});
     if (!result) return reject(new Error("Project not found"));
@@ -120,34 +117,70 @@ export const updateProject = async (id: number, item: Partial<Project>) => {
   });
 };
 
-// export const deleteProject = async (id: string) => {
-//   console.log("IN DELETE PROJECT", id);
-//   return new Promise(async (resolve) => {
-//     const result = await Project.destroy({ where: { id: id }});
-//     return resolve(result);
-//   });
-// };
+export const updateAccountProjectMapping = async (accountId: number, projectId: number, status: string) => {
+  return new Promise(async (resolve, reject) => {
+    const mapping = await AccountProjectMapping.findOne({ where: { accountId: accountId, projectId: projectId }});
+    if (!mapping) return reject(new Error("Mapping not found"));
+    mapping.update({ status: status });
+    return resolve(mapping);
+  });
+}
 
-export const deleteProjects = async (ids: Array<number>) => {
+export const deleteProjects = async (ids: Array<number>, accountId: number) => {
   return new Promise(async (resolve) => {
     const results = [];
     for (const id of ids) {
       //  *** TODO: Review with group if this is the best solution,
       // alternative option: add "ON DELETE CASCADE" to the foreign key in the database ***
-      await AccountProjectMapping.destroy({ where: { projectId: id }});
-      const result = await Project.destroy({ where: { projectId: id }});
 
+      const mappings = await AccountProjectMapping.findAll({ where: { projectId: id }});
+      if (!mappings) return resolve([]);
+
+      await AccountProjectMapping.destroy({ where: { projectId: id, accountId: accountId }});
+
+      // if project is not linked to any other account or only pending projects exist, delete project
+      if (mappings.length == 1 || mappings.every((m) => m.status == 'pending')) {
+        // delete sessions
+        const sessions = [];
+        for (const id of ids) {
+          const doc = await getSessionsByProject(id) as Session[];
+          sessions.push(...doc.map((s) => s.dataValues.sessionId));
+        }
+
+        await deleteSessions(sessions);
+
+        const result = await Project.destroy({ where: { projectId: id }});
+        results.push(result);
+
+      }
+    }
+
+    return resolve(results);
+  });
+}
+
+// for future use maybe
+export const deleteProjectsForAll = async (ids: Array<number>) => {
+  return new Promise(async (resolve) => {
+    const results = [];
+    for (const id of ids) {
+      //  *** TODO: Review with group if this is the best solution,
+      // alternative option: add "ON DELETE CASCADE" to the foreign key in the database ***
+
+      // delete sessions
+      const sessions = [];
+      for (const id of ids) {
+        const doc = await getSessionsByProject(id) as Session[];
+        sessions.push(...doc.map((s) => s.dataValues.sessionId));
+      }
+
+      await deleteSessions(sessions);
+
+      await AccountProjectMapping.destroy({ where: { projectId: id}});
+      const result = await Project.destroy({ where: { projectId: id }});
       results.push(result);
     }
 
-    // delete sessions
-    const sessions = [];
-    for (const id of ids) {
-      const doc = await getSessionsByProject(id) as Session[];
-      sessions.push(...doc.map((s) => s.dataValues.sessionId));
-    }
-
-    await deleteSessions(sessions);
     return resolve(results);
   });
 };

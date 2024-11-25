@@ -32,3 +32,4 @@
 
 # populate database python file
 database/populate_dummy.py
+*.lock

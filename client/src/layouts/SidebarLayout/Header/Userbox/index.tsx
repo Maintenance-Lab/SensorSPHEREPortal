@@ -74,7 +74,7 @@ function HeaderUserbox() {
 
   // Close popover
   useEffect(() => {
-    setOpen(false);   
+    setOpen(false);
   }, [location]);
 
   const userInfo = user ? (

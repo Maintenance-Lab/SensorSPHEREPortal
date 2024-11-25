@@ -51,7 +51,8 @@ const Login = () => {
   const classes = useStyles();
   const [error, setError] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = (event) => {
+    event.preventDefault();
     const usernameInput = document.getElementById(
       'username'
     ) as HTMLInputElement | null;
@@ -74,12 +75,18 @@ const Login = () => {
       headers: {
         'Content-Type': 'application/json'
       },
+      credentials: 'include',
       body: JSON.stringify({
         username,
         password
       })
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Failed to login');
+        }
+        return res.json()
+      })
       .then((data) => {
         const { success, error, location } = data;
         if (success) navigate(location);
@@ -100,7 +107,7 @@ const Login = () => {
           onSubmit={handleLogin}
           action="#"
         >
-          <TextField id="username" label="Username" fullWidth />
+          <TextField id="username" label="Username or email" fullWidth />
           <TextField id="password" label="Password" type="password" fullWidth />
           <Button
             type="submit"

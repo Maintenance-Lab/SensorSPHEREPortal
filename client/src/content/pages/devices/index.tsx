@@ -9,6 +9,7 @@ import {
   Typography,
   Container,
   Chip,
+  Link,
   List,
   ListItem,
   ListItemButton,
@@ -83,77 +84,29 @@ const updateProject = async (projectId: number, selectedSensorUnits) => {
   return updateData;
 }
 
-const devicesPlaceholder = [
-  {
-    id: 0,
-    type: 'This Device',
-    macAddress: '00:00:00:00:00:00',
-    battery: '',
-    project: '',
-    sensors: [
-      { id: 1, name: 'microphone' },
-      { id: 2, name: 'camera' }
-    ]
-  },
-  {
-    id: 1,
-    type: 'M5Stack Core2',
-    macAddress: 'e4:72:05:0a:fc:66',
-    battery: '93',
-    project: '',
-    sensors: [
-      { id: 1, name: 'temperature' },
-      { id: 2, name: 'humidity' }
-    ]
-  },
-  {
-    id: 2,
-    type: 'M5Stack Core2',
-    macAddress: '94:b7:ab:57:d4:75',
-    battery: '91',
-    project: 'Project 1',
-    sensors: [
-      { id: 1, name: 'gyroX' },
-      { id: 2, name: 'gyroY' },
-      { id: 3, name: 'gyroZ' }
-    ]
-  },
-  {
-    id: 3,
-    type: 'M5Stack Core2',
-    macAddress: '5f:ec:07:db:01:6e',
-    battery: '10',
-    project: 'Building Temperature Research',
-    sensors: []
-  },
-  {
-    id: 4,
-    type: 'M5Stack Core2',
-    macAddress: '1e:e7:31:2e:df:7a',
-    battery: '',
-    project: 'Project 3',
-    sensors: []
-  },
-  {
-    id: 5,
-    type: 'M5Stack Core2',
-    macAddress: '95:8e:53:46:7e:6e',
-    battery: '',
-    project: '',
-    sensors: []
+const fetchDevices = async () => {
+  console.log("in fetchDevices");
+  const devices = await fetch('/api/devices/all', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
+
+  if (!devices.ok) {
+    console.error('Failed to fetch data');
+    return [];
   }
-];
+
+  const devicesData = await devices.json();
+  return devicesData;
+}
 
 const devicesColumns: GridColDef[] = [
-  // { field: 'id', headerName: '#' },
   {
-    field: 'type', headerName: 'Type', renderCell: (params) => (
-      <Stack direction="row" alignItems="center" spacing={1}>
-        {params.value === 'This Device' && (
-          <DevicesIcon />
-        )}
-        <Typography variant="inherit">{params.value}</Typography>
-      </Stack>
+    field: 'name', headerName: 'Name', renderCell: (params) => (
+      <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
     )
   },
   { field: 'macAddress', headerName: 'MAC Address', valueFormatter: (value?: string) => value?.toUpperCase() },
@@ -169,41 +122,9 @@ const devicesColumns: GridColDef[] = [
       </Stack>
     )
   },
-  {
-    field: 'sensors',
-    headerName: 'Sensors',
-    renderCell: (params) => (
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ height: "100%" }}>
-        {params.value.map((sensor: { id: number, name: string }) => (
-          <Chip key={sensor.id} label={sensor.name} size="small" />
-        ))}
-      </Stack>
-    )
-  },
-  // {
-  //   field: 'project',
-  //   headerName: 'Project',
-  //   renderCell: (params) => (
-  //     <Typography variant="inherit">{params.value}</Typography>
-  //   )
-  // },
-  // {
-  //   field: 'status',
-  //   headerName: 'Status',
-  //   renderCell: (params) => (
-  //     <DeviceStatus status={params.value} project={params.row.project} session={params.row.session} />
-  //   )
-  // }
+  { field: 'status', headerName: 'Status' },
+  { field: 'maxHz', headerName: 'Max Hz' },
 ];
-
-const devicesRows: GridRowsProp = devicesPlaceholder.map((device) => ({
-  id: device.id,
-  type: device.type,
-  macAddress: device.macAddress,
-  battery: device.battery,
-  project: device.project,
-  sensors: device.sensors,
-}));
 
 function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, handleOpenAddToProjects }) {
   const activeSelection = selectedDeviceIds.length > 0;
@@ -232,30 +153,51 @@ const Devices = () => {
   const [activeProjects, setActiveProjects] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [searchText, setSearchText] = useState('');
+  const [devices, setDevices] = useState([]);
 
-  const handleAddDevicesToProject = async (projectId) => {
-    const macAddresses = selectedDeviceIds.map((id) => devicesPlaceholder.find((device) => device.id === id).macAddress);
-    await updateProject(projectId, macAddresses);
-    setOpenAddToProjects(false);
-    console.log(" we gaan naar project id", projectId);
-    window.location.href = '/projects/detail/' + projectId;
+  const allDevices = async () => {
+    const devices = await fetchDevices();
+    setDevices(devices);
+    console.log("all devices", devices);
   }
 
-  useEffect(() => {
-    fetchActiveProjects().then((data) => {
-      setActiveProjects(data);
-      setSearchResults(data);
-    });
-  }, []);
+  const devicesRows: GridRowsProp = devices.map((device) => ({
+    id: device.deviceId,
+    name:device.manufacturerName,
+    status: device.connectStatus,
+    battery: device.battery,
+    maxHz: device.maxHz,
+  }));
 
   useEffect(() => {
-    if (searchText) {
-      const results = activeProjects.filter((project) => project.name.toLowerCase().includes(searchText.toLowerCase()));
-      setSearchResults(results);
-    } else {
-      setSearchResults(activeProjects);
-    }
-  }, [searchText]);
+    allDevices();
+  }, []);
+
+
+
+  const handleAddDevicesToProject = async (projectId) => {
+    // const macAddresses = selectedDeviceIds.map((id) => devices.find((device) => device.deviceId === id).macAddress);
+    // await updateProject(projectId, macAddresses);
+    // setOpenAddToProjects(false);
+    // console.log(" we gaan naar project id", projectId);
+    // window.location.href = '/projects/detail/' + projectId;
+  }
+
+  // useEffect(() => {
+  //   fetchActiveProjects().then((data) => {
+  //     setActiveProjects(data);
+  //     setSearchResults(data);
+  //   });
+  // }, []);
+
+  // useEffect(() => {
+  //   if (searchText) {
+  //     const results = activeProjects.filter((project) => project.name.toLowerCase().includes(searchText.toLowerCase()));
+  //     setSearchResults(results);
+  //   } else {
+  //     setSearchResults(activeProjects);
+  //   }
+  // }, [searchText]);
 
   return (
     <div>
@@ -283,11 +225,11 @@ const Devices = () => {
           <Divider sx={{ mt: 1 }} />
           <List sx={{ width: "100%" }} disablePadding>
             {searchResults.map((project) => (
-              <ListItem key={project._id} sx={{ py: 1 }} disablePadding divider={true}>
+              <ListItem key={project.projectId} sx={{ py: 1 }} disablePadding divider={true}>
                 <ListItemButton
                   disableGutters
                   sx={{ px: 2 }}
-                  onClick={() => handleAddDevicesToProject(project._id)}
+                  onClick={() => handleAddDevicesToProject(project.projectId)}
                 >
                   <ListItemText primary={project.name} secondary={project.description} />
                 </ListItemButton>
@@ -304,6 +246,7 @@ const Devices = () => {
           <DataGrid
             rows={devicesRows}
             columns={devicesColumns}
+            // map divices to rows
             density="compact"
             autosizeOnMount
             autosizeOptions={{ includeOutliers: true }}

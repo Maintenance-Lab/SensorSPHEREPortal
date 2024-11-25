@@ -3,18 +3,18 @@ import random
 import string
 import datetime
 
-database_path = 'db.sqlite3'
+database_path = 'database/db.sqlite3'
 
 # connect to the database
 conn = sqlite3.connect(database_path)
 c = conn.cursor()
 
 # First delete all existing data
-def delete_all():
-    for table in ['AccountProjectMapping', 'DeviceSensorConfiguration', 'DeviceSensorMapping', 'SessionDeviceMapping', 'SensorProperty', 'Sensor', 'Manufacturer', 'SensorCategory', 'Device', 'Session', 'Project', 'Account']:
-        c.execute(f'DELETE FROM {table};')
+# def delete_all():
+#     for table in ['AccountProjectMapping', 'DeviceSensorConfiguration', 'DeviceSensorMapping', 'SessionDeviceMapping', 'SensorProperty', 'Sensor', 'Manufacturer', 'SensorCategory', 'Device', 'Session', 'Project', 'Account']:
+#         c.execute(f'DELETE FROM {table};')
 
-delete_all()
+# delete_all()
 
 # Create dummy accounts
 accounts = [
@@ -59,16 +59,16 @@ c.executemany('''
 
 # Create dummy devices
 devices = [
-    (1, 1, 100),
-    (2, 1, 200),
-    (3, 0, 150),
-    (4, 1, 300),
-    (5, 1, 250)
+    (1, "manufacturer1", "connected", 100, 1000),
+    (2, "manufacturer2", "disconnected", 90, 2000),
+    (3, "manufacturer3", "connected", 80, 3000),
+    (4, "manufacturer4", "disconnected", 70, 4000),
+    (5, "manufacturer5", "connected", 60, 5000)
 ]
 
 c.executemany('''
-    INSERT INTO Device (deviceId, connectStatus, maxHz)
-    VALUES (?, ?, ?)
+    INSERT INTO Device (deviceId, manufacturerName, connectStatus, batteryLevel, maxHz)
+    VALUES (?, ?, ?, ?, ?)
 ''', devices)
 
 # Create dummy sensor categories
@@ -85,9 +85,11 @@ c.executemany('''
 
 # Create dummy manufacturers
 manufacturers = [
-    ("SensorCo"),
-    ("DeviceInc"),
-    ("GadgetWorks")
+    ("manufacturer1"),
+    ("manufacturer2"),
+    ("manufacturer3"),
+    ("manufacturer4"),
+    ("manufacturer5")
 ]
 
 c.executemany('''

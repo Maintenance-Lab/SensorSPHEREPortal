@@ -394,14 +394,14 @@ const SessionDetail = () => {
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
 
-  // const deviceRows: GridRowsProp = sessionSensorUnits.map((macAddress) => ({
-  //   id: macAddress,
-  //   type: devicesPlaceholder[macAddress].type,
-  //   macAddress: macAddress,
-  //   battery: devicesPlaceholder[macAddress].battery,
-  //   project: devicesPlaceholder[macAddress].project,
-  //   sensors: devicesPlaceholder[macAddress].sensors,
-  // }));
+  const deviceRows: GridRowsProp = sessionSensorUnits.map((macAddress) => ({
+    id: macAddress,
+    type: devicesPlaceholder[macAddress].type,
+    macAddress: macAddress,
+    battery: devicesPlaceholder[macAddress].battery,
+    project: devicesPlaceholder[macAddress].project,
+    sensors: devicesPlaceholder[macAddress].sensors,
+  }));
 
   const fetchSession = async () => {
     console.log("SESSION ID", sessionId);
@@ -645,7 +645,7 @@ const SessionDetail = () => {
           <Typography variant="h2" sx={{ pt: 2 }}>Devices and Sensors</Typography>
           <Paper>
             <DataGrid
-              // rows={deviceRows}
+              rows={deviceRows}
               columns={deviceColumns}
               density='compact'
               autoHeight

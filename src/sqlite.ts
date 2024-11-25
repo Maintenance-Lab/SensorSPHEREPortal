@@ -95,10 +95,13 @@ const initDb = () => {
         db.run(`
             CREATE TABLE IF NOT EXISTS Device (
                 deviceId INTEGER NOT NULL,
+                manufacturerName TEXT NOT NULL,
                 connectStatus BOOLEAN,
+                batteryLevel INTEGER,
                 maxHz INTEGER,
                 PRIMARY KEY (deviceId),
                 FOREIGN KEY (deviceId) REFERENCES DeviceSensorMapping(deviceId)
+                FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName)
             );
         `);
 

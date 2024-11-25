@@ -788,6 +788,32 @@ const ConfirmationDialog = ({ open, onClose, onConfirm, projectIds }) => (
   </Dialog>
 );
 
+const ConfirmationDialog2 = ({ open, onClose, onConfirm, projectId }) => (
+  <Dialog open={open} onClose={onClose}>
+    <DialogTitle>Confirm Deletion</DialogTitle>
+    <DialogContent>
+      <Typography>
+        Are you sure you want to delete this project? This action cannot be undone.
+      </Typography>
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={onClose} color="primary">
+        Cancel
+      </Button>
+      <Button
+        onClick={() => {
+          onConfirm(projectId);
+          onClose();
+        }}
+        color="error"
+        variant="contained"
+      >
+        Delete
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
+
 
 const ProjectDetail = () => {
   const projectId = Number(useParams().projectId);
@@ -810,6 +836,9 @@ const ProjectDetail = () => {
   const [activeStep, setActiveStep] = useState(3);
   const [sortedSessions, setSortedSessions] = useState([]);
   const [currentTab, setTab] = useState('2');
+  const [isDialogOpen, setDialogOpen] = useState(false);
+  const handleOpenDialog2 = () => setDialogOpen(true);
+  const handleCloseDialog2 = () => setDialogOpen(false);
 
 
   const handleTabChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
@@ -907,7 +936,7 @@ const ProjectDetail = () => {
     setIsArchived(archived);
   };
 
-  const handleDeleteProject = async () => {
+  const handleDeleteProject = async (projectId) => {
     await deleteProject(projectId);
     window.location.href = '/projects';
   };
@@ -1119,10 +1148,18 @@ const ProjectDetail = () => {
                   backgroundColor: 'error.main'
                 }
               }}
-              onClick={handleDeleteProject}
+              onClick={handleOpenDialog2}
             >
               Delete Project
             </Button>
+            <ConfirmationDialog2
+            open={isDialogOpen}
+            onClose={handleCloseDialog2}
+            onConfirm={async (projectId) => {
+              await handleDeleteProject(projectId);
+            }}
+            projectId={projectId}
+          />
           </Stack>
         </Stack>
       </PageTitleWrapper>

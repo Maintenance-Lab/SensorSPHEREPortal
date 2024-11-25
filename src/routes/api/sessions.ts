@@ -105,11 +105,11 @@ router.put("/update-many", async (req, res) => {
         const { id, ...rest } = item;
         const cleaned = cleanBody(rest);
 
-        const project: any = await getSessionById(id);
+        const session: any = await getSessionById(id);
+        const projectId = session.projectId;
+        if (!projectId) return res.status(404).json({ message: "Project not found" });
 
-        if (!project) return res.status(404).json({ message: "Project not found" });
-
-        const mapping = await AccountProjectMapping.findOne({ where: { accountId, projectId: id } });
+        const mapping = await AccountProjectMapping.findOne({ where: { accountId: accountId, projectId: projectId } });
         if (!mapping) return res.status(401).json({ message: "Unauthorized" });
 
         toUpdate.push({ id, cleaned });

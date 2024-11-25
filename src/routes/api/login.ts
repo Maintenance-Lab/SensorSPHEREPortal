@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import { IS_PROD, JWT_ACCESS_SECRET, JWT_EXPIRESIN } from '../../config.js';
-import { createAccount, getAccountByNameOrEmail } from '../../services/Account.js';
+import { createAccount, getAccountByEmail, getAccountByNameOrEmail } from '../../services/Account.js';
 import { verify, hash, hashSync } from '@node-rs/argon2';
 import { createLoginSession } from '../../services/LoginSession.js';
 
@@ -17,7 +17,7 @@ router.post("/", async (req, res) => {
   // await createAccount({ name: "Test", email: "admin@admin.com", password: await hash("password123"), role: "admin" })
 
   try {
-    const account = await getAccountByNameOrEmail(username);
+    const account = await getAccountByEmail(username);
     if (!account) return res.json({ success: false, location: null, error: "Invalid login credentials" });
     if (!account.enabled)
       return res.json({
@@ -48,7 +48,7 @@ router.post("/", async (req, res) => {
       })
       .json({ success: true, location: "/home", error: null });
   } catch (error) {
-    return res.json({ success: false, location: null, error: "Error logging in, please try again later" });
+    return res.json({ success: false, location: null, error: "Invalid login credentials" });
     // if (!IS_PROD) console.error("Error logging in", error);
     // return res.json({ success: false, location: null, error: "Error logging in, please try again later" });
   }

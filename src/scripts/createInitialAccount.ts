@@ -13,10 +13,10 @@ import { isEmail, isPasswordStrong } from 'src/tools/utils';
 
 const main = async () => {
   const accounts = await getAllAccounts();
-  if (accounts.length > 0) {
-    console.log("An administrator account already exists. Exiting setup.");
-    process.exit(0);
-  }
+  // if (accounts.length > 0) {
+  //   console.log("An administrator account already exists. Exiting setup.");
+  //   process.exit(0);
+  // }
 
   console.log("Welcome to the SensorSphere setup! Let's create an administrator account.");
 

@@ -122,7 +122,7 @@ const devicesPlaceholder = [
     id: 3,
     type: 'M5Stack Core2',
     macAddress: '5f:ec:07:db:01:6e',
-    battery: '',
+    battery: '10',
     project: 'Building Temperature Research',
     sensors: []
   },

@@ -167,7 +167,7 @@ const routes: RouteObject[] = [
         )
       },
       {
-        path: 'detail',
+        path: 'detail/:deviceId',
         element: (
           <ProtectedRoute>
             <DeviceDetail />

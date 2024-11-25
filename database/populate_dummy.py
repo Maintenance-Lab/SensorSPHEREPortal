@@ -3,7 +3,7 @@ import random
 import string
 import datetime
 
-database_path = 'database/db.sqlite3'
+database_path = 'db.sqlite3'
 
 # connect to the database
 conn = sqlite3.connect(database_path)

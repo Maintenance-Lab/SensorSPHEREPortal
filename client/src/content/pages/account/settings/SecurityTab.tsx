@@ -36,6 +36,7 @@ import DoneTwoToneIcon from '@mui/icons-material/DoneTwoTone';
 import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
 import { useNavigate } from 'react-router-dom';
 import MuiAlert from '@mui/material/Alert';
+import zIndex from '@mui/material/styles/zIndex';
 
 const ButtonError = styled(Button)(
   ({ theme }) => `
@@ -81,10 +82,12 @@ function SecurityTab(props: SecurityTabProps) {
   const [currentPass, setCurrentPass] = useState('');
   const [newPass, setNewPass] = useState('');
   const [confirmNewPass, setConfirmNewPass] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     severity: 'success' | 'info' | 'warning' | 'error';
+    sx?: any;
   }>({ open: false, message: '', severity: 'success' });
 
   const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
@@ -99,21 +102,30 @@ function SecurityTab(props: SecurityTabProps) {
 
   const handlePasswordDialogClose = () => {
     setOpenPasswordDialog(false);
+
+    setCurrentPass('');
+    setNewPass('');
+    setConfirmNewPass('');
+    setErrorMessage('');
   };
 
   const handleChangePassword = async () => {
-    if (newPass !== confirmNewPass) {
-      setSnackbar({
-        open: true,
-        message: 'New passwords do not match',
-        severity: 'error'
-      });
-      return;
-    }
+    // if (newPass !== confirmNewPass) {
+    //   setErrorMessage('New passwords do not match');
+    //   return;
+    // }
+    // if (newPass === currentPass) {
+    //   setErrorMessage('New password cannot be the same as the current password');
+    //   return;
+    // }
+    // if (!newPass || !currentPass) {
+    //   setErrorMessage('Current and new password required');
+    //   return;
+    // }
     const response = await fetch('/api/account/password', {
       method: 'POST',
       headers: { credentials: 'include', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ currentPass, newPass })
+      body: JSON.stringify({ currentPass, newPass, confirmNewPass })
     });
     if (response.status == 401) navigate('/login');
     const data = await response.json();
@@ -126,14 +138,15 @@ function SecurityTab(props: SecurityTabProps) {
       setCurrentPass('');
       setNewPass('');
       setConfirmNewPass('');
+      handlePasswordDialogClose();
     } else {
       setSnackbar({
         open: true,
         message: data.message || 'Failed to update password',
-        severity: 'error'
+        severity: 'error',
+        sx: { zIndex: 1300 }
       });
     }
-    handlePasswordDialogClose();
   };
 
   const deleteSession = async (id: string) => {
@@ -153,6 +166,8 @@ function SecurityTab(props: SecurityTabProps) {
     setFilteredSessions(
       sessions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
     );
+    console.log("sessions ", sessions);
+    console.log("filteredSessions ", filteredSessions);
   }, [sessions, page, rowsPerPage]);
 
   useEffect(() => {
@@ -206,72 +221,6 @@ function SecurityTab(props: SecurityTabProps) {
           </List>
         </Card>
       </Grid>
-      <Grid item xs={12}>
-        <Card>
-          <CardHeader
-            subheaderTypographyProps={{}}
-            titleTypographyProps={{}}
-            title="Access Logs"
-            subheader="Recent sign in activity logs"
-          />
-          <Divider />
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Browser</TableCell>
-                  <TableCell>IP Address</TableCell>
-                  <TableCell>Date/Time</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredSessions.map((session) => (
-                  <TableRow key={session._id} hover>
-                    <TableCell>{session.userAgent}</TableCell>
-                    <TableCell>{session.ip}</TableCell>
-                    <TableCell>
-                      {new Date(session.date).toLocaleString()}
-                    </TableCell>
-                    <TableCell align="right">
-                      <Tooltip placement="top" title="Delete" arrow>
-                        <IconButton
-                          sx={{
-                            '&:hover': {
-                              background: theme.colors.error.lighter
-                            },
-                            color: theme.palette.error.main
-                          }}
-                          color="inherit"
-                          size="small"
-                          onClick={async () => {
-                            await deleteSession(session._id);
-                            setSessions(
-                              sessions.filter((s) => s._id !== session._id)
-                            );
-                          }}
-                        >
-                          <DeleteTwoToneIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <Box p={2}>
-            <TablePagination
-              component="div"
-              count={sessions.length}
-              page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-          </Box>
-        </Card>
-      </Grid>
 
       <Dialog open={openPasswordDialog} onClose={handlePasswordDialogClose}>
         <DialogTitle>Change Password</DialogTitle>
@@ -300,6 +249,9 @@ function SecurityTab(props: SecurityTabProps) {
             value={confirmNewPass}
             onChange={(e) => setConfirmNewPass(e.target.value)}
           />
+          <Typography variant="caption" id="error-message" color="error" align="center">
+              {errorMessage}
+          </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handlePasswordDialogClose} color="primary">

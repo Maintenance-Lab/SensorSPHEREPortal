@@ -20,7 +20,7 @@ Account.init({
     accountId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, allowNull: false },
     // ProjectId: { type: DataTypes.ARRAY(DataTypes.INTEGER), references: { model: Project, key: 'projectId' } },
     enabled: { type: DataTypes.BOOLEAN, defaultValue: true },
-    name: { type: DataTypes.STRING(100), allowNull: false },
+    name: { type: DataTypes.STRING(100), allowNull: false, unique: true },
     email: { type: DataTypes.STRING(50), allowNull: false, unique: true },
     password: { type: DataTypes.STRING(50), allowNull: false },
     meta: { type: DataTypes.JSON, defaultValue: {} },

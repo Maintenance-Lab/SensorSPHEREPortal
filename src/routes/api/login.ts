@@ -17,7 +17,7 @@ router.post("/", async (req, res) => {
   // await createAccount({ name: "Test", email: "admin@admin.com", password: await hash("password123"), role: "admin" })
 
   try {
-    const account = await getAccountByEmail(username);
+    const account = await getAccountByNameOrEmail(username);
     if (!account) return res.json({ success: false, location: null, error: "Invalid login credentials" });
     if (!account.enabled)
       return res.json({

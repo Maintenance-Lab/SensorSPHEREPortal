@@ -107,7 +107,7 @@ const Login = () => {
           onSubmit={handleLogin}
           action="#"
         >
-          <TextField id="username" label="Username" fullWidth />
+          <TextField id="username" label="Username or email" fullWidth />
           <TextField id="password" label="Password" type="password" fullWidth />
           <Button
             type="submit"

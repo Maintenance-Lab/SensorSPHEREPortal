@@ -25,9 +25,11 @@ router.post("/password", async (req, res) => {
   const { account } = response;
   if (!account) return res.status(401).json({ message: "Unauthorized" });
 
-  let { newPass, currentPass } = req.body;
+  // let { newPass, currentPass } = req.body;
+  let { newPass, currentPass, confirmNewPass } = req.body;
   if (!newPass || !currentPass) return res.status(400).json({ message: "Current and new password required" });
   if (newPass === currentPass) return res.status(400).json({ message: "New password cannot be the same as the current password" });
+  if (newPass !== confirmNewPass) return res.status(400).json({ message: "New passwords do not match" });
 
   const { accountId } = account;
   if (!accountId) return res.status(400).json({ message: "Account ID is required" });

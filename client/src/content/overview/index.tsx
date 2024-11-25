@@ -66,7 +66,7 @@ export const Overview = () => {
   return (
     <>
       <Helmet>
-        <title>SensorSphere Portal</title>
+        <title>SensorSPHERE Portal</title>
       </Helmet>
       <Container maxWidth="lg" style={{ marginTop: 100 }} className="test">
         <Card className={classes.card} style={{ padding: 50 }}>
@@ -91,13 +91,6 @@ export const Overview = () => {
           </Box>
           <Box className={classes.buttonBox}>
             {loginButton}
-            <Button
-              className={classes.actionButton}
-              variant="contained"
-              color="secondary"
-            >
-              Contact Us
-            </Button>
           </Box>
         </Card>
       </Container>

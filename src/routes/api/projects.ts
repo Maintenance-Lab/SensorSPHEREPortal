@@ -8,6 +8,7 @@ import {
   updateProject,
   // getArchivedProjectsByOwner,
   deleteProjects,
+  deleteProjectsForAll,
   getActiveProjectsByAccountId,
   getArchivedProjectsByAccountId,
 } from '../../services/Projects.js';
@@ -15,6 +16,8 @@ import { getAccountById } from '../../services/Account.js';
 import { getSession } from '../../utils.js';
 import Project from '../../models/Project.js';
 import AccountProjectMapping from '../../models/mappings/AccountProjectMapping.js';
+import { arch } from 'os';
+import { getPendingProjectsByAccountId } from '../../services/Projects.js';
 
 const router = Router();
 
@@ -36,6 +39,28 @@ const router = Router();
 TODO:
 - Handle auth middleware and check for correct permissions
 */
+
+router.post("/accept", async (req, res) => {
+  console.log("in accept")
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account, sessions } = response;
+  if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
+
+  const { accountId } = account;
+  if (!accountId) return res.status(400).json({ message: "Account ID is required" });
+
+  const { body } = req;
+  const { projectId } = body;
+
+  const mapping = await AccountProjectMapping.findOne({ where: { accountId: accountId, projectId: projectId, status: "pending" } });
+  if (!mapping) return res.status(401).json({ message: "Unauthorized" });
+
+  await mapping.update({ status: "active" });
+
+  return res.json({ message: "Accepted" });
+});
 
 router.get("/active", async (req, res) => {
   console.log("in get active")
@@ -128,6 +153,29 @@ router.post("/create", async (req, res) => {
 //   return res.json(results);
 // });
 
+router.post("/decline", async (req, res) => {
+  console.log("in decline")
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account, sessions } = response;
+  if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
+
+  const { accountId } = account;
+  if (!accountId) return res.status(400).json({ message: "Account ID is required" });
+
+  const { body } = req;
+  const { projectId } = body;
+
+  const mapping = await AccountProjectMapping.findOne({ where: { accountId: accountId, projectId: projectId } });
+  if (!mapping) return res.status(401).json({ message: "Unauthorized" });
+
+  // delete mapping
+  await mapping.destroy();
+
+  return res.json({ message: "Declined" });
+});
+
 router.get("/latest", async (req, res) => {
   console.log("in latest")
   const response = await getSession(req, res);
@@ -151,6 +199,21 @@ router.get("/latest", async (req, res) => {
   return res.json(latestProjects.slice(0, Math.min(6, sortedProjects.length)));
 });
 
+router.get("/pending", async (req, res) => {
+  console.log("in pending")
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account } = response;
+  if (!account) return res.status(401).json({ message: "Unauthorized" });
+  if (!account.accountId) return res.status(400).json({ message: "Account ID is required" });
+
+  const projects = await getPendingProjectsByAccountId(account.accountId);
+  if (!projects) return res.status(404).json({ message: "No pending projects found" });
+
+  return res.json(projects);
+});
+
 router.put("/update/:id", async (req, res) => {
   console.log("in update project ")
   const id = Number(req.params.id);
@@ -172,6 +235,12 @@ router.put("/update/:id", async (req, res) => {
 
   const cleaned = cleanBody(body);
 
+  // if archived in body, update mapping status
+  if ('archived' in cleaned) {
+    await mapping.update({ status: cleaned.archived ? "archived" : "active" });
+    delete cleaned.archived;
+  }
+
   const result = await updateProject(id, cleaned);
   return res.json(result);
 });
@@ -186,8 +255,8 @@ router.put("/update-many", async (req, res) => {
     if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
 
     const { accountId } = account;
-
     const { body } = req;
+
     const toUpdate = [];
     const results = [];
     // create cleaned update body and check if you are the owner
@@ -206,8 +275,21 @@ router.put("/update-many", async (req, res) => {
 
     // Apply updates
     for (const { id, cleaned } of toUpdate) {
-      const result = await updateProject(id, cleaned);
-      results.push(result);
+      const mapping = await AccountProjectMapping.findOne({ where: { accountId, projectId: id } });
+      if (!mapping) return res.status(401).json({ message: "Unauthorized" });
+
+      // if archived in body, update mapping status
+      if ('archived' in cleaned) {
+        await mapping.update({ status: cleaned.archived ? "archived" : "active" });
+        delete cleaned.archived;
+      }
+
+      if (Object.keys(cleaned).length !== 0) {
+        const result = await updateProject(id, cleaned);
+        results.push(result);
+      }
+
+      console.log("Project updated/pushed")
     }
 
     return res.json(results);
@@ -217,15 +299,45 @@ router.put("/update-many", async (req, res) => {
   }
 });
 
+
+// // TODO: NOG NAAR KIJKEN
+// router.put("/update-mapping/:projectIds", async (req, res) => {
+//   console.log("in update mapping")
+//   try {
+//     const response = await getSession(req, res);
+//     if (!response) return;
+
+//     const { account, sessions } = response;
+//     if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
+
+//     const { accountId } = account;
+//     const { projectIds } = req.params;
+//     const { status } = req.body;
+//     console.log("Status in update mapping", status);
+
+//     for (const id of projectIds) {
+//       const mapping = await AccountProjectMapping.findOne({ where: { accountId, id } });
+//       if (!mapping) return res.status(401).json({ message: "Unauthorized" });
+
+//       mapping.update({ status: status });
+//     }
+
+//     return res.json({ message: "Updated" });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ message: "Internal server error" });
+//   }
+// });
+
 router.post("/delete", async (req, res) => {
-  console.log("in delete project")
   const { ids } = req.body;
+  console.log("in delete project ", ids);
   const response = await getSession(req, res);
   if (!response) return;
 
   const { account, sessions } = response;
   if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
-  const { accountId } = account;
+  const accountId : number = account.accountId!;
 
   // Can contain one or multiple project ids
   const project: any = [];
@@ -241,7 +353,28 @@ router.post("/delete", async (req, res) => {
   }
 
   // ids can be one or multiple project ids
-  const result = await deleteProjects(ids);
+  const result = await deleteProjects(ids, accountId);
+  return res.json(result);
+});
+
+router.post("/delete-for-all", async (req, res) => {
+  const { ids } = req.body;
+  console.log("in delete for all ", ids)
+
+  const response = await getSession(req, res);
+  if (!response) return;
+
+  const { account, sessions } = response;
+  if (!account || !sessions) return res.status(401).json({ message: "Unauthorized" });
+  const accountId : number = account.accountId!;
+
+  for (const id of ids) {
+    const mapping = await AccountProjectMapping.findOne({ where: { accountId, projectId: id } });
+    if (!mapping) return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  // ids can be one or multiple project ids
+  const result = await deleteProjectsForAll(ids);
   return res.json(result);
 });
 

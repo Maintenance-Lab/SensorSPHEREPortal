@@ -25,7 +25,7 @@ const getUser = () => {
 
 export const logout = () => {
   const cookies = new Cookies();
-  cookies.remove('token');
+  cookies.remove('token', { path: '/' });
   window.location.href = '/'
 };
 

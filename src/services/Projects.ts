@@ -139,11 +139,7 @@ export const deleteProjects = async (ids: Array<number>, accountId: number) => {
       await AccountProjectMapping.destroy({ where: { projectId: id, accountId: accountId }});
 
       // if project is not linked to any other account or only pending projects exist, delete project
-      // if (mappings.length == 1) {
       if (mappings.length == 1 || mappings.every((m) => m.status == 'pending')) {
-        const result = await Project.destroy({ where: { projectId: id }});
-        results.push(result);
-
         // delete sessions
         const sessions = [];
         for (const id of ids) {
@@ -152,6 +148,10 @@ export const deleteProjects = async (ids: Array<number>, accountId: number) => {
         }
 
         await deleteSessions(sessions);
+
+        const result = await Project.destroy({ where: { projectId: id }});
+        results.push(result);
+
       }
     }
 
@@ -167,10 +167,6 @@ export const deleteProjectsForAll = async (ids: Array<number>) => {
       //  *** TODO: Review with group if this is the best solution,
       // alternative option: add "ON DELETE CASCADE" to the foreign key in the database ***
 
-      await AccountProjectMapping.destroy({ where: { projectId: id}});
-      const result = await Project.destroy({ where: { projectId: id }});
-      results.push(result);
-
       // delete sessions
       const sessions = [];
       for (const id of ids) {
@@ -179,6 +175,10 @@ export const deleteProjectsForAll = async (ids: Array<number>) => {
       }
 
       await deleteSessions(sessions);
+
+      await AccountProjectMapping.destroy({ where: { projectId: id}});
+      const result = await Project.destroy({ where: { projectId: id }});
+      results.push(result);
     }
 
     return resolve(results);

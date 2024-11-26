@@ -28,95 +28,19 @@ import { ArchiveOutlined, DeleteOutline, Devices, Edit, EventNote, InfoOutlined,
 import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 
-const devicesPlaceholder = {
-  '00:00:00:00:00:00': {
-    id: 0,
-    type: 'This Device',
-    macAddress: '00:00:00:00:00:00',
-    battery: '',
-    project: '',
-    sensors: [
-      { id: 1, name: 'microphone' },
-      { id: 2, name: 'camera' }
-    ]
-  },
-  'e4:72:05:0a:fc:66': {
-    id: 1,
-    type: 'M5Stack Core2',
-    macAddress: 'e4:72:05:0a:fc:66',
-    battery: '93',
-    project: '',
-    sensors: [
-      { id: 1, name: 'temperature' },
-      { id: 2, name: 'humidity' }
-    ]
-  },
-  '94:b7:ab:57:d4:75': {
-    id: 2,
-    type: 'M5Stack Core2',
-    macAddress: '94:b7:ab:57:d4:75',
-    battery: '91',
-    project: 'Project 1',
-    sensors: [
-      { id: 1, name: 'gyroX' },
-      { id: 2, name: 'gyroY' },
-      { id: 3, name: 'gyroZ' }
-    ]
-  },
-  '5f:ec:07:db:01:6e': {
-    id: 3,
-    type: 'M5Stack Core2',
-    macAddress: '5f:ec:07:db:01:6e',
-    battery: '',
-    project: 'Building Temperature Research',
-    sensors: []
-  },
-  '1e:e7:31:2e:df:7a': {
-    id: 4,
-    type: 'M5Stack Core2',
-    macAddress: '1e:e7:31:2e:df:7a',
-    battery: '',
-    project: 'Project 3',
-    sensors: []
-  },
-  '95:8e:53:46:7e:6e': {
-    id: 5,
-    type: 'M5Stack Core2',
-    macAddress: '95:8e:53:46:7e:6e',
-    battery: '',
-    project: '',
-    sensors: []
-  }
-};
 
-const sessionSensorUnits = [
-  'e4:72:05:0a:fc:66',
-  '94:b7:ab:57:d4:75',
-  '5f:ec:07:db:01:6e',
-  '1e:e7:31:2e:df:7a',
-  '95:8e:53:46:7e:6e'
-];
 
-const deviceColumns: GridColDef[] = [
-  // { field: 'id', headerName: '#' },
+const devicesColumns: GridColDef[] = [
   {
-    field: 'type', headerName: 'Type', flex: 2, renderCell: (params) => (
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ py: 1 }}>
-        {params.value === 'This Device' && (
-          <Devices />
-        )}
-        <Typography variant="inherit">{params.value}</Typography>
-      </Stack>
+    field: 'name', headerName: 'Name', renderCell: (params) => (
+      <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
     )
   },
+  // { field: 'macAddress', headerName: 'MAC Address', valueFormatter: (value?: string) => value?.toUpperCase() },
+  { field: 'id', headerName: 'MAC Address' },
   {
-    field: 'macAddress', headerName: 'MAC Address', flex: 2, renderCell: (params) => (
-      <Typography variant="inherit" sx={{ py: 1 }}>{params.value}</Typography>
-    )
-  },
-  {
-    field: 'battery', headerName: 'Battery', flex: 2, renderCell: (params) => (
-      <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500', py: 1 } : { color: 'gray', py: 1 }}>
+    field: 'battery', headerName: 'Battery', renderCell: (params) => (
+      <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
         <BatteryFullIcon fontSize="small" />
         {params.value ? (
           <Typography variant="inherit">{params.value}%</Typography>
@@ -126,39 +50,30 @@ const deviceColumns: GridColDef[] = [
       </Stack>
     )
   },
-  {
-    field: 'sensors',
-    headerName: 'Sensors',
-    flex: 6,
-    renderCell: (params) => (
-      <Box alignItems="center" sx={{ height: "100%" }}>
-        <List disablePadding sx={{ py: 0.5 }}>
-          {params.value.map((sensor: { id: number, name: string }) => (
-            <ListItem key={sensor.id} disableGutters disablePadding sx={{ py: 0.5 }}>
-              {/* <ListItemButton disableGutters sx={{ p: 0 }}> */}
-              {/* <Switch
-                  edge="start"
-                  checked=
-                  disableRipple
-                /> */}
-              <Chip label={sensor.name} size="small" />
-              {/* </ListItemButton> */}
-            </ListItem>
-          ))}
-        </List>
-        {
-          params.value.length === 0 && (
-            <Typography variant="inherit" color="gray">
-              No sensors found
-            </Typography>
-          )
-        }
-      </Box >
-    )
-  },
+  { field: 'status', headerName: 'Status' },
+  { field: 'maxHz', headerName: 'Max Hz' },
 ];
 
-const updateSession = async (sessionId, name, description, archived, sensorUnits, status) => {
+const fetchDevices = async () => {
+  console.log("in fetchDevices");
+  const devices = await fetch('/api/devices/all', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
+
+  if (!devices.ok) {
+    console.error('Failed to fetch data');
+    return [];
+  }
+
+  const devicesData = await devices.json();
+  return devicesData;
+}
+
+const updateSession = async (sessionId, name, description, archived, status) => {
   const res = await fetch('/api/sessions/update/' + sessionId, {
     method: 'PUT',
     headers: {
@@ -394,13 +309,23 @@ const SessionDetail = () => {
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
 
-  const deviceRows: GridRowsProp = sessionSensorUnits.map((macAddress) => ({
-    id: macAddress,
-    type: devicesPlaceholder[macAddress].type,
-    macAddress: macAddress,
-    battery: devicesPlaceholder[macAddress].battery,
-    project: devicesPlaceholder[macAddress].project,
-    sensors: devicesPlaceholder[macAddress].sensors,
+  const [devices, setDevices] = useState([]);
+
+  const allDevices = async () => {
+    const devices = await fetchDevices();
+    setDevices(devices);
+  }
+
+  useEffect(() => {
+    allDevices();
+  }, []);
+
+  const devicesRows: GridRowsProp = devices.map((device) => ({
+    name:     device.manufacturerName,
+    id:       device.deviceId,
+    status:   device.connectStatus,
+    battery:  device.batteryLevel,
+    maxHz:    device.maxHz,
   }));
 
   const fetchSession = async () => {
@@ -441,19 +366,19 @@ const SessionDetail = () => {
   }
 
   const handleNameChange = async (event) => {
-    await updateSession(sessionId, event.target.value, sessionDescription, isArchived, sessionSensorUnits, sessionStatus);
+    await updateSession(sessionId, event.target.value, sessionDescription, isArchived, sessionStatus);
     setIsEditingName(false);
     fetchSession();
   };
 
   const handleDescriptionChange = async (event) => {
-    await updateSession(sessionId, sessionName, event.target.value, isArchived, sessionSensorUnits, sessionStatus);
+    await updateSession(sessionId, sessionName, event.target.value, isArchived, sessionStatus);
     setIsEditingDescription(false);
     fetchSession();
   };
 
   const handleArchiveSession = async (archive) => {
-    await updateSession(sessionId, sessionName, sessionDescription, archive, sessionSensorUnits, sessionStatus);
+    await updateSession(sessionId, sessionName, sessionDescription, archive, sessionStatus);
     fetchSession();
   };
 
@@ -645,8 +570,8 @@ const SessionDetail = () => {
           <Typography variant="h2" sx={{ pt: 2 }}>Devices and Sensors</Typography>
           <Paper>
             <DataGrid
-              rows={deviceRows}
-              columns={deviceColumns}
+              rows={devicesRows}
+              columns={devicesColumns}
               density='compact'
               autoHeight
               getRowHeight={() => 'auto'}

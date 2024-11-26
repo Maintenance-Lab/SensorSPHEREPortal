@@ -109,7 +109,8 @@ const devicesColumns: GridColDef[] = [
       <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
     )
   },
-  { field: 'macAddress', headerName: 'MAC Address', valueFormatter: (value?: string) => value?.toUpperCase() },
+  // { field: 'macAddress', headerName: 'MAC Address', valueFormatter: (value?: string) => value?.toUpperCase() },
+  { field: 'id', headerName: 'MAC Address' },
   {
     field: 'battery', headerName: 'Battery', renderCell: (params) => (
       <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
@@ -158,20 +159,22 @@ const Devices = () => {
   const allDevices = async () => {
     const devices = await fetchDevices();
     setDevices(devices);
-    console.log("all devices", devices);
   }
-
-  const devicesRows: GridRowsProp = devices.map((device) => ({
-    id: device.deviceId,
-    name:device.manufacturerName,
-    status: device.connectStatus,
-    battery: device.battery,
-    maxHz: device.maxHz,
-  }));
 
   useEffect(() => {
     allDevices();
   }, []);
+
+  // log device.deviceId from object from list of devices
+  console.log(devices.map(device => device.deviceId));
+
+  const devicesRows: GridRowsProp = devices.map((device) => ({
+    name:     device.manufacturerName,
+    id:       device.deviceId,
+    status:   device.connectStatus,
+    battery:  device.batteryLevel,
+    maxHz:    device.maxHz,
+  }));
 
 
 

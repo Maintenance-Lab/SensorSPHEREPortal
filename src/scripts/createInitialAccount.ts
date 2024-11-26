@@ -45,7 +45,7 @@ const main = async () => {
     name,
     email,
     password: hashSync(password),
-    role: "administrator",
+    role: "admin",
     hasChangedPassword: true, // We already created a secure password, no need to change it
   };
   const account = await createAccount(accountObj);

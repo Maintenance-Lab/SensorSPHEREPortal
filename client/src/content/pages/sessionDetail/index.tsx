@@ -23,21 +23,26 @@ import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
-import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';
 import { ArchiveOutlined, DeleteOutline, Devices, Edit, EventNote, InfoOutlined, Inventory, MoreTime, Pause, PlayArrow, Router, Schedule, Stop, UnarchiveOutlined, Usb } from '@mui/icons-material';
 import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
+import { add } from 'date-fns';
+
 
 
 
 const devicesColumns: GridColDef[] = [
   {
+    // field: 'name', headerName: 'Name', renderCell: (params) => (
+    //   <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
     field: 'name', headerName: 'Name', renderCell: (params) => (
-      <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
-    )
+    <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
+    ),
+    flex: 1
   },
   // { field: 'macAddress', headerName: 'MAC Address', valueFormatter: (value?: string) => value?.toUpperCase() },
-  { field: 'id', headerName: 'MAC Address' },
+  { field: 'id', headerName: 'MAC Address', flex: 1 },
   {
     field: 'battery', headerName: 'Battery', renderCell: (params) => (
       <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
@@ -48,10 +53,11 @@ const devicesColumns: GridColDef[] = [
           <Typography variant="inherit">?</Typography>
         )}
       </Stack>
-    )
+    ),
+    flex: 1
   },
-  { field: 'status', headerName: 'Status' },
-  { field: 'maxHz', headerName: 'Max Hz' },
+  { field: 'status', headerName: 'Status', flex: 1 },
+  { field: 'maxHz', headerName: 'Max Hz', flex: 1 },
 ];
 
 const fetchDevices = async () => {
@@ -292,6 +298,45 @@ const SessionStatusCard = ({ sessionId, status }) => {
   );
 };
 
+function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, sessionId }) {
+  const addDeviceToSession = async (sessionId, selectedDeviceIds) => {
+    const res = await fetch('/api/sessions/addDevices', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      },
+      body: JSON.stringify({
+        sessionId: sessionId,
+        deviceIds: selectedDeviceIds
+      })
+    });
+
+    if (!res.ok) {
+      console.error('Failed to add devices to session');
+      return;
+    }
+    const data = await res.json();
+    return data;
+  }
+
+  return (
+    <GridToolbarContainer sx={{ padding: 1 }}>
+      <Stack direction="row" spacing={1}>
+        <Button
+          variant="outlined"
+          startIcon={<Devices />}
+          onClick={() => addDeviceToSession(sessionId, selectedDeviceIds)}
+        >
+          Add Devices
+        </Button>
+        <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
+      </Stack>
+    </GridToolbarContainer>
+  );
+}
+
+
 const SessionDetail = () => {
   const sessionId = Number(useParams().sessionId);
   const [sessionName, setSessionName] = useState('');
@@ -309,6 +354,8 @@ const SessionDetail = () => {
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
 
+  const deviceId = Number(useParams().deviceId);
+  const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
   const [devices, setDevices] = useState([]);
 
   const allDevices = async () => {
@@ -574,8 +621,23 @@ const SessionDetail = () => {
               columns={devicesColumns}
               density='compact'
               autoHeight
-              getRowHeight={() => 'auto'}
-              disableRowSelectionOnClick
+              initialState={{
+                pagination: { paginationModel: { pageSize: 10 } },
+                sorting: {
+                  sortModel: [{ field: 'id', sort: 'desc' }],
+                },
+              }}
+              // getRowHeight={() => 'auto'}
+              // disableRowSelectionOnClick
+              checkboxSelection
+              onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
+              slots={{
+                toolbar: () => <CustomDevicesToolbar
+                  selectedDeviceIds={selectedDeviceIds}
+                  setSelectedDeviceIds={setSelectedDeviceIds}
+                  sessionId={sessionId}
+                  // fetchDevices={allDevices}
+                />}}
               sx={{
                 "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {
                   outline: "none !important",

@@ -84,7 +84,7 @@ const initDb = () => {
             CREATE TABLE IF NOT EXISTS SessionDeviceMapping (
                 sessionId INTEGER,
                 deviceId INTEGER,
-                confiuredHz INTEGER,
+                configuredHz INTEGER,
                 PRIMARY KEY (sessionId, deviceId),
                 FOREIGN KEY (sessionId) REFERENCES Session(sessionId),
                 FOREIGN KEY (deviceId) REFERENCES Device(deviceId)

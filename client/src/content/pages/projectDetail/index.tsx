@@ -533,48 +533,48 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, sens
           Create New Session...
         </Button>
         <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
-        <Button
-          variant="outlined"
-          size="medium"
-          startIcon={<ArchiveOutlinedIcon />}
-          disabled={!activeSelection}
-          onClick={handleArchiveProjects}
-        >
-          {tab === '2' ? "Archive" : "Unarchive"}
-        </Button>
-        <Button
-          variant="outlined"
-          size="medium"
-          color="error"
-          startIcon={<DeleteOutlineOutlinedIcon />}
-          disabled={!activeSelection}
-          onClick={handleOpenDialog}
-        >
-          Delete
-        </Button>
-        <ConfirmationDialog
-            open={isDialogOpen}
-            onClose={handleCloseDialog}
-            onConfirm={async (sessionsIds) => {
-              await deleteSessions(sessionsIds);
-              setSelectedSessionIds([]); // Optioneel: selectie wissen
-              fetchData(); // Herlaad data na verwijdering
-            }}
-            projectIds={selectedSessionIds}
-          />
-        </Stack>
-       <Dialog open={open} onClose={() => setOpen(false)}>
-         <DialogTitle>Create New Session</DialogTitle>
-         <DialogContent>
-           <Stack direction="row" spacing={1} mb={2} color="secondary.main">
-             <InfoOutlined />
-             <List sx={{ p: 0 }}>
-               <ListItem sx={{ px: 0, pt: 0 }}>
-                 <Typography variant="body1">
-                   This project's devices will be used to collect data:
-                 </Typography>
-               </ListItem>
-               {sensorUnits?.map((macAddress) => (
+          <Button
+            variant="outlined"
+            size="medium"
+            startIcon={<ArchiveOutlinedIcon />}
+            disabled={!activeSelection}
+            onClick={handleArchiveProjects}
+          >
+            {tab === '2' ? "Archive" : "Unarchive"}
+          </Button>
+          <Button
+            variant="outlined"
+            size="medium"
+            color="error"
+            startIcon={<DeleteOutlineOutlinedIcon />}
+            disabled={!activeSelection}
+            onClick={handleOpenDialog}
+          >
+            Delete
+          </Button>
+          <ConfirmationDialog
+              open={isDialogOpen}
+              onClose={handleCloseDialog}
+              onConfirm={async (sessionsIds) => {
+                await deleteSessions(sessionsIds);
+                setSelectedSessionIds([]); // Optioneel: selectie wissen
+                fetchData(); // Herlaad data na verwijdering
+              }}
+              projectIds={selectedSessionIds}
+            />
+      </Stack>
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>Create New Session</DialogTitle>
+        <DialogContent>
+          <Stack direction="row" spacing={1} mb={2} color="secondary.main">
+            <InfoOutlined />
+            <List sx={{ p: 0 }}>
+              <ListItem sx={{ px: 0, pt: 0 }}>
+                <Typography variant="body1">
+                  This project's devices will be used to collect data:
+                </Typography>
+              </ListItem>
+                {sensorUnits?.map((macAddress) => (
                 <ListItem key={macAddress} sx={{ px: 0 }}>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Usb />

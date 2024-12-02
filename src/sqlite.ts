@@ -123,12 +123,12 @@ const initDb = () => {
         db.run(`
             CREATE TABLE IF NOT EXISTS DeviceSensorMapping (
                 deviceId INTEGER,
-                sensorModel TEXT,
+                model TEXT,
                 manufacturerName TEXT,
                 channel INTEGER,
-                PRIMARY KEY (deviceId, sensorModel, manufacturerName, channel),
+                PRIMARY KEY (deviceId, model, manufacturerName, channel),
                 FOREIGN KEY (deviceId) REFERENCES Device(deviceId),
-                FOREIGN KEY (sensorModel) REFERENCES Sensor(model),
+                FOREIGN KEY (model) REFERENCES Sensor(model),
                 FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName)
             );
         `);

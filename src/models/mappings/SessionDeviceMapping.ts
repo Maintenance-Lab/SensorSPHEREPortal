@@ -9,8 +9,8 @@ class SessionDeviceMapping extends Model {
 }
 
 SessionDeviceMapping.init({
-    sessionId: { type: DataTypes.INTEGER, references: { model: 'Session', key: 'sessionId' }, primaryKey: true, allowNull: false },
-    deviceId: { type: DataTypes.INTEGER, references: { model: 'Device', key: 'deviceId' }, primaryKey: true, allowNull: false },
+    sessionId: { type: DataTypes.INTEGER, primaryKey: true,  references: { model: 'Session', key: 'sessionId' }, allowNull: false },
+    deviceId: { type: DataTypes.INTEGER, primaryKey: true, references: { model: 'Device', key: 'deviceId' },  allowNull: false },
     configuredHz: { type: DataTypes.INTEGER, allowNull: false },
 }, {
     sequelize,

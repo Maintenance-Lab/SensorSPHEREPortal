@@ -6,7 +6,7 @@ export const getAllDevices = async (): Promise<Device[]> => {
         console.log("in getAllDevices");
         const results = await Device.findAll();
         if (!results) return resolve([]);
-        console.log("all devices", results);
+        // console.log("all devices", results);
         // return resolve(docs.map(doc => doc.toJSON()));
         return resolve(results);
 

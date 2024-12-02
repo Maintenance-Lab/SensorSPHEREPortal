@@ -1,6 +1,8 @@
 import Session from '../models/Session.js';
 import Project from '../models/Project.js';
+import Device from '../models/Device.js';
 import SessionDeviceMapping from '../models/mappings/SessionDeviceMapping.js';
+import { config } from 'dotenv-safe';
 
 /* FUNCTIES DIE WERKEN - volgens mij (amber)
     getSessionById
@@ -90,6 +92,32 @@ export const createSession = async (item: Partial<Session>) => {
     return resolve(result);
   });
 };
+
+export const addDevices = async (sessionId: number, deviceIds: Array<number>) => {
+  const configuredHz = 1;
+  console.log("in addDevices funtie", sessionId, deviceIds);
+  return new Promise(async (resolve, reject) => {
+    const results = [];
+    for (const deviceId of deviceIds) {
+      try {
+        const mapping = await SessionDeviceMapping.findOne({ where: { sessionId: sessionId, deviceId: deviceId }});
+        // if (mapping) return reject(new Error("Device already added to session"));
+        if (!mapping) {
+          const result = await SessionDeviceMapping.create({ sessionId: sessionId, deviceId: deviceId, configuredHz: configuredHz });
+          if (!result) return reject(new Error("Failed to add device to session"));
+          results.push(result);
+        }
+      }
+      catch (error) {
+        console.error("Error in addDevices:", error);
+        return reject(error);
+      }
+      // const result = await SessionDeviceMapping.create({ sessionId: sessionId, deviceId: deviceId, configuredHz: configuredHz });
+    }
+
+    return resolve(results);
+  });
+}
 
 export const updateSession = async (id: number, item: Partial<Session>) => {
   console.log("in updateSession", id, item);

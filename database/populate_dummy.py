@@ -3,7 +3,7 @@ import random
 import string
 import datetime
 
-database_path = 'database/db.sqlite3'
+database_path = 'db.sqlite3'
 
 # connect to the database
 conn = sqlite3.connect(database_path)
@@ -124,18 +124,18 @@ c.executemany('''
 
 # Create mappings between sessions and devices
 session_device_mappings = [
-    (1, 1),  # Session 1 is using Device 1
-    (1, 2),  # Session 1 is using Device 2
-    (2, 3),  # Session 2 is using Device 3
-    (3, 4),  # Session 3 is using Device 4
-    (4, 1),  # Session 4 is using Device 1
-    (4, 5),  # Session 4 is using Device 5
-    (5, 2)   # Session 5 is using Device 2
+    (1, 1, 1300),  # Session 1 is using Device 1
+    (1, 2, 1300),  # Session 1 is using Device 2
+    (2, 3, 2324),  # Session 2 is using Device 3
+    (3, 4, 2423),  # Session 3 is using Device 4
+    (4, 1, 6969),  # Session 4 is using Device 1
+    (4, 5, 21),  # Session 4 is using Device 5
+    (5, 2, 1111)   # Session 5 is using Device 2
 ]
 
 c.executemany('''
-    INSERT INTO SessionDeviceMapping (sessionId, deviceId)
-    VALUES (?, ?)
+    INSERT INTO SessionDeviceMapping (sessionId, deviceId, configuredHz)
+    VALUES (?, ?, ?)
 ''', session_device_mappings)
 
 # Create mappings between devices and sensors

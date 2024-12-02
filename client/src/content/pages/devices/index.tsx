@@ -105,14 +105,14 @@ const fetchDevices = async () => {
 
 const devicesColumns: GridColDef[] = [
   {
-    field: 'name', headerName: 'Name', renderCell: (params) => (
+    field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
       <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
     )
   },
   // { field: 'macAddress', headerName: 'MAC Address', valueFormatter: (value?: string) => value?.toUpperCase() },
-  { field: 'id', headerName: 'MAC Address' },
+  { field: 'id', headerName: 'MAC Address', flex: 1 },
   {
-    field: 'battery', headerName: 'Battery', renderCell: (params) => (
+    field: 'battery', headerName: 'Battery', flex: 1, renderCell: (params) => (
       <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
         <BatteryFullIcon fontSize="small" />
         {params.value ? (
@@ -123,8 +123,8 @@ const devicesColumns: GridColDef[] = [
       </Stack>
     )
   },
-  { field: 'status', headerName: 'Status' },
-  { field: 'maxHz', headerName: 'Max Hz' },
+  { field: 'status', headerName: 'Status', flex: 1 },
+  { field: 'maxHz', headerName: 'Max Hz', flex: 1 },
 ];
 
 function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, handleOpenAddToProjects }) {

@@ -741,6 +741,17 @@ const ProjectDetail = () => {
     }
   };
 
+  const dateFormat = (lastActive) => {
+    const date = new Date(lastActive);
+    return new Intl.DateTimeFormat('nl-NL', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date).replace(',', '');
+  };
+
   const sessionRows: GridRowsProp = sortedSessions.map((session) => ({
     id: session.sessionId,
     name: session.name,
@@ -750,7 +761,7 @@ const ProjectDetail = () => {
     projectId: session.projectId,
     meta: session.meta,
     createdAt: session.createdAt,
-    lastActive: session.lastActive,
+    lastActive: dateFormat(session.lastActive),
     archived: session.archived,
   }));
 

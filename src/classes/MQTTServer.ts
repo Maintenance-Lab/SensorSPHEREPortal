@@ -3,39 +3,7 @@ import { MQTT_URI } from '../config.js';
 import { EventEmitter } from 'events';
 import Device from '../models/Device.js';
 import Manufacturer from '../models/Manufacturer.js';
-import { addDeviceData } from '../services/Device.js';
-
-// Example discover message we might receive
-// {
-//     "MAC": "<MAC-ADDRESS>",
-//     "connected": [
-//       {
-//         "unit": "ENV3",
-//         "variables": ["t", "hu", "te"]
-//       },
-//       {
-//         "unit": "IMU",
-//         "variables": ["accX", "accY", "accZ", "gyroX", "gyroY", "gyroZ", "temp"]
-//       },
-//       ...
-//     ]
-//   }
-
-// Example Configuration message we can use to configure a device
-// This is to topic data/<MAC-ADDRESS>/cfg
-// {
-//     "read": [
-//       {
-//         "unit": "ENV3",
-//         "variables": ["t", "hu"]
-//       },
-//       {
-//         "unit": "IMU",
-//         "variables": ["accX", "accY", "accZ", "temp"]
-//       },
-//       ...
-//     ]
-//   }
+import { MQTTMessage } from '../services/Mqtt.js';
 
 // export const mqttEvents = new EventEmitter();
 
@@ -91,7 +59,8 @@ export class MQTTServer {
 
     this.client.on("message", (topic, message) => {
       console.log(`MQTT message received: ${topic} ${message}`);
-      addDeviceData(topic, message);
+      MQTTMessage(topic, message);
+      // addDeviceData(topic, message);
       // mqttEvents.emit("message", topic, message);
     });
   }

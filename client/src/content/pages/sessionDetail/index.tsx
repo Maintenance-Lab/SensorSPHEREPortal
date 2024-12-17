@@ -318,28 +318,29 @@ function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, session
       return;
     }
 
-    // const res2 = await fetch('/api/mqtt/publish', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     credentials: 'include'
-    //   },
-    //   body: JSON.stringify({
-    //     id: selectedDeviceIds[0],
-    //     postfix: 'msg',
-        // message: JSON.stringify({
-        //   read: [
-        //     { unit: 'ENV3', variables: ['t', 'hu'] },
-        //     { unit: 'IMU', variables: ['accX', 'accY', 'accZ', 'temp'] }
-        //   ]
-        // })
-    //   })
-    // });
+    const res2 = await fetch('/api/mqtt/publish', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      },
+      body: JSON.stringify({
+        id: selectedDeviceIds[0],
+        postfix: 'msg',
+        message: JSON.stringify({
+          read: [
+            { unit: 'ENV3', variables: ['t', 'hu'] },
+            { unit: 'IMU', variables: ['accX', 'accY', 'accZ', 'temp'] }
+          ]
+        })
+      })
+    });
 
-    // if (!res2.ok) {
-    //   console.error('Failed to add devices to session');
-    //   return;
-    // }
+    if (!res2.ok) {
+      console.error('Failed to add devices to session');
+      return;
+    }
+
     const data = await res.json();
     allDevices();
     return data;

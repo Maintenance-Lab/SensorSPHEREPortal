@@ -60,16 +60,24 @@ export const setupRelations = () => {
 
 
     // Set up the one-to-many relationships
-    Sensor.belongsTo(Manufacturer, { foreignKey: 'manufacturerName'});
-    Manufacturer.hasMany(Sensor)
+
+    Device.hasMany(Manufacturer, { foreignKey: 'manufacturerName' });
+    Sensor.hasMany(Manufacturer, { foreignKey: 'manufacturerName' });
 
 
-    Device.hasOne(Manufacturer, { foreignKey: 'manufacturerName' });
+// -------------------------------------- ^ dit werkt ^ --------------------------
+
+
+    // Sensor.belongsTo(Manufacturer, { foreignKey: 'manufacturerName'});
+    // Manufacturer.hasMany(Sensor)
+
+
+    // Device.hasOne(Manufacturer, { foreignKey: 'manufacturerName' });
     // Manufacturer.hasMany(Device)
 
 
-    Sensor.belongsTo(SensorCategory, { foreignKey: 'categoryName' });
-    // SensorCategory.hasMany(Sensor);
+    // Sensor.belongsTo(SensorCategory, { foreignKey: 'categoryName' });
+    // // SensorCategory.hasMany(Sensor);
 
 
     SensorProperty.belongsTo(Sensor, { foreignKey: 'model', as: 'sensorModel' })

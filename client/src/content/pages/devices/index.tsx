@@ -161,7 +161,7 @@ function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, handleO
           disabled={!activeSelection}
           onClick={handleOpenAddToProjects}
         >
-          Add Devices To Project...
+          Add Devices To Session...
         </Button>
       </Stack>
     </GridToolbarContainer>

@@ -7,6 +7,7 @@ import ProjectsRouter from './projects.js';
 import ProjectRouter from './project/index.js';
 import SessionRouter from './sessions.js';
 import TestRouter from './test.js';
+import MQTTRouter from './mqtt.js';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use("/projects", ProjectsRouter);
 router.use("/project", ProjectRouter);
 router.use("/sessions", SessionRouter);
 router.use("/test", TestRouter);
+router.use("/mqtt", MQTTRouter);
 
 export default router;

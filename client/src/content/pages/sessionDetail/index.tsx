@@ -28,7 +28,8 @@ import { ArchiveOutlined, DeleteOutline, Devices, Edit, EventNote, InfoOutlined,
 import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import { add } from 'date-fns';
-
+import { id } from 'date-fns/locale';
+import { Session } from 'inspector';
 
 
 
@@ -60,9 +61,9 @@ const devicesColumns: GridColDef[] = [
   { field: 'maxHz', headerName: 'Max Hz', flex: 1 },
 ];
 
-const fetchDevices = async () => {
-  console.log("in fetchDevices");
-  const devices = await fetch('/api/devices/all', {
+const fetchDevices = async (sessionId) => {
+  console.log("in fetchDevices: ", sessionId);
+  const devices = await fetch('/api/devices/all/' + sessionId, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -298,7 +299,7 @@ const SessionStatusCard = ({ sessionId, status }) => {
   );
 };
 
-function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, sessionId }) {
+function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, sessionId, allDevices }) {
   const addDeviceToSession = async (sessionId, selectedDeviceIds) => {
     const res = await fetch('/api/sessions/addDevices', {
       method: 'POST',
@@ -316,7 +317,31 @@ function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, session
       console.error('Failed to add devices to session');
       return;
     }
+
+    // const res2 = await fetch('/api/mqtt/publish', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     credentials: 'include'
+    //   },
+    //   body: JSON.stringify({
+    //     id: selectedDeviceIds[0],
+    //     postfix: 'msg',
+        // message: JSON.stringify({
+        //   read: [
+        //     { unit: 'ENV3', variables: ['t', 'hu'] },
+        //     { unit: 'IMU', variables: ['accX', 'accY', 'accZ', 'temp'] }
+        //   ]
+        // })
+    //   })
+    // });
+
+    // if (!res2.ok) {
+    //   console.error('Failed to add devices to session');
+    //   return;
+    // }
     const data = await res.json();
+    allDevices();
     return data;
   }
 
@@ -326,7 +351,7 @@ function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, session
         <Button
           variant="outlined"
           startIcon={<Devices />}
-          onClick={() => addDeviceToSession(sessionId, selectedDeviceIds)}
+          onClick={() =>  addDeviceToSession(sessionId, selectedDeviceIds)}
         >
           Add Devices
         </Button>
@@ -359,13 +384,10 @@ const SessionDetail = () => {
   const [devices, setDevices] = useState([]);
 
   const allDevices = async () => {
-    const devices = await fetchDevices();
+    console.log("in all devices");
+    const devices = await fetchDevices(sessionId);
     setDevices(devices);
   }
-
-  useEffect(() => {
-    allDevices();
-  }, []);
 
   const devicesRows: GridRowsProp = devices.map((device) => ({
     name:     device.manufacturerName,
@@ -439,6 +461,7 @@ const SessionDetail = () => {
   };
 
   useEffect(() => {
+    allDevices();
     fetchSession();
   }, []);
 
@@ -636,6 +659,7 @@ const SessionDetail = () => {
                   selectedDeviceIds={selectedDeviceIds}
                   setSelectedDeviceIds={setSelectedDeviceIds}
                   sessionId={sessionId}
+                  allDevices={allDevices}
                   // fetchDevices={allDevices}
                 />}}
               sx={{

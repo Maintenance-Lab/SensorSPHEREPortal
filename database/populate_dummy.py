@@ -3,7 +3,7 @@ import random
 import string
 import datetime
 
-database_path = 'db.sqlite3'
+database_path = 'database/db.sqlite3'
 
 # connect to the database
 conn = sqlite3.connect(database_path)
@@ -148,7 +148,7 @@ device_sensor_mappings = [
 ]
 
 c.executemany('''
-    INSERT INTO DeviceSensorMapping (deviceId, sensorModel, manufacturerName, channel)
+    INSERT INTO DeviceSensorMapping (deviceId, model, manufacturerName, channel)
     VALUES (?, ?, ?, ?)
 ''', device_sensor_mappings)
 

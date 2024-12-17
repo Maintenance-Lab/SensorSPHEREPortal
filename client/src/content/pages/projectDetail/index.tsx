@@ -761,7 +761,8 @@ const ProjectDetail = () => {
     projectId: session.projectId,
     meta: session.meta,
     createdAt: session.createdAt,
-    lastActive: dateFormat(session.lastActive),
+    lastActive: session.lastActive,
+    // lastActive: dateFormat(session.lastActive),
     archived: session.archived,
   }));
 

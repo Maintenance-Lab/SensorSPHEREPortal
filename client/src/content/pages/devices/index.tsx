@@ -84,6 +84,26 @@ const updateProject = async (projectId: number, selectedSensorUnits) => {
   return updateData;
 }
 
+const fetchDevicesGateway = async () => {
+  console.log("in fetchDevicesGateway");
+  const devicesGateway = await fetch('/api/mqtt/devices', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    }
+  });
+
+  if (!devicesGateway.ok) {
+    console.error('Failed to fetch data');
+    return [];
+  }
+
+  const devicesGatewayData = await devicesGateway.json();
+  console.log("devicesGatewayData", devicesGatewayData);
+  return devicesGatewayData;
+}
+
 const fetchDevices = async () => {
   console.log("in fetchDevices");
   const devices = await fetch('/api/devices/all', {
@@ -162,6 +182,7 @@ const Devices = () => {
   }
 
   useEffect(() => {
+    fetchDevicesGateway();
     allDevices();
   }, []);
 

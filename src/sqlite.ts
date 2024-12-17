@@ -100,7 +100,6 @@ const initDb = () => {
                 batteryLevel INTEGER,
                 maxHz INTEGER,
                 PRIMARY KEY (deviceId),
-                FOREIGN KEY (deviceId) REFERENCES DeviceSensorMapping(deviceId)
                 FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName)
             );
         `);
@@ -129,7 +128,7 @@ const initDb = () => {
                 PRIMARY KEY (deviceId, model, manufacturerName, channel),
                 FOREIGN KEY (deviceId) REFERENCES Device(deviceId),
                 FOREIGN KEY (model) REFERENCES Sensor(model),
-                FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName)
+                FOREIGN KEY (manufacturerName) REFERENCES Sensor(manufacturerName)
             );
         `);
 

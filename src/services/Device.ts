@@ -43,7 +43,7 @@ export const getAllDevicesSession = async (sessionId: number): Promise<Device[]>
 
 
 
-export const getDeviceById = async (id: number): Promise<Device> => {
+export const getDeviceById = async (id: string): Promise<Device> => {
     return new Promise(async (resolve, reject) => {
         console.log("in getDeviceById", id);
         const doc = await Device.findByPk(id);

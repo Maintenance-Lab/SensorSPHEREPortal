@@ -39,12 +39,12 @@ export const setupRelations = () => {
     Sensor.belongsToMany(Device, { through: DeviceSensorMapping, foreignKey: 'model' });
     Sensor.belongsToMany(Device, { through: DeviceSensorMapping, foreignKey: 'manufacturerName' });
 
-    Device.hasMany(DeviceSensorMapping, { foreignKey: 'deviceId' });
-    DeviceSensorMapping.belongsTo(Device, { foreignKey: 'deviceId' });
-    Sensor.hasMany(DeviceSensorMapping, { foreignKey: 'model' });
-    DeviceSensorMapping.belongsTo(Sensor, { foreignKey: 'model' });
-    Sensor.hasMany(DeviceSensorMapping, { foreignKey: 'manufacturerName' });
-    DeviceSensorMapping.belongsTo(Sensor, { foreignKey: 'manufacturerName' });
+    // Device.hasMany(DeviceSensorMapping, { foreignKey: 'deviceId' });
+    // DeviceSensorMapping.belongsTo(Device, { foreignKey: 'deviceId' });
+    // Sensor.hasMany(DeviceSensorMapping, { foreignKey: 'model' });
+    // DeviceSensorMapping.belongsTo(Sensor, { foreignKey: 'model' });
+    // Sensor.hasMany(DeviceSensorMapping, { foreignKey: 'manufacturerName' });
+    // DeviceSensorMapping.belongsTo(Sensor, { foreignKey: 'manufacturerName' });
 
 
 

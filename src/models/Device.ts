@@ -3,21 +3,19 @@ import sequelize from '../sequelize.js';
 import Manufacturer from './Manufacturer.js';
 
 class Device extends Model {
-    deviceId: number;
+    deviceId: string;
     manufacturerName: string;
     // Model: string;
-    connectStatus: boolean;
+    connectStatus: string;
     batteryLevel: number;
     maxHz: number;
 }
 
 Device.init({
-    // Device id should be a mac address, maybe double check if this is correct?
-    // deviceId: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false, validate: { is: /^([0-9a-fA-F][0-9a-fA-F]:){5}([0-9a-fA-F][0-9a-fA-F])$/} },
-    deviceId: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false },
+    deviceId: { type: DataTypes.STRING, primaryKey: true, references: { model: 'Device', key: 'deviceId' },  allowNull: false, validate: { is: /^([0-9A-F][0-9A-F]:){5}([0-9A-F][0-9A-F])$/i } },
     manufacturerName: { type: DataTypes.STRING(100), allowNull: false, references: { model: 'Manufacturer', key: 'manufacturerName' } },
     // Model: { type: DataTypes.STRING(100), allowNull: false, references: { model: Sensor, key: 'Model' } },
-    connectStatus: { type: DataTypes.BOOLEAN, defaultValue: false},
+    connectStatus: { type: DataTypes.STRING, defaultValue: false,  validate: { isIn: [["connected", "disconnected"]] }},
     batteryLevel: { type: DataTypes.INTEGER, defaultValue: 0},
     maxHz: { type: DataTypes.INTEGER, defaultValue: 0},
 },

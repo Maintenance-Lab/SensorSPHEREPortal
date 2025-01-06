@@ -22,7 +22,7 @@ router.get("/all/:session", async (req, res) => {
 
 router.get("/id/:id", async (req, res) => {
     console.log("in get session by id");
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const doc = await getDeviceById(id);
     if (!doc) return res.status(404).json({ message: "Device not found" });
     return res.json(doc);

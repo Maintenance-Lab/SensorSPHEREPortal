@@ -94,9 +94,9 @@ const initDb = () => {
         // Device table
         db.run(`
             CREATE TABLE IF NOT EXISTS Device (
-                deviceId INTEGER NOT NULL,
+                deviceId TEXT NOT NULL,
                 manufacturerName TEXT NOT NULL,
-                connectStatus BOOLEAN,
+                connectStatus TEXT,
                 batteryLevel INTEGER,
                 maxHz INTEGER,
                 PRIMARY KEY (deviceId),

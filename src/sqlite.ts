@@ -112,8 +112,8 @@ const initDb = () => {
                 propertyName TEXT NOT NULL,
                 active BOOLEAN NOT NULL,
                 PRIMARY KEY (sessionId, deviceId, propertyName),
-                FOREIGN KEY (sessionId) REFERENCES Session(sessionId),
-                FOREIGN KEY (deviceId) REFERENCES Device(deviceId),
+                FOREIGN KEY (sessionId) REFERENCES SessionDeviceMapping(sessionId),
+                FOREIGN KEY (deviceId) REFERENCES SessionDeviceMapping(deviceId),
                 FOREIGN KEY (propertyName) REFERENCES SensorProperty(propertyName)
             );
         `);
@@ -127,8 +127,7 @@ const initDb = () => {
                 channel INTEGER,
                 PRIMARY KEY (deviceId, model, manufacturerName, channel),
                 FOREIGN KEY (deviceId) REFERENCES Device(deviceId),
-                FOREIGN KEY (model) REFERENCES Sensor(model),
-                FOREIGN KEY (manufacturerName) REFERENCES Sensor(manufacturerName)
+                FOREIGN KEY (model, manufacturerName) REFERENCES Sensor(model, manufacturerName)
             );
         `);
 
@@ -157,8 +156,7 @@ const initDb = () => {
                 propertyName TEXT PRIMARY KEY,
                 model TEXT,
                 manufacturerName TEXT,
-                FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName),
-                FOREIGN KEY (model) REFERENCES SensorCategory(model)
+                FOREIGN KEY (manufacturerName, model) REFERENCES Sensor(manufacturerName, model)
             );
         `);
 

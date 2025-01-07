@@ -1,5 +1,6 @@
 import Session from './Session.js';
 import Device from './Device.js';
+import SessionDeviceMapping from './mappings/SessionDeviceMapping.js';
 import SensorProperty from './SensorProperty.js';
 import sequelize from '../sequelize.js';
 
@@ -14,8 +15,8 @@ class DeviceSensorConfiguration extends Model {
 }
 
 DeviceSensorConfiguration.init({
-    sessionId: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false, references: { model: Session, key: 'sessionId' } },
-    deviceId: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false, references: { model: Device, key: 'deviceId' } },
+    sessionId: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false, references: { model: SessionDeviceMapping, key: 'sessionId' } },
+    deviceId: { type: DataTypes.INTEGER, primaryKey: true, allowNull: false, references: { model: SessionDeviceMapping, key: 'deviceId' } },
     propertyName: { type: DataTypes.STRING, primaryKey: true, allowNull: false, references: { model: SensorProperty, key: 'propertyName' } },
     active: { type: DataTypes.BOOLEAN, defaultValue: false },
 },

@@ -36,26 +36,29 @@ export const setupRelations = () => {
 
     // Device Sensor Mapping
     Device.belongsToMany(Sensor, { through: DeviceSensorMapping, foreignKey: 'deviceId' });
-    Sensor.belongsToMany(Device, { through: DeviceSensorMapping, foreignKey: 'model' });
-    Sensor.belongsToMany(Device, { through: DeviceSensorMapping, foreignKey: 'manufacturerName' });
+    Sensor.belongsToMany(Device, { through: DeviceSensorMapping, foreignKey: 'model', otherKey: 'manufacturerName' });
+    // Sensor.belongsToMany(Device, { through: DeviceSensorMapping, foreignKey: 'manufacturerName' });
+    // Sensor.belongsToMany(Device, { through: DeviceSensorMapping, foreignKey: 'manufacturerName' });
 
-    // Device.hasMany(DeviceSensorMapping, { foreignKey: 'deviceId' });
-    // DeviceSensorMapping.belongsTo(Device, { foreignKey: 'deviceId' });
-    // Sensor.hasMany(DeviceSensorMapping, { foreignKey: 'model' });
-    // DeviceSensorMapping.belongsTo(Sensor, { foreignKey: 'model' });
-    // Sensor.hasMany(DeviceSensorMapping, { foreignKey: 'manufacturerName' });
-    // DeviceSensorMapping.belongsTo(Sensor, { foreignKey: 'manufacturerName' });
-
-
+    Device.hasMany(DeviceSensorMapping, { foreignKey: 'deviceId' });
+    DeviceSensorMapping.belongsTo(Device, { foreignKey: 'deviceId' });
+    Sensor.hasMany(DeviceSensorMapping, { foreignKey: 'model' });
+    DeviceSensorMapping.belongsTo(Sensor, { foreignKey: 'model' });
+    Sensor.hasMany(DeviceSensorMapping, { foreignKey: 'manufacturerName' });
+    DeviceSensorMapping.belongsTo(Sensor, { foreignKey: 'manufacturerName' });
 
     // Set up one-to-many relationships
     // // Device Sensor Configuration
     DeviceSensorConfiguration.hasMany(SessionDeviceMapping, { foreignKey: 'sessionId' });
+    SessionDeviceMapping.belongsTo(DeviceSensorConfiguration, { foreignKey: 'sessionId' });
     DeviceSensorConfiguration.hasMany(SessionDeviceMapping, { foreignKey: 'deviceId' });
+    SessionDeviceMapping.belongsTo(DeviceSensorConfiguration, { foreignKey: 'deviceId' });
     DeviceSensorConfiguration.hasMany(SensorProperty, { foreignKey: 'propertyName' });
+    SessionDeviceMapping.belongsTo(SensorProperty, { foreignKey: 'propertyName' });
 
-    SessionDeviceMapping.belongsToMany(DeviceSensorConfiguration, { through: DeviceSensorConfiguration, foreignKey: 'sessionId' });
-    SessionDeviceMapping.belongsToMany(DeviceSensorConfiguration, { through: DeviceSensorConfiguration, foreignKey: 'deviceId' });
+    // SessionDeviceMapping.belongsToMany(DeviceSensorConfiguration, { through: DeviceSensorConfiguration, foreignKey: 'sessionId', otherKey: 'deviceId' });
+    // SessionDeviceMapping.belongsToMany(DeviceSensorConfiguration, { through: DeviceSensorConfiguration, foreignKey: 'sessionId' });
+    // SessionDeviceMapping.belongsToMany(DeviceSensorConfiguration, { through: DeviceSensorConfiguration, foreignKey: 'deviceId' });
     SensorProperty.belongsToMany(DeviceSensorConfiguration, { through: DeviceSensorConfiguration, foreignKey: 'propertyName' });
 
 
@@ -63,6 +66,9 @@ export const setupRelations = () => {
 
     Device.hasMany(Manufacturer, { foreignKey: 'manufacturerName' });
     Sensor.hasMany(Manufacturer, { foreignKey: 'manufacturerName' });
+
+    Manufacturer.belongsTo(Device, { foreignKey: 'manufacturerName' });
+    Manufacturer.belongsTo(Sensor, { foreignKey: 'manufacturerName' });
 
 
 // -------------------------------------- ^ dit werkt ^ --------------------------
@@ -88,8 +94,8 @@ export const setupRelations = () => {
     Session.belongsTo(Project, { foreignKey: 'projectId' });
 
 
-    DeviceSensorConfiguration.hasMany(SensorProperty, { foreignKey: 'propertyName' });
-    SensorProperty.belongsTo(DeviceSensorConfiguration);
+    // DeviceSensorConfiguration.hasMany(SensorProperty, { foreignKey: 'propertyName' });
+    // SensorProperty.belongsTo(DeviceSensorConfiguration);
 
 
 

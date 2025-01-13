@@ -12,9 +12,11 @@ class SensorProperty extends Model {
 
 SensorProperty.init({
     propertyName: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
-    model: { type: DataTypes.STRING, allowNull: false, references: { model: Sensor, key: 'model' } },
+    model: { type: DataTypes.STRING, primaryKey: true, allowNull: false, references: { model: Sensor, key: 'model' } },
+    // model: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
     // manufacturerName: { type: DataTypes.STRING, allowNull: false, references: { model: Manufacturer, key: 'manufacturerName' } },
-    manufacturerName: { type: DataTypes.STRING, allowNull: false, references: { model: Sensor, key: 'manufacturerName' } },
+    manufacturerName: { type: DataTypes.STRING, primaryKey: true, allowNull: false, references: { model: Sensor, key: 'manufacturerName' } },
+    // manufacturerName: { type: DataTypes.STRING, primaryKey: true, allowNull: false }
 },
 {
     sequelize,

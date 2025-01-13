@@ -1,6 +1,7 @@
 import Project from "../models/Project.js";
 import Manufacturer from "../models/Manufacturer.js";
 import SensorCategory from "../models/SensorCategory.js";
+import SensorProperty from "../models/SensorProperty.js";
 import DeviceSensorMapping from "../models/mappings/DeviceSensorMapping.js";
 import Device from "../models/Device.js";
 import Sensor from "../models/Sensor.js";
@@ -20,6 +21,7 @@ Message example received from MQTT:
                 model: "model1",
                 manufacturerName: "Philips",
                 categoryName : "category1"
+                properties: ["Gyro X", "Gyro Y", "Gyro Z"]
                }
             ]
 }
@@ -55,23 +57,11 @@ const addNewEntryToTable = async (table: any, entry: any) => {
     return new Promise(async (resolve, reject) => {
         console.log("In add new entry to table: ", table, entry);
 
-        let existingEntry;
-        try {
-            existingEntry = await table.findOne({ where: entry });
-        }
-        catch (error) {
-            console.log("Error finding entry: ", error);
-        }
-        // const existingEntry = await table.findOne({ where: entry });
+        const existingEntry = await table.findOne({ where: entry });
 
         if (!existingEntry) {
-            try {
-                const doc = await table.create( entry );
-                if (!doc) return reject(new Error("Error creating entry"));
-            }
-            catch (error) {
-                console.log("Error creating entry....: ", error);
-            }
+            const doc = await table.create( entry );
+            if (!doc) return reject(new Error("Error creating entry"));
         }
 
         return resolve({ message: "Entry created" });
@@ -83,32 +73,16 @@ const addOrUpdateDevice = async (entry: any) => {
     return new Promise(async (resolve, reject) => {
         console.log("In add or update device");
 
-        let existingDevice;
-        try {
-            existingDevice = await Device.findOne({ where: { deviceId: entry["deviceId"] } });
-        }
-        catch (error) {
-            console.log("Error finding device: ", error);
-        }
+        const existingDevice = await Device.findOne({ where: { deviceId: entry["deviceId"] } });
 
         if (existingDevice) {
             // update device
-            try {
-                const doc = await existingDevice.update( entry );
-                if (!doc) return reject(new Error("Error updating entry"));
-            }
-            catch (error) {
-                console.log("Error updating device: ", error);
-            }
+            const doc = await existingDevice.update( entry );
+            if (!doc) return reject(new Error("Error updating entry"));
         }
         else {
-            try {
-                const doc = await Device.create( entry );
-                if (!doc) return reject(new Error("Error creating entry"));
-            }
-            catch (error) {
-                console.log("Error creating device: ", error);
-            }
+            const doc = await Device.create( entry );
+            if (!doc) return reject(new Error("Error creating entry"));
         }
 
         return resolve({ message: "Entry created or updated" });
@@ -121,7 +95,6 @@ const addDeviceToDatabase = async (message: any, deviceId: string) => {
         console.log("In add device to database: ", message, deviceId);
 
         // If device manufacturer does not exist, add it to database
-        console.log("manufacturer name: ", message.manufacturerName);
         addNewEntryToTable(Manufacturer, { manufacturerName: message.manufacturerName })
 
         // Add device to database if device does not exist
@@ -133,16 +106,16 @@ const addDeviceToDatabase = async (message: any, deviceId: string) => {
         for (const sensor of message.sensors) {
             addNewEntryToTable(SensorCategory, { categoryName: sensor.categoryName })
             addNewEntryToTable(Manufacturer, { manufacturerName: sensor.manufacturerName })
-            addNewEntryToTable(Sensor, sensor)
+            addNewEntryToTable(Sensor, { model: sensor.model, manufacturerName: sensor.manufacturerName, categoryName: sensor.categoryName })
 
-            // Add device sensor mapping to database if it does not exist - NOG TESTEN
+            // Add device sensor mapping to database if it does not exist
             addNewEntryToTable(DeviceSensorMapping, { channel: message.channel, deviceId: deviceId, model: sensor.model, manufacturerName: sensor.manufacturerName })
+
+            // Add sensor properties to database if they do not exist
+            for (const property of sensor.properties) {
+                addNewEntryToTable(SensorProperty, { propertyName: property, model: sensor.model, manufacturerName: sensor.manufacturerName })
+            }
         }
-
-
-
-
-
 
 
         // GEBLEVEN BIJ:
@@ -154,10 +127,9 @@ const addDeviceToDatabase = async (message: any, deviceId: string) => {
         //  - sensor toevoegen
         //  - device toevoegen
         //  - device sensor mapping toevoegen
+        //  - uitzoeken wat die sensor property is/doet en toevoegen
         //
         // TODO:
-        // - uitzoeken wat die sensor property is/doet en toevoegen
-        //
         // device sensor config komt later als user daadwerkelijk wil gaan meten
 
 

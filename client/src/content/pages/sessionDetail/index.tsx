@@ -17,7 +17,8 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle
+  DialogTitle,
+  Snackbar
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
@@ -25,11 +26,13 @@ import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
 import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';
 import { ArchiveOutlined, DeleteOutline, Devices, Edit, EventNote, InfoOutlined, Inventory, MoreTime, Pause, PlayArrow, Router, Schedule, Stop, UnarchiveOutlined, Usb } from '@mui/icons-material';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import { add } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Session } from 'inspector';
+
 
 
 
@@ -61,24 +64,51 @@ const devicesColumns: GridColDef[] = [
   { field: 'maxHz', headerName: 'Max Hz', flex: 1 },
 ];
 
+
+
 const fetchDevices = async (sessionId) => {
-  console.log("in fetchDevices: ", sessionId);
-  const devices = await fetch('/api/devices/all/' + sessionId, {
+  console.log("------ Fetching devices for session: ", sessionId);
+  const devices = await fetch('/api/devices/all/' + sessionId, {  // Adjust the endpoint as needed
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
-    }
+      credentials: 'include',
+    },
   });
 
   if (!devices.ok) {
-    console.error('Failed to fetch data');
+    console.error('Failed to fetch devices 22');
     return [];
   }
 
   const devicesData = await devices.json();
+  console.log(devicesData)
   return devicesData;
-}
+};
+
+const removeDevicesFromSession = async (sessionId, selectedDeviceIds) => {
+  const res = await fetch('/api/sessions/removeFromSession', {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include',
+    },
+    body: JSON.stringify({
+      sessionId: sessionId,
+      deviceIds: selectedDeviceIds,
+    }),
+  });
+
+  if (!res.ok) {
+    console.error('Failed to remove devices from session');
+    return;
+  }
+
+  const data = await res.json();
+  console.log('Devices removed successfully:', data);
+
+  window.location.reload();
+};
 
 const updateSession = async (sessionId, name, description, archived, status) => {
   const res = await fetch('/api/sessions/update/' + sessionId, {
@@ -300,6 +330,7 @@ const SessionStatusCard = ({ sessionId, status }) => {
 };
 
 function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, sessionId, allDevices }) {
+  const activeSelection = selectedDeviceIds.length > 0;
   const addDeviceToSession = async (sessionId, selectedDeviceIds) => {
     const res = await fetch('/api/sessions/addDevices', {
       method: 'POST',
@@ -357,9 +388,20 @@ function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, session
           Add Devices
         </Button>
         <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
+          <Button
+            variant="outlined"
+            size="medium"
+            color="error"
+            startIcon={<DeleteOutlineOutlinedIcon />}
+            disabled={!activeSelection}
+            onClick={() => removeDevicesFromSession(sessionId, selectedDeviceIds)}
+          >
+            Remove from session
+          </Button>
       </Stack>
     </GridToolbarContainer>
   );
+  
 }
 
 
@@ -390,6 +432,12 @@ const SessionDetail = () => {
     setDevices(devices);
   }
 
+  const fetchSessionDevices = async () => {
+    console.log('--------- hij zit in fetchSessionDevices')
+    const devices = await fetchDevices(sessionId);
+    setDevices(devices);
+  };
+
   const devicesRows: GridRowsProp = devices.map((device) => ({
     name:     device.manufacturerName,
     id:       device.deviceId,
@@ -417,7 +465,7 @@ const SessionDetail = () => {
     setSessionStatus(data.status);
     setSessionDescription(data.description);
 
-    console.log('Fetching project 3', data.projectId);
+    console.log('Fetching project step 3', data.projectId);
     const projectResponse = await fetch('/api/projects/id/' + data.projectId, {
       method: 'GET',
       headers: {
@@ -462,9 +510,10 @@ const SessionDetail = () => {
   };
 
   useEffect(() => {
-    allDevices();
+    fetchSessionDevices();
     fetchSession();
-  }, []);
+
+  }, [sessionId]);
 
   const ConfirmationDialog = ({ open, onClose, onConfirm, sessionId }) => (
     <Dialog open={open} onClose={onClose}>

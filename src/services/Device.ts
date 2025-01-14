@@ -22,6 +22,32 @@ export const getAllDevices = async (): Promise<Device[]> => {
     });
 }
 
+// Devices mapped to session
+export const getDevicesMappedToSession = async (sessionId: number): Promise<Device[]> => {
+    return new Promise(async (resolve) => {
+        console.log("in getAllDevicesMappedToSession");
+
+        // Fetch all devices
+        const devices = await Device.findAll();
+        if (!devices) return resolve([]);
+
+        // Get the session-device mappings for the given sessionId
+        const mapping = await SessionDeviceMapping.findAll({ where: { sessionId } });
+        if (!mapping) return resolve([]);
+
+        // Extract the deviceIds from the mappings
+        const deviceIds = mapping.map((m) => m.deviceId);
+
+        // Filter the devices to get only those that are mapped to the given session
+        const results = devices.filter((device) => deviceIds.includes(device.deviceId));
+        if (!results) return resolve([]);
+
+        return resolve(results);
+    });
+}
+
+
+// Devices not mapped to session
 export const getAllDevicesSession = async (sessionId: number): Promise<Device[]> => {
     return new Promise(async (resolve) => {
         console.log("in getAllDevices");;

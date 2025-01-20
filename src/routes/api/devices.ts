@@ -49,6 +49,12 @@ router.post("/addToSession", async (req, res) => {
     }
 });
 
+router.get("/available/:session", async (req, res) => {
+    console.log("in fetch available devices");
+    const sessionId = Number(req.params.session);
+    const doc = await getAllDevicesSession(sessionId);
+    return res.json(doc);
+});
 
 
 

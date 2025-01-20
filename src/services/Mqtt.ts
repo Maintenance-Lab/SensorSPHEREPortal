@@ -74,7 +74,7 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
         switch (postfix) {
             case "msg":
                 console.log("Got message on msg topic");
-                addDeviceToDatabase(message, deviceId);
+                await addDeviceToDatabase(message, deviceId);
                 break;
             case "cfg":
                 console.log("Got message on cfg topic");
@@ -98,11 +98,22 @@ const addNewEntryToTable = async (table: any, entry: any) => {
         }
 
         let existingEntry;
-        existingEntry = await table.findOne({ where: entry });
+        try {
+            existingEntry = await table.findOne({ where: entry });
+        }
+        catch(error) {
+            console.log("dit is de error:", error)
+        }
 
         if (!existingEntry) {
-            const doc = await table.create( entry );
-            if (!doc) return reject(new Error("Error creating entry"));
+            try{
+                const doc = await table.create( entry );
+                if (!doc) return reject(new Error("Error creating entry"));
+            }
+            catch(error) {
+                console.log("dit is de error 2:", error)
+
+            }
         }
 
         return resolve({ message: "Entry created" });
@@ -143,7 +154,7 @@ const addDeviceToDatabase = async (message: any, deviceId: string) => {
         message.channel = 3;
 
         // If device manufacturer does not exist, add it to database
-        addNewEntryToTable(Manufacturer, { manufacturerName: message.manufacturerName })
+        await addNewEntryToTable(Manufacturer, { manufacturerName: message.manufacturerName })
 
         // Add device to database if device does not exist
         await addOrUpdateDevice({ deviceId: deviceId, manufacturerName: message.manufacturerName, connectStatus: "connected", batteryLevel: message.batteryLevel, maxHz: message.maxHz })
@@ -158,16 +169,16 @@ const addDeviceToDatabase = async (message: any, deviceId: string) => {
             sensor.categoryName = "category1";
             sensor.manufacturerName = "Philips123";
 
-            addNewEntryToTable(SensorCategory, { categoryName: sensor.categoryName })
-            addNewEntryToTable(Manufacturer, { manufacturerName: sensor.manufacturerName })
-            addNewEntryToTable(Sensor, { model: sensor.unit, manufacturerName: sensor.manufacturerName, categoryName: sensor.categoryName })
+            await addNewEntryToTable(SensorCategory, { categoryName: sensor.categoryName })
+            await addNewEntryToTable(Manufacturer, { manufacturerName: sensor.manufacturerName })
+            await addNewEntryToTable(Sensor, { model: sensor.unit, manufacturerName: sensor.manufacturerName, categoryName: sensor.categoryName })
 
             // Add device sensor mapping to database if it does not exist
-            addNewEntryToTable(DeviceSensorMapping, { deviceId: deviceId, model: sensor.unit, manufacturerName: sensor.manufacturerName, channel: message.channel })
+            await addNewEntryToTable(DeviceSensorMapping, { deviceId: deviceId, model: sensor.unit, manufacturerName: sensor.manufacturerName, channel: message.channel })
 
             // Add sensor properties to database if they do not exist
             for (const property of sensor.variables) {
-                addNewEntryToTable(SensorProperty, { propertyName: property, model: sensor.unit, manufacturerName: sensor.manufacturerName })
+                await addNewEntryToTable(SensorProperty, { propertyName: property, model: sensor.unit, manufacturerName: sensor.manufacturerName })
             }
         }
 

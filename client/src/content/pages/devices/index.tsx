@@ -85,7 +85,9 @@ const fetchDevices = async () => {
 };
 
 const devicesColumns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', flex: 1 },
+  { field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
+    <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
+  )},
   { field: 'id', headerName: 'MAC Address', flex: 1 },
   {
     field: 'battery', headerName: 'Battery', flex: 1, renderCell: (params) => (

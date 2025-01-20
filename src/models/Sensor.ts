@@ -17,7 +17,6 @@ Sensor.init({
     model: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
     manufacturerName: { type: DataTypes.STRING, primaryKey: true, allowNull: false, references: { model: Manufacturer, key: 'manufacturerName' } },
     categoryName: { type: DataTypes.STRING, allowNull: false, references: { model: SensorCategory, key: 'categoryName' }},
-    // propertyName:{ type: DataTypes.STRING, allowNull: false, references: { model: SensorProperty, key: 'PropertyName' }},
 },
 {
     sequelize,

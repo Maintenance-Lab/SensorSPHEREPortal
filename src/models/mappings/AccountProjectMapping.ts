@@ -10,7 +10,7 @@ class AccountProjectMapping extends Model {
 
 AccountProjectMapping.init({
     accountId: { type: DataTypes.INTEGER, references: { model: 'Account', key: 'accountId' }, primaryKey: true, allowNull: false },
-    projectId: { type: DataTypes.INTEGER, references: { model: 'Projects', key: 'projectId' }, primaryKey: true, allowNull: false },
+    projectId: { type: DataTypes.INTEGER, references: { model: 'Project', key: 'projectId' }, primaryKey: true, allowNull: false },
     status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'active', validate: { isIn: [['active', 'archived', 'pending']] } },
 }, {
     sequelize,

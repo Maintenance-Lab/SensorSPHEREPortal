@@ -10,11 +10,15 @@ conn = sqlite3.connect(database_path)
 c = conn.cursor()
 
 # First delete all existing data
-def delete_all():
-    for table in ['AccountProjectMapping', 'DeviceSensorConfiguration', 'DeviceSensorMapping', 'SessionDeviceMapping', 'SensorProperty', 'Sensor', 'Manufacturer', 'SensorCategory', 'Device', 'Session', 'Project', 'Account']:
-        c.execute(f'DELETE FROM {table};')
+# def delete_all():
+#     for table in ['AccountProjectMapping', 'DeviceSensorConfiguration', 'DeviceSensorMapping', 'SessionDeviceMapping', 'SensorProperty', 'Sensor', 'Manufacturer', 'SensorCategory', 'Device', 'Session', 'Project', 'Account']:
+#         c.execute(f'DELETE FROM {table};')
 
-delete_all()
+# delete_all()
+
+
+# delete existing entries
+c.execute('DELETE FROM Account;')
 
 # Create dummy accounts
 accounts = [
@@ -29,6 +33,7 @@ c.executemany('''
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ''', accounts)
 
+c.execute('DELETE FROM Project;')
 # Create dummy projects
 projects = [
     (1, "Project Alpha", "Description for project Alpha", None, "2023-01-01", "2023-09-01"),
@@ -43,6 +48,7 @@ c.executemany('''
     VALUES (?, ?, ?, ?, ?, ?)
 ''', projects)
 
+c.execute('DELETE FROM Session;')
 # Create dummy sessions
 sessions = [
     (1, "Session 1", "Scheduled", "2023-06-01", "2023-06-10", 2, None, "2023-01-01", "2023-09-01", 0),
@@ -57,20 +63,22 @@ c.executemany('''
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ''', sessions)
 
+c.execute('DELETE FROM Device;')
 # Create dummy devices
 devices = [
-    (1, 1, 100),
-    (2, 1, 200),
-    (3, 0, 150),
-    (4, 1, 300),
-    (5, 1, 250)
+    (1, "manufacturer1", "connected", 100, 1000),
+    (2, "manufacturer2", "disconnected", 90, 2000),
+    (3, "manufacturer3", "connected", 80, 3000),
+    (4, "manufacturer4", "disconnected", 70, 4000),
+    (5, "manufacturer5", "connected", 60, 5000)
 ]
 
 c.executemany('''
-    INSERT INTO Device (deviceId, connectStatus, maxHz)
-    VALUES (?, ?, ?)
+    INSERT INTO Device (deviceId, manufacturerName, connectStatus, batteryLevel, maxHz)
+    VALUES (?, ?, ?, ?, ?)
 ''', devices)
 
+c.execute('DELETE FROM SensorCategory;')
 # Create dummy sensor categories
 sensor_categories = [
     ("Temperature"),
@@ -83,11 +91,14 @@ c.executemany('''
     VALUES (?)
 ''', [(category,) for category in sensor_categories])
 
+c.execute('DELETE FROM Manufacturer;')
 # Create dummy manufacturers
 manufacturers = [
-    ("SensorCo"),
-    ("DeviceInc"),
-    ("GadgetWorks")
+    ("manufacturer1"),
+    ("manufacturer2"),
+    ("manufacturer3"),
+    ("manufacturer4"),
+    ("manufacturer5")
 ]
 
 c.executemany('''
@@ -95,6 +106,7 @@ c.executemany('''
     VALUES (?)
 ''', [(manufacturer,) for manufacturer in manufacturers])
 
+c.execute('DELETE FROM Sensor;')
 # Create dummy sensors
 sensors = [
     ("TempSensor", "SensorCo", "Temperature"),
@@ -107,6 +119,7 @@ c.executemany('''
     VALUES (?, ?, ?)
 ''', sensors)
 
+c.execute('DELETE FROM SensorProperty;')
 # Create dummy sensor properties
 sensor_properties = [
     ("MaxTemperature", "TempSensor", "SensorCo"),
@@ -120,37 +133,39 @@ c.executemany('''
     VALUES (?, ?, ?)
 ''', sensor_properties)
 
+c.execute('DELETE FROM DeviceSensorMapping;')
 # Create mappings between sessions and devices
 session_device_mappings = [
-    (1, 1),  # Session 1 is using Device 1
-    (1, 2),  # Session 1 is using Device 2
-    (2, 3),  # Session 2 is using Device 3
-    (3, 4),  # Session 3 is using Device 4
-    (4, 1),  # Session 4 is using Device 1
-    (4, 5),  # Session 4 is using Device 5
-    (5, 2)   # Session 5 is using Device 2
+    (1, 1, 1300),  # Session 1 is using Device 1
+    (1, 2, 1300),  # Session 1 is using Device 2
+    (2, 3, 2324),  # Session 2 is using Device 3
+    (3, 4, 2423),  # Session 3 is using Device 4
+    (4, 1, 6969),  # Session 4 is using Device 1
+    (4, 5, 21),  # Session 4 is using Device 5
+    (5, 2, 1111)   # Session 5 is using Device 2
 ]
 
 c.executemany('''
-    INSERT INTO SessionDeviceMapping (sessionId, deviceId)
-    VALUES (?, ?)
+    INSERT INTO SessionDeviceMapping (sessionId, deviceId, configuredHz)
+    VALUES (?, ?, ?)
 ''', session_device_mappings)
 
+c.execute('DELETE FROM DeviceSensorMapping;')
 # Create mappings between devices and sensors
 device_sensor_mappings = [
     (1, "TempSensor", "SensorCo", 1),  # Device 1 is mapped to TempSensor
     (2, "PressureSensor", "DeviceInc", 1),  # Device 2 is mapped to PressureSensor
     (3, "HumiditySensor", "GadgetWorks", 1),  # Device 3 is mapped to HumiditySensor
-    (4, "TempSensor", "SensorCo", 1),  # Device 4 is mapped to TempSensor
-    (5, "PressureSensor", "DeviceInc", 1)   # Device 5 is mapped to PressureSensor
+    (4, "TempSensor", "SensorCol", 1),  # Device 4 is mapped to TempSensor
+    (5, "PressureSensor", "DeviceIncs", 1)   # Device 5 is mapped to PressureSensor
 ]
 
 c.executemany('''
-    INSERT INTO DeviceSensorMapping (deviceId, sensorModel, manufacturerName, channel)
+    INSERT INTO DeviceSensorMapping (deviceId, model, manufacturerName, channel)
     VALUES (?, ?, ?, ?)
 ''', device_sensor_mappings)
 
-
+c.execute('DELETE FROM AccountProjectMapping;')
 # Create mappings between accounts and projects
 account_project_mappings = [
     (1, 1, 'active'),
@@ -167,6 +182,7 @@ c.executemany('''
     VALUES (?, ?, ?)
 ''', account_project_mappings)
 
+c.execute('DELETE FROM DeviceSensorConfiguration;')
 # Device sensor configurations
 device_sensor_configurations = [
     (1, 1, "MaxTemperature", 1),  # Device 1 is configured to monitor MaxTemperature
@@ -187,6 +203,7 @@ c.executemany('''
     VALUES (?, ?, ?, ?)
 ''', device_sensor_configurations)
 
+c.execute('DELETE FROM LoginSession;')
 # add 1 loginsession
 loginsession = [
     (0, 1, "2023-01-01", "Mozilla/5.0", "127.000.1", "1234567890")

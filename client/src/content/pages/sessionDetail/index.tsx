@@ -17,106 +17,40 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle
+  DialogTitle,
+  Snackbar
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
-import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
-import { ArchiveOutlined, DeleteOutline, Devices, Edit, EventNote, InfoOutlined, Inventory, MoreTime, Pause, PlayArrow, Router, Schedule, Stop, UnarchiveOutlined, Usb } from '@mui/icons-material';
+import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';
+import { ArchiveOutlined, DeleteOutline, Devices, Edit, EventNote, InfoOutlined, Inventory, MoreTime, Pause, PlayArrow, Router, Schedule, Stop, UnarchiveOutlined, Usb} from '@mui/icons-material';
+import { ListItemIcon, ListItemText } from '@mui/material';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
+import { add } from 'date-fns';
+import { id } from 'date-fns/locale';
+import { Session } from 'inspector';
 
-const devicesPlaceholder = {
-  '00:00:00:00:00:00': {
-    id: 0,
-    type: 'This Device',
-    macAddress: '00:00:00:00:00:00',
-    battery: '',
-    project: '',
-    sensors: [
-      { id: 1, name: 'microphone' },
-      { id: 2, name: 'camera' }
-    ]
-  },
-  'e4:72:05:0a:fc:66': {
-    id: 1,
-    type: 'M5Stack Core2',
-    macAddress: 'e4:72:05:0a:fc:66',
-    battery: '93',
-    project: '',
-    sensors: [
-      { id: 1, name: 'temperature' },
-      { id: 2, name: 'humidity' }
-    ]
-  },
-  '94:b7:ab:57:d4:75': {
-    id: 2,
-    type: 'M5Stack Core2',
-    macAddress: '94:b7:ab:57:d4:75',
-    battery: '91',
-    project: 'Project 1',
-    sensors: [
-      { id: 1, name: 'gyroX' },
-      { id: 2, name: 'gyroY' },
-      { id: 3, name: 'gyroZ' }
-    ]
-  },
-  '5f:ec:07:db:01:6e': {
-    id: 3,
-    type: 'M5Stack Core2',
-    macAddress: '5f:ec:07:db:01:6e',
-    battery: '',
-    project: 'Building Temperature Research',
-    sensors: []
-  },
-  '1e:e7:31:2e:df:7a': {
-    id: 4,
-    type: 'M5Stack Core2',
-    macAddress: '1e:e7:31:2e:df:7a',
-    battery: '',
-    project: 'Project 3',
-    sensors: []
-  },
-  '95:8e:53:46:7e:6e': {
-    id: 5,
-    type: 'M5Stack Core2',
-    macAddress: '95:8e:53:46:7e:6e',
-    battery: '',
-    project: '',
-    sensors: []
-  }
-};
 
-const sessionSensorUnits = [
-  'e4:72:05:0a:fc:66',
-  '94:b7:ab:57:d4:75',
-  '5f:ec:07:db:01:6e',
-  '1e:e7:31:2e:df:7a',
-  '95:8e:53:46:7e:6e'
-];
 
-const deviceColumns: GridColDef[] = [
-  // { field: 'id', headerName: '#' },
+
+const devicesColumns: GridColDef[] = [
   {
-    field: 'type', headerName: 'Type', flex: 2, renderCell: (params) => (
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ py: 1 }}>
-        {params.value === 'This Device' && (
-          <Devices />
-        )}
-        <Typography variant="inherit">{params.value}</Typography>
-      </Stack>
-    )
+    // field: 'name', headerName: 'Name', renderCell: (params) => (
+    //   <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
+    field: 'name', headerName: 'Name', renderCell: (params) => (
+    <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
+    ),
+    flex: 1
   },
+  // { field: 'macAddress', headerName: 'MAC Address', valueFormatter: (value?: string) => value?.toUpperCase() },
+  { field: 'id', headerName: 'MAC Address', flex: 1 },
   {
-    field: 'macAddress', headerName: 'MAC Address', flex: 2, renderCell: (params) => (
-      <Typography variant="inherit" sx={{ py: 1 }}>{params.value}</Typography>
-    )
-  },
-  {
-    field: 'battery', headerName: 'Battery', flex: 2, renderCell: (params) => (
-      <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500', py: 1 } : { color: 'gray', py: 1 }}>
+    field: 'battery', headerName: 'Battery', renderCell: (params) => (
+      <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
         <BatteryFullIcon fontSize="small" />
         {params.value ? (
           <Typography variant="inherit">{params.value}%</Typography>
@@ -124,41 +58,59 @@ const deviceColumns: GridColDef[] = [
           <Typography variant="inherit">?</Typography>
         )}
       </Stack>
-    )
+    ),
+    flex: 1
   },
-  {
-    field: 'sensors',
-    headerName: 'Sensors',
-    flex: 6,
-    renderCell: (params) => (
-      <Box alignItems="center" sx={{ height: "100%" }}>
-        <List disablePadding sx={{ py: 0.5 }}>
-          {params.value.map((sensor: { id: number, name: string }) => (
-            <ListItem key={sensor.id} disableGutters disablePadding sx={{ py: 0.5 }}>
-              {/* <ListItemButton disableGutters sx={{ p: 0 }}> */}
-              {/* <Switch
-                  edge="start"
-                  checked=
-                  disableRipple
-                /> */}
-              <Chip label={sensor.name} size="small" />
-              {/* </ListItemButton> */}
-            </ListItem>
-          ))}
-        </List>
-        {
-          params.value.length === 0 && (
-            <Typography variant="inherit" color="gray">
-              No sensors found
-            </Typography>
-          )
-        }
-      </Box >
-    )
-  },
+  { field: 'status', headerName: 'Status', flex: 1 },
+  { field: 'maxHz', headerName: 'Max Hz', flex: 1 },
 ];
 
-const updateSession = async (sessionId, name, description, archived, sensorUnits, status) => {
+const fetchDevices = async (sessionId) => {
+  console.log("------ Fetching devices for session: ", sessionId);
+  const devices = await fetch('/api/devices/all/' + sessionId, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include',
+    },
+  });
+
+  if (!devices.ok) {
+    console.error('Failed to fetch devices 22');
+    return [];
+  }
+
+  const devicesData = await devices.json();
+  console.log(devicesData)
+  return devicesData;
+};
+
+const removeDevicesFromSession = async (sessionId, selectedDeviceIds, fetchSessionDevices, fetchAvailableDevices) => {
+  const res = await fetch('/api/sessions/removeFromSession', {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include',
+    },
+    body: JSON.stringify({
+      sessionId: sessionId,
+      deviceIds: selectedDeviceIds,
+    }),
+  });
+
+  if (!res.ok) {
+    console.error('Failed to remove devices from session');
+    return;
+  }
+
+  const data = await res.json();
+  console.log('Devices removed successfully:', data);
+
+  fetchSessionDevices();
+  fetchAvailableDevices(sessionId);
+};
+
+const updateSession = async (sessionId, name, description, archived) => {
   const res = await fetch('/api/sessions/update/' + sessionId, {
     method: 'PUT',
     headers: {
@@ -169,32 +121,11 @@ const updateSession = async (sessionId, name, description, archived, sensorUnits
       name: name,
       description: description,
       archived: archived,
-      status: status
     })
   });
 
   if (!res.ok) {
     console.error('Failed to update session');
-    return;
-  }
-  const data = await res.json();
-  return data;
-};
-
-const updateSessionStatus = async (sessionId, status) => {
-  const res = await fetch('/api/sessions/update/' + sessionId, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      credentials: 'include'
-    },
-    body: JSON.stringify({
-      status: status
-    })
-  });
-
-  if (!res.ok) {
-    console.error('Failed to update session status');
     return;
   }
   const data = await res.json();
@@ -223,185 +154,140 @@ const deleteSession = async (sessionId: number) => {
   return data;
 };
 
-const SessionStatusCard = ({ sessionId, status }) => {
-  const [sessionStatus, setSessionStatus] = useState('');
+function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, sessionId, sessionDevices, fetchSessionDevices, fetchAvailableDevices }) {
+  const [open, setOpen] = useState(false);
+  const [allDevices, setAllDevices] = useState([]);
 
-  const statusLabel = {
-    inactive: 'Inactive',
-    active: 'Collecting Data',
-    activeScheduled: 'Active (Scheduled)',
-    paused: 'Paused',
-    scheduled: 'Scheduled',
-    completed: 'Completed',
-    error: 'Error',
-    stopped: 'Stopped'
-  };
-
-  const statusColor = {
-    inactive: '',
-    active: 'primary.main',
-    activeScheduled: 'primary.main',
-    paused: 'secondary.main',
-    scheduled: 'primary.main',
-    completed: 'success.main',
-    error: 'error.main',
-    stopped: 'error.main'
-  };
-
-  useEffect(() => {
-    setSessionStatus(status);
-  }, [status]);
-
-  const handleSessionStart = async () => {
-    await updateSessionStatus(sessionId, 'active');
-    setSessionStatus('active');
-  };
-
-  const handleSessionPause = async () => {
-    await updateSessionStatus(sessionId, 'paused');
-    setSessionStatus('paused');
-  };
-
-  const handleSessionStop = async () => {
-    await updateSessionStatus(sessionId, 'completed');
-    setSessionStatus('completed');
-  };
-
-  const handleSessionContinue = async () => {
-    await updateSessionStatus(sessionId, 'active');
-    setSessionStatus('active');
-  };
+  const activeSelection = selectedDeviceIds.length > 0;
 
   return (
-    <Stack spacing={1} sx={{ p: 2 }} component={Paper}>
-      <Typography variant="h4" color={statusColor[sessionStatus]}>{statusLabel[sessionStatus]}</Typography>
-      {sessionStatus == 'inactive' && (
-        <Stack direction="row" spacing={1}>
-          <InfoOutlined sx={{ color: "gray" }} />
-          <Typography sx={{ color: "gray" }} variant="body1">Start this session to collect data.</Typography>
-        </Stack>
-      )}
-      {/* <Stack direction="row" spacing={1}>
-        <EventNote />
-        <Typography variant="body1">No schedule</Typography>
-      </Stack> */}
-      {sessionStatus == 'inactive' && (
-        <Stack direction="row" spacing={1}>
+    <GridToolbarContainer sx={{ padding: 1 }}>
+      <Stack direction="row" spacing={1}>
+        <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
           <Button
             variant="outlined"
-            startIcon={<PlayArrow />}
-            onClick={handleSessionStart}
+            size="medium"
+            color="error"
+            startIcon={<DeleteOutlineOutlinedIcon />}
+            disabled={!activeSelection}
+            onClick={() => removeDevicesFromSession(sessionId, selectedDeviceIds, fetchSessionDevices, fetchAvailableDevices)}
           >
-            Start
+            Remove Devices from Session
           </Button>
-          {/* <Button
-            variant="outlined"
-            startIcon={<EventNote />}
-          // onClick={handleSessionSchedule}
-          >
-            Set Schedule...
-          </Button> */}
-        </Stack>
-      )}
-      {sessionStatus == 'active' && (
-        <Stack spacing={1}>
-          <Stack direction="row" spacing={1} alignItems="center" maxWidth="200px">
-            <Usb color="primary" />
-            <LinearProgress sx={{ flex: 1, transform: "scaleX(-1)" }} variant="buffer" value={0} valueBuffer={0} />
-            <Router color="primary" />
-          </Stack>
-          <Stack direction="row" spacing={1} alignItems="center">
-          <InfoOutlined sx={{ color: "secondary.main" }} />
-            <Typography sx={{ color: "secondary.main" }} variant="body1">
-              The device is collecting data and sending it to the gateway. Ask your supervisor how to access the data.
-            </Typography>
-          </Stack>
-          <Stack direction="row" spacing={1}>
-            <Button
-              variant="outlined"
-              startIcon={<Pause />}
-              onClick={handleSessionPause}
-            >
-              Pause
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<Stop />}
-              onClick={handleSessionStop}
-            >
-              Stop
-            </Button>
-          </Stack>
-        </Stack>
-      )}
-      {/* {sessionStatus == 'activeScheduled' && (
-        <Stack direction="row" spacing={1}>
-          <Button
-            variant="outlined"
-            startIcon={<Stop />}
-            onClick={handleSessionStop}
-          >
-            Stop
-          </Button>
-        </Stack>
-      )} */}
-      {sessionStatus == 'paused' && (
-        <Stack direction="row" spacing={1}>
-          <Button
-            variant="outlined"
-            startIcon={<PlayArrow />}
-            onClick={handleSessionContinue}
-          >
-            Continue
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<Stop />}
-            onClick={handleSessionStop}
-          >
-            Stop
-          </Button>
-        </Stack>
-      )}
-      {/* {sessionStatus == 'scheduled' && (
-        <Stack direction="row" spacing={1}>
-          <Button
-            variant="outlined"
-            startIcon={<Edit />}
-          >
-            Edit Schedule...
-          </Button>
-        </Stack>
-      )} */}
-    </Stack>
+      </Stack>
+    </GridToolbarContainer>
   );
-};
+  
+}
+
+function CustomDevicesToolbar2({ selectedAddDeviceIds, setSelectedAddDeviceIds, sessionId, availableDevices, fetchSessionDevices,  fetchAvailableDevices}) {
+  const addDevices = async () => {
+    const res = await fetch("/api/devices/addToSession", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        credentials: "include",
+      },
+      body: JSON.stringify({
+        sessionId,
+        deviceIds: selectedAddDeviceIds,
+      }),
+    });
+
+    if (!res.ok) {
+      console.error("Failed to add devices to session");
+      return;
+    }
+
+    const data = await res.json();
+    console.log("Devices added successfully:", data);
+
+    fetchSessionDevices();
+    fetchAvailableDevices(sessionId);
+  };
+
+  
+  const activeSelection = selectedAddDeviceIds.length > 0;
+
+  return (
+    <GridToolbarContainer sx={{ padding: 1 }}>
+      <Stack direction="row" spacing={1}>
+      <GridToolbarQuickFilter variant="outlined" size="small" sx={{ padding: 0 }} />
+        <Button
+          variant="outlined"
+          startIcon={<Devices />}
+          onClick={() =>  addDevices()}
+          disabled={!activeSelection}
+        >
+          Add Devices to Session
+        </Button>
+      </Stack>
+    </GridToolbarContainer>
+  );
+  
+}
 
 const SessionDetail = () => {
   const sessionId = Number(useParams().sessionId);
   const [sessionName, setSessionName] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
-  const [sessionStatus, setSessionStatus] = useState('');
   const [projectId, setProjectId] = useState('');
   const [projectName, setProjectName] = useState('');
   const [isArchived, setIsArchived] = useState(false);
   // const [sessionSensorUnits, setSessionSensorUnits] = useState([]);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
-
-  const [open, setOpen] = useState(false);
   const [isDialogOpen, setDialogOpen] = useState(false);
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
+  const deviceId = Number(useParams().deviceId);
+  const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
+  const [selectedAddDeviceIds, setSelectedAddDeviceIds] = useState([]);
+  const [devices, setDevices] = useState([]);
+  const [availableDevices, setAvailableDevices] = useState([]);
+  const [allDevices, setAllDevices] = useState([]);
 
-  // const deviceRows: GridRowsProp = sessionSensorUnits.map((macAddress) => ({
-  //   id: macAddress,
-  //   type: devicesPlaceholder[macAddress].type,
-  //   macAddress: macAddress,
-  //   battery: devicesPlaceholder[macAddress].battery,
-  //   project: devicesPlaceholder[macAddress].project,
-  //   sensors: devicesPlaceholder[macAddress].sensors,
-  // }));
+  const fetchAvailableDevices = async (sessionId) => {
+    console.log("------ Fetching available devices for", sessionId);
+    const availableDevices = await fetch('/api/devices/available/' + sessionId, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include',
+      },
+    });
+  
+    if (!availableDevices.ok) {
+      console.error('Failed to fetch available devices');
+      return [];
+    }
+  
+    const availableDevicesData = await availableDevices.json();
+    console.log("-- De available devices zijn:", availableDevicesData)
+    setAvailableDevices(availableDevicesData);
+  };
+
+  const fetchSessionDevices = async () => {
+    console.log('--------- hij zit in fetchSessionDevices')
+    const devices = await fetchDevices(sessionId);
+    setDevices(devices);
+  };
+
+  const devicesRows: GridRowsProp = devices.map((device) => ({
+    name:     device.manufacturerName,
+    id:       device.deviceId,
+    status:   device.connectStatus,
+    battery:  device.batteryLevel,
+    maxHz:    device.maxHz,
+  }));
+
+  const availableDevicesRows: GridRowsProp = availableDevices.map((device) => ({
+    name:     device.manufacturerName,
+    id:       device.deviceId,
+    status:   device.connectStatus,
+    battery:  device.batteryLevel,
+    maxHz:    device.maxHz,
+  }));
 
   const fetchSession = async () => {
     console.log("SESSION ID", sessionId);
@@ -419,10 +305,9 @@ const SessionDetail = () => {
     setProjectId(data.projectId);
     setSessionName(data.name);
     setIsArchived(data.archived);
-    setSessionStatus(data.status);
     setSessionDescription(data.description);
 
-    console.log('Fetching project 3', data.projectId);
+    console.log('Fetching project step 3', data.projectId);
     const projectResponse = await fetch('/api/projects/id/' + data.projectId, {
       method: 'GET',
       headers: {
@@ -441,19 +326,19 @@ const SessionDetail = () => {
   }
 
   const handleNameChange = async (event) => {
-    await updateSession(sessionId, event.target.value, sessionDescription, isArchived, sessionSensorUnits, sessionStatus);
+    await updateSession(sessionId, event.target.value, sessionDescription, isArchived);
     setIsEditingName(false);
     fetchSession();
   };
 
   const handleDescriptionChange = async (event) => {
-    await updateSession(sessionId, sessionName, event.target.value, isArchived, sessionSensorUnits, sessionStatus);
+    await updateSession(sessionId, sessionName, event.target.value, isArchived);
     setIsEditingDescription(false);
     fetchSession();
   };
 
   const handleArchiveSession = async (archive) => {
-    await updateSession(sessionId, sessionName, sessionDescription, archive, sessionSensorUnits, sessionStatus);
+    await updateSession(sessionId, sessionName, sessionDescription, archive);
     fetchSession();
   };
 
@@ -467,8 +352,10 @@ const SessionDetail = () => {
   };
 
   useEffect(() => {
+    fetchSessionDevices();
+    fetchAvailableDevices(sessionId);
     fetchSession();
-  }, []);
+  }, [sessionId]);
 
   const ConfirmationDialog = ({ open, onClose, onConfirm, sessionId }) => (
     <Dialog open={open} onClose={onClose}>
@@ -640,18 +527,67 @@ const SessionDetail = () => {
       </PageTitleWrapper>
       <Container>
         <Stack spacing={2}>
-          <Typography variant="h2">Status</Typography>
-          <SessionStatusCard status={sessionStatus} sessionId={sessionId} />
-          <Typography variant="h2" sx={{ pt: 2 }}>Devices and Sensors</Typography>
+          <Typography variant="h2" sx={{ pt: 2 }}>Connected Devices in Session</Typography>
           <Paper>
             <DataGrid
-              // rows={deviceRows}
-              columns={deviceColumns}
+              rows={devicesRows}
+              columns={devicesColumns}
               density='compact'
               autoHeight
-              getRowHeight={() => 'auto'}
-              disableRowSelectionOnClick
+              initialState={{
+                pagination: { paginationModel: { pageSize: 10 } },
+                sorting: {
+                  sortModel: [{ field: 'id', sort: 'desc' }],
+                },
+              }}
+              // getRowHeight={() => 'auto'}
+              // disableRowSelectionOnClick
+              checkboxSelection
+              onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
+              slots={{
+                toolbar: () => <CustomDevicesToolbar
+                  selectedDeviceIds={selectedDeviceIds}
+                  setSelectedDeviceIds={setSelectedDeviceIds}
+                  sessionId={sessionId}
+                  sessionDevices={fetchSessionDevices}
+                  fetchSessionDevices={fetchSessionDevices}
+                  fetchAvailableDevices={fetchAvailableDevices}
+                  // fetchDevices={allDevices}
+                />}}
               sx={{
+                "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {
+                  outline: "none !important",
+                },
+                "& .MuiDataGrid-row:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0)",
+                }
+              }}
+            />
+          </Paper>
+        </Stack>
+      </Container>
+      <Container>
+        <Stack spacing={2} sx={{ mt: 4 }}>
+          <Typography variant="h2">Available Devices to Add</Typography>
+          <Paper>
+            <DataGrid
+              rows={availableDevicesRows}
+              columns={devicesColumns}
+              density='compact'
+              autoHeight
+              checkboxSelection
+              onRowSelectionModelChange={(newSelection) => setSelectedAddDeviceIds(newSelection)}
+              slots={{
+                toolbar: () => <CustomDevicesToolbar2
+                  selectedAddDeviceIds={selectedAddDeviceIds}
+                  setSelectedAddDeviceIds={setSelectedAddDeviceIds}
+                  sessionId={sessionId}
+                  availableDevices={fetchAvailableDevices}
+                  fetchSessionDevices={fetchSessionDevices}
+                  fetchAvailableDevices={fetchAvailableDevices}
+
+                />}}              
+                sx={{
                 "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {
                   outline: "none !important",
                 },
@@ -668,31 +604,3 @@ const SessionDetail = () => {
 };
 
 export default SessionDetail;
-
-
-
-{/* <DataGrid
-  rows={deviceRows}
-  columns={deviceColumns}
-  initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
-  density="compact"
-  onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
-  checkboxSelection
-  slots={{
-    toolbar: () => <CustomProjectSensorUnitsToolbar
-      selectedDeviceIds={selectedDeviceIds}
-      projectId={projectId}
-      projectName={projectName}
-      projectDescription={projectDescription}
-      projectSensorUnits={projectSensorUnits}
-      isArchived={isArchived}
-      fetchProject={fetchProject}
-      handleOpenAddDevices={() => setOpenAddDevices(true)}
-    />,
-  }}
-  sx={{
-    "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus": {
-      outline: "none",
-    },
-  }}
-/> */}

@@ -147,6 +147,9 @@ function Header() {
     fetchData();
   }, [location]);
 
+  const excludedRoutes = ['/home', '/account'];
+  const hideBreadcrumbs = excludedRoutes.includes(location.pathname);
+
   return (
     <HeaderWrapper
       display="flex"
@@ -175,7 +178,8 @@ function Header() {
       >
         {/* Sessions get custom breadcrumbs, as they do not have an overview 'Sessions' page.
             They are part of projects, so it shows the session path as part of the project. */}
-        {location.pathname.includes('/sessions/detail') ? (
+        {!hideBreadcrumbs && (
+          location.pathname.includes('/sessions/detail') ? (
           <Breadcrumbs separator="/">
             <Link component={RouterLink} to="/projects" color="inherit">
               {loading ? <Skeleton width="100px" /> : "Projects"}
@@ -219,6 +223,7 @@ function Header() {
               );
             })}
           </Breadcrumbs>
+          )
         )}
         {/* <HeaderMenu /> */}
       </Stack>

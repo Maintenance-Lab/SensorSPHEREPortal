@@ -1,6 +1,7 @@
 import { Sequelize, DataTypes, Model } from 'sequelize'
 import Sensor from './Sensor.js';
 import sequelize from '../sequelize.js';
+import Manufacturer from './Manufacturer.js';
 // const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class SensorProperty extends Model {
@@ -11,8 +12,8 @@ class SensorProperty extends Model {
 
 SensorProperty.init({
     propertyName: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
-    model: { type: DataTypes.STRING, allowNull: false, references: { model: Sensor, key: 'model' } },
-    manufacturerName: { type: DataTypes.STRING, allowNull: false, references: { model: Sensor, key: 'manufacturerName' } },
+    model: { type: DataTypes.STRING, primaryKey: true, allowNull: false, references: { model: Sensor, key: 'model' } },
+    manufacturerName: { type: DataTypes.STRING, primaryKey: true, allowNull: false, references: { model: Sensor, key: 'manufacturerName' } },
 },
 {
     sequelize,

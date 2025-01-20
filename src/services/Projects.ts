@@ -22,8 +22,7 @@ import Session from 'src/models/Session.js';
 export const getAllProjects = async () => {
   return new Promise(async (resolve) => {
     const results = await Project.findAll();
-
-    // print all ids
+    if (!results) return resolve([]);
     console.log("ALL PROJECTS: ", results.map((r) => r.projectId));
     return resolve(results);
   });

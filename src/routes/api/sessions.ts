@@ -3,6 +3,7 @@ import { IS_PROD } from '../../config.js';
 import {
     getSessionById,
     createSession,
+    addDevices,
     updateSession,
     getSessionsByProject,
     getActiveSessionsByProject,
@@ -12,6 +13,8 @@ import {
 import { getSession } from '../../utils.js';
 import Session from '../../models/Session.js';
 import AccountProjectMapping from '../../models/mappings/AccountProjectMapping.js';
+import SessionDeviceMapping from '../../models/mappings/SessionDeviceMapping.js';
+
 
 /* APIS DIE WERKEN - volgens mij (amber)
     /id/:id
@@ -63,6 +66,14 @@ router.post("/create", async (req, res) => {
     console.log("in create api", body);
     const doc = await createSession(body);
     if (!doc) return res.status(400).json({ message: "Failed to create session" });
+    return res.json(doc);
+});
+
+router.post("/addDevices", async (req, res) => {
+    const { body } = req;
+    console.log("in add devices", body);
+    const doc = await addDevices(body.sessionId, body.deviceIds);
+    if (!doc) return res.status(400).json({ message: "Failed to add devices" });
     return res.json(doc);
 });
 
@@ -156,6 +167,25 @@ router.delete("/delete", async (req, res) => {
 
     return res.json(result);
 });
+
+router.delete("/removeFromSession", async (req, res) => {
+    const { sessionId, deviceIds } = req.body;
+
+    try {
+      await SessionDeviceMapping.destroy({
+        where: {
+          sessionId: sessionId,
+          deviceId: deviceIds,
+        },
+      });
+  
+      return res.status(200).json({ message: "Devices removed successfully" });
+    } catch (error) {
+      console.error("Error removing devices from session:", error);
+      return res.status(500).json({ message: "Failed to remove devices from session" });
+    }
+});
+  
 
 export default router;
 

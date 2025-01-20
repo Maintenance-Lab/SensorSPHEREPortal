@@ -84,7 +84,7 @@ const initDb = () => {
             CREATE TABLE IF NOT EXISTS SessionDeviceMapping (
                 sessionId INTEGER,
                 deviceId INTEGER,
-                confiuredHz INTEGER,
+                configuredHz INTEGER,
                 PRIMARY KEY (sessionId, deviceId),
                 FOREIGN KEY (sessionId) REFERENCES Session(sessionId),
                 FOREIGN KEY (deviceId) REFERENCES Device(deviceId)
@@ -94,11 +94,13 @@ const initDb = () => {
         // Device table
         db.run(`
             CREATE TABLE IF NOT EXISTS Device (
-                deviceId INTEGER NOT NULL,
-                connectStatus BOOLEAN,
+                deviceId TEXT NOT NULL,
+                manufacturerName TEXT NOT NULL,
+                connectStatus TEXT,
+                batteryLevel INTEGER,
                 maxHz INTEGER,
                 PRIMARY KEY (deviceId),
-                FOREIGN KEY (deviceId) REFERENCES DeviceSensorMapping(deviceId)
+                FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName)
             );
         `);
 
@@ -110,8 +112,7 @@ const initDb = () => {
                 propertyName TEXT NOT NULL,
                 active BOOLEAN NOT NULL,
                 PRIMARY KEY (sessionId, deviceId, propertyName),
-                FOREIGN KEY (sessionId) REFERENCES Session(sessionId),
-                FOREIGN KEY (deviceId) REFERENCES Device(deviceId),
+                FOREIGN KEY (sessionId, deviceId) REFERENCES SessionDeviceMapping(sessionId, deviceId),
                 FOREIGN KEY (propertyName) REFERENCES SensorProperty(propertyName)
             );
         `);
@@ -120,13 +121,12 @@ const initDb = () => {
         db.run(`
             CREATE TABLE IF NOT EXISTS DeviceSensorMapping (
                 deviceId INTEGER,
-                sensorModel TEXT,
+                model TEXT,
                 manufacturerName TEXT,
                 channel INTEGER,
-                PRIMARY KEY (deviceId, sensorModel, manufacturerName, channel),
+                PRIMARY KEY (deviceId, model, manufacturerName, channel),
                 FOREIGN KEY (deviceId) REFERENCES Device(deviceId),
-                FOREIGN KEY (sensorModel) REFERENCES Sensor(model),
-                FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName)
+                FOREIGN KEY (model, manufacturerName) REFERENCES Sensor(model, manufacturerName)
             );
         `);
 
@@ -152,11 +152,11 @@ const initDb = () => {
         // SensorProperty table
         db.run(`
             CREATE TABLE IF NOT EXISTS SensorProperty (
-                propertyName TEXT PRIMARY KEY,
+                propertyName TEXT,
                 model TEXT,
                 manufacturerName TEXT,
-                FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName),
-                FOREIGN KEY (model) REFERENCES SensorCategory(model)
+                PRIMARY KEY (propertyName, model, manufacturerName),
+                FOREIGN KEY (manufacturerName, model) REFERENCES Sensor(manufacturerName, model)
             );
         `);
 

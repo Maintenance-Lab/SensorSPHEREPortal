@@ -109,7 +109,7 @@ const sensorsPlaceholder = [
 ]
 
 const sensorColumns: GridColDef[] = [
-  { field: 'name', headerName: 'Name' },
+  { field: 'name', headerName: 'Name', flex: 1 },
   {
     field: 'outputs',
     headerName: 'Outputs',
@@ -126,7 +126,8 @@ const sensorColumns: GridColDef[] = [
           </TableBody>
         </Table>
       </TableContainer>
-    )
+    ),
+    flex: 1
   },
 ];
 
@@ -150,13 +151,14 @@ const sessionsPlaceholder = [
 ];
 
 const sessionColumns: GridColDef[] = [
-  { field: 'name', headerName: 'Name' },
+  { field: 'name', headerName: 'Name', flex: 1 },
   {
     field: 'status',
     headerName: 'Status',
     renderCell: (params) => (
       <DeviceStatus status={params.value} project="" />
-    )
+    ),
+    flex: 1
   }
 ];
 

@@ -8,27 +8,27 @@ import {
   DialogTitle,
   Typography,
   Container,
-  Chip,
+  Link,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
   Divider,
-  TextField,
+  Stack,
+  Snackbar,
+  Alert,
+
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
-import Stack from '@mui/material/Stack';
-import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import { DataGrid, GridColDef, GridRenderCellParams, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';
-import DevicesIcon from '@mui/icons-material/Devices';
 import QueueOutlinedIcon from '@mui/icons-material/QueueOutlined';
-import { set } from 'date-fns';
+import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';
+import DevicesIcon from '@mui/icons-material/Devices';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';  // Import the expand/collapse icon
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';  // Import the collapse icon
 
+// Fetch active projects
 const fetchActiveProjects = async () => {
   const res = await fetch('/api/projects/active', {
     method: 'GET',
@@ -44,11 +44,30 @@ const fetchActiveProjects = async () => {
   }
   const data = await res.json();
   return data;
-}
+};
 
-const updateProject = async (projectId: number, selectedSensorUnits) => {
-  console.log('Updating project', projectId, selectedSensorUnits);
-  const projectResponse = await fetch('/api/projects/id/' + projectId, {
+// Fetch sessions for a project
+const fetchSessionsForProject = async (projectId: number) => {
+  const res = await fetch(`/api/sessions/project/${projectId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include',
+    },
+  });
+
+  if (!res.ok) {
+    console.error('Failed to fetch sessions');
+    return [];
+  }
+
+  const data = await res.json();
+  return data;
+};
+
+// Fetch devices
+const fetchDevices = async () => {
+  const devices = await fetch('/api/devices/all', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -56,156 +75,33 @@ const updateProject = async (projectId: number, selectedSensorUnits) => {
     }
   });
 
-  if (!projectResponse.ok) {
+  if (!devices.ok) {
     console.error('Failed to fetch data');
-    return;
+    return [];
   }
 
-  const projectData = await projectResponse.json();
-  const updatedSensorUnits = [...new Set([...projectData.sensorUnits, ...selectedSensorUnits])];
-
-  const updateResponse = await fetch('/api/projects/update/' + projectId, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      credentials: 'include'
-    },
-    body: JSON.stringify({
-      sensorUnits: updatedSensorUnits
-    })
-  });
-
-  if (!updateResponse.ok) {
-    console.error('Failed to update project');
-    return;
-  }
-  const updateData = await updateResponse.json();
-  return updateData;
-}
-
-const devicesPlaceholder = [
-  {
-    id: 0,
-    type: 'This Device',
-    macAddress: '00:00:00:00:00:00',
-    battery: '',
-    project: '',
-    sensors: [
-      { id: 1, name: 'microphone' },
-      { id: 2, name: 'camera' }
-    ]
-  },
-  {
-    id: 1,
-    type: 'M5Stack Core2',
-    macAddress: 'e4:72:05:0a:fc:66',
-    battery: '93',
-    project: '',
-    sensors: [
-      { id: 1, name: 'temperature' },
-      { id: 2, name: 'humidity' }
-    ]
-  },
-  {
-    id: 2,
-    type: 'M5Stack Core2',
-    macAddress: '94:b7:ab:57:d4:75',
-    battery: '91',
-    project: 'Project 1',
-    sensors: [
-      { id: 1, name: 'gyroX' },
-      { id: 2, name: 'gyroY' },
-      { id: 3, name: 'gyroZ' }
-    ]
-  },
-  {
-    id: 3,
-    type: 'M5Stack Core2',
-    macAddress: '5f:ec:07:db:01:6e',
-    battery: '',
-    project: 'Building Temperature Research',
-    sensors: []
-  },
-  {
-    id: 4,
-    type: 'M5Stack Core2',
-    macAddress: '1e:e7:31:2e:df:7a',
-    battery: '',
-    project: 'Project 3',
-    sensors: []
-  },
-  {
-    id: 5,
-    type: 'M5Stack Core2',
-    macAddress: '95:8e:53:46:7e:6e',
-    battery: '',
-    project: '',
-    sensors: []
-  }
-];
+  const devicesData = await devices.json();
+  return devicesData;
+};
 
 const devicesColumns: GridColDef[] = [
-  // { field: 'id', headerName: '#' },
+  { field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
+    <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
+  )},
+  { field: 'id', headerName: 'MAC Address', flex: 1 },
   {
-    field: 'type', headerName: 'Type', renderCell: (params) => (
-      <Stack direction="row" alignItems="center" spacing={1}>
-        {params.value === 'This Device' && (
-          <DevicesIcon />
-        )}
-        <Typography variant="inherit">{params.value}</Typography>
-      </Stack>
-    )
-  },
-  { field: 'macAddress', headerName: 'MAC Address', valueFormatter: (value?: string) => value?.toUpperCase() },
-  {
-    field: 'battery', headerName: 'Battery', renderCell: (params) => (
+    field: 'battery', headerName: 'Battery', flex: 1, renderCell: (params) => (
       <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
         <BatteryFullIcon fontSize="small" />
-        {params.value ? (
-          <Typography variant="inherit">{params.value}%</Typography>
-        ) : (
-          <Typography variant="inherit">?</Typography>
-        )}
+        {params.value ? <Typography variant="inherit">{params.value}%</Typography> : <Typography variant="inherit">?</Typography>}
       </Stack>
     )
   },
-  {
-    field: 'sensors',
-    headerName: 'Sensors',
-    renderCell: (params) => (
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ height: "100%" }}>
-        {params.value.map((sensor: { id: number, name: string }) => (
-          <Chip key={sensor.id} label={sensor.name} size="small" />
-        ))}
-      </Stack>
-    )
-  },
-  // {
-  //   field: 'project',
-  //   headerName: 'Project',
-  //   renderCell: (params) => (
-  //     <Typography variant="inherit">{params.value}</Typography>
-  //   )
-  // },
-  // {
-  //   field: 'status',
-  //   headerName: 'Status',
-  //   renderCell: (params) => (
-  //     <DeviceStatus status={params.value} project={params.row.project} session={params.row.session} />
-  //   )
-  // }
+  { field: 'status', headerName: 'Status', flex: 1 },
+  { field: 'maxHz', headerName: 'Max Hz', flex: 1 },
 ];
 
-const devicesRows: GridRowsProp = devicesPlaceholder.map((device) => ({
-  id: device.id,
-  type: device.type,
-  macAddress: device.macAddress,
-  battery: device.battery,
-  project: device.project,
-  sensors: device.sensors,
-}));
-
-function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, handleOpenAddToProjects }) {
+function CustomDevicesToolbar({ selectedDeviceIds, handleOpenAddToProjects }) {
   const activeSelection = selectedDeviceIds.length > 0;
 
   return (
@@ -217,45 +113,117 @@ function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, handleO
           size="medium"
           startIcon={<QueueOutlinedIcon />}
           disabled={!activeSelection}
-          onClick={handleOpenAddToProjects}
+          onClick={() => {
+            console.log("Button clicked!");
+            handleOpenAddToProjects();
+          }}
         >
-          Add Devices To Project...
+          Add Devices To Session...
         </Button>
       </Stack>
     </GridToolbarContainer>
   );
-};
+}
 
 const Devices = () => {
   const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
   const [openAddToProjects, setOpenAddToProjects] = useState(false);
   const [activeProjects, setActiveProjects] = useState([]);
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchText, setSearchText] = useState('');
+  const [selectedSessions, setSelectedSessions] = useState({});
+  const [sessions, setSessions] = useState({});
+  const [devices, setDevices] = useState([]);
+  const [expandedProject, setExpandedProject] = useState<number | null>(null); // Track expanded project
+  const [snackbarOpen, setSnackbarOpen] = useState(false);  // Snackbar open state
+  const [snackbarMessage, setSnackbarMessage] = useState('');  // Snackbar message
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'warning' | 'error' | 'info'>('success');
 
-  const handleAddDevicesToProject = async (projectId) => {
-    const macAddresses = selectedDeviceIds.map((id) => devicesPlaceholder.find((device) => device.id === id).macAddress);
-    await updateProject(projectId, macAddresses);
-    setOpenAddToProjects(false);
-    console.log(" we gaan naar project id", projectId);
-    window.location.href = '/projects/detail/' + projectId;
-  }
+
+
+  const allDevices = async () => {
+    const devices = await fetchDevices();
+    setDevices(devices);
+  };
 
   useEffect(() => {
-    fetchActiveProjects().then((data) => {
-      setActiveProjects(data);
-      setSearchResults(data);
-    });
+    allDevices();
   }, []);
 
-  useEffect(() => {
-    if (searchText) {
-      const results = activeProjects.filter((project) => project.name.toLowerCase().includes(searchText.toLowerCase()));
-      setSearchResults(results);
-    } else {
-      setSearchResults(activeProjects);
+  const handleOpenAddToProjects = async () => {
+    console.log("handleOpenAddToProjects called");
+    const projects = await fetchActiveProjects();
+    setActiveProjects(projects);
+    console.log("Fetched projects:", projects);
+
+    const sessionsData = {};
+    for (const project of projects) {
+      const projectSessions = await fetchSessionsForProject(project.projectId);
+      console.log(`Sessions for project ${project.projectId}:`, projectSessions);
+      sessionsData[project.projectId] = projectSessions;  // Store sessions for each project
     }
-  }, [searchText]);
+    setSessions(sessionsData);
+
+    setOpenAddToProjects(true);
+  };
+
+  const handleSessionChange = (projectId: number, sessionId: number) => {
+    setSelectedSessions((prev) => ({
+      ...prev,
+      [projectId]: sessionId,
+    }));
+  };
+
+  const toggleProjectExpansion = (projectId: number) => {
+    setExpandedProject((prev) => (prev === projectId ? null : projectId)); // Toggle project expansion
+  };
+
+  const handleAddDevicesToSession = async (sessionId: number) => {
+    if (selectedDeviceIds.length === 0) {
+      setSnackbarSeverity('warning');
+      setSnackbarMessage("Please select at least one device.");
+      setSnackbarOpen(true);
+      return;
+    }
+  
+    try {
+      const response = await fetch('/api/devices/addToSession', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          credentials: 'include',
+        },
+        body: JSON.stringify({
+          sessionId,
+          deviceIds: selectedDeviceIds,
+        }),
+      });
+  
+      if (response.ok) {
+        setSnackbarSeverity('success');
+        setSnackbarMessage("Device(s) successfully added to session!");
+      } else {
+        const errorData = await response.json();
+        setSnackbarSeverity('error');
+        setSnackbarMessage(`Failed to add devices: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error("Error adding devices:", error);
+      setSnackbarSeverity('error');
+      setSnackbarMessage("An error occurred while adding devices.");
+    } finally {
+      setSnackbarOpen(true);
+      setOpenAddToProjects(false);
+
+    }
+  };
+  
+
+  const devicesRows: GridRowsProp = devices.map((device) => ({
+    name: device.manufacturerName,
+    id: device.deviceId,
+    status: device.connectStatus,
+    battery: device.batteryLevel,
+    maxHz: device.maxHz,
+  }));
 
   return (
     <div>
@@ -265,56 +233,78 @@ const Devices = () => {
       <PageTitleWrapper>
         <Typography variant="h1">All Devices</Typography>
       </PageTitleWrapper>
-      <Dialog open={openAddToProjects} onClose={() => setOpenAddToProjects(false)}>
-        <DialogTitle>Add Devices To Project</DialogTitle>
+
+      <Dialog open={openAddToProjects} onClose={() => setOpenAddToProjects(false)} sx={{"& .MuiDialog-paper": {width: '500px', maxWidth: '80%', zIndex: 1000}, backdropFilter: 'none',}}>
+        <DialogTitle>Select Project to Add Device(s) to</DialogTitle>
         <DialogContent>
-          <Stack direction="row" spacing={1} sx={{ mt: 1, mb: 2 }}>
-            <TextField
-              label="Search Projects"
-              variant="outlined"
-              fullWidth
-              sx={{ flex: 2 }}
-              size="small"
-              value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
-            />
-          </Stack>
-          <Typography variant="caption" fontWeight="700" sx={{ pl: 2 }}>{searchResults.length} projects</Typography>
-          <Divider sx={{ mt: 1 }} />
-          <List sx={{ width: "100%" }} disablePadding>
-            {searchResults.map((project) => (
-              <ListItem key={project._id} sx={{ py: 1 }} disablePadding divider={true}>
-                <ListItemButton
-                  disableGutters
-                  sx={{ px: 2 }}
-                  onClick={() => handleAddDevicesToProject(project._id)}
-                >
-                  <ListItemText primary={project.name} secondary={project.description} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
+          {activeProjects.length === 0 ? (
+            <Typography variant="body1" sx={{ mt: 2 }}>
+              No projects found.
+            </Typography>
+          ) : (
+            <List sx={{ width: "100%" }} disablePadding>
+              {activeProjects.map((project) => (
+                <div key={project.projectId}>
+                  {/* Project Row with Expand/Collapse Icon */}
+                  <ListItem sx={{ py: 1 }} disablePadding>
+                    <ListItemButton
+                      disableGutters
+                      sx={{ px: 2 }}
+                      onClick={() => toggleProjectExpansion(project.projectId)} // Toggle the session list
+                    >
+                      <ListItemText primary={project.name} secondary={project.description} />
+                      {expandedProject === project.projectId ? (
+                        <ExpandLessIcon /> // Collapse icon
+                      ) : (
+                        <ExpandMoreIcon /> // Expand icon
+                      )}
+                    </ListItemButton>
+                  </ListItem>
+
+                  {/* Sessions list under the project */}
+                  {expandedProject === project.projectId && (
+                    <List sx={{ pl: 4 }}>
+                      {sessions[project.projectId]?.map((session) => (
+                        <ListItem key={session.sessionId} sx={{ py: 1 }} secondaryAction={
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => handleAddDevicesToSession(session.sessionId)}
+                          >
+                            Add
+                          </Button>
+                        }>
+                          <ListItemText primary={session.name} />
+                        </ListItem>
+                      ))}
+                    </List>
+                  )}
+                  <Divider />
+                </div>
+              ))}
+            </List>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenAddToProjects(false)} color="secondary">Cancel</Button>
+          <Button onClick={() => setOpenAddToProjects(false)} color="secondary">
+            Cancel
+          </Button>
         </DialogActions>
       </Dialog>
+
       <Container>
         <Paper>
           <DataGrid
             rows={devicesRows}
             columns={devicesColumns}
             density="compact"
-            autosizeOnMount
-            autosizeOptions={{ includeOutliers: true }}
             autoHeight
             checkboxSelection={true}
             onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
             slots={{
               toolbar: () => <CustomDevicesToolbar
                 selectedDeviceIds={selectedDeviceIds}
-                setSelectedDeviceIds={setSelectedDeviceIds}
-                handleOpenAddToProjects={() => setOpenAddToProjects(true)}
+                handleOpenAddToProjects={handleOpenAddToProjects}
               />,
             }}
             sx={{
@@ -325,6 +315,25 @@ const Devices = () => {
           />
         </Paper>
       </Container>
+      {/* Snackbar for showing messages */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        sx={{ zIndex: 1100 }}  // Ensure it appears above Dialog
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

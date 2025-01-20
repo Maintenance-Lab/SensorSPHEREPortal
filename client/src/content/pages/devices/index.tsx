@@ -183,7 +183,7 @@ const Devices = () => {
       setSnackbarOpen(true);
       return;
     }
-  
+
     try {
       const response = await fetch('/api/devices/addToSession', {
         method: 'POST',
@@ -196,7 +196,7 @@ const Devices = () => {
           deviceIds: selectedDeviceIds,
         }),
       });
-  
+
       if (response.ok) {
         setSnackbarSeverity('success');
         setSnackbarMessage("Device(s) successfully added to session!");
@@ -215,7 +215,7 @@ const Devices = () => {
 
     }
   };
-  
+
 
   const devicesRows: GridRowsProp = devices.map((device) => ({
     name: device.manufacturerName,

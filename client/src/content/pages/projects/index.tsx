@@ -98,7 +98,6 @@ const createProject = async (name, description) => {
     throw new Error('Failed to create project');
   }
 
-
   const data = await response.json();
   return data;
 };

@@ -43,45 +43,47 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
 import PlaylistAddOutlinedIcon from '@mui/icons-material/PlaylistAddOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import { useParams } from 'react-router-dom';
+import { id } from 'date-fns/locale';
 
-const DeviceStatus = ({ status, project }) => {
-  let statusColor = '';
-  let statusLabel = '';
+// const DeviceStatus = ({ status, project }) => {
+//   let statusColor = '';
+//   let statusLabel = '';
 
-  switch (status) {
-    case 'takenFinished':
-      statusColor = 'success.main';
-      statusLabel = 'Finished Collecting Data';
-      break;
-    case 'takenCollecting':
-      statusColor = 'primary.main';
-      statusLabel = 'Collecting Data';
-      break;
-    case 'takenInactive':
-      statusColor = '';
-      statusLabel = 'Inactive';
-      break;
-    case 'unavailable':
-      statusColor = 'gray';
-      statusLabel = 'Unavailable';
-      break;
-    default:
-      statusColor = '';
-      statusLabel = 'Unknown';
-  }
+//   switch (status) {
+//     case 'takenFinished':
+//       statusColor = 'success.main';
+//       statusLabel = 'Finished Collecting Data';
+//       break;
+//     case 'takenCollecting':
+//       statusColor = 'primary.main';
+//       statusLabel = 'Collecting Data';
+//       break;
+//     case 'takenInactive':
+//       statusColor = '';
+//       statusLabel = 'Inactive';
+//       break;
+//     case 'unavailable':
+//       statusColor = 'gray';
+//       statusLabel = 'Unavailable';
+//       break;
+//     default:
+//       statusColor = '';
+//       statusLabel = 'Unknown';
+//   }
 
-  return (
-    <Stack spacing={1} sx={{ color: statusColor }}>
-      <Stack direction="row" spacing={1} alignItems="center">
-        {status === 'takenFinished' && (<CheckCircleIcon />)}
-        {status === 'takenCollecting' && (<MoreHorizIcon />)}
-        <Typography variant="inherit" sx={{ fontWeight: 600 }}>
-          {statusLabel}
-        </Typography>
-      </Stack>
-    </Stack>
-  );
-};
+//   return (
+//     <Stack spacing={1} sx={{ color: statusColor }}>
+//       <Stack direction="row" spacing={1} alignItems="center">
+//         {status === 'takenFinished' && (<CheckCircleIcon />)}
+//         {status === 'takenCollecting' && (<MoreHorizIcon />)}
+//         <Typography variant="inherit" sx={{ fontWeight: 600 }}>
+//           {statusLabel}
+//         </Typography>
+//       </Stack>
+//     </Stack>
+//   );
+// };
 
 const sensorsPlaceholder = [
   {
@@ -108,116 +110,174 @@ const sensorsPlaceholder = [
   }
 ]
 
-const sensorColumns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', flex: 1 },
-  {
-    field: 'outputs',
-    headerName: 'Outputs',
-    renderCell: (params) => (
-      <TableContainer >
-        <Table size="small">
-          <TableBody>
-            {Object.keys(params.value).map((key) => (
-              <TableRow key={key}>
-                <TableCell sx={{ fontWeight: '600' }}>{key}</TableCell>
-                <TableCell>{params.value[key]}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    ),
-    flex: 1
-  },
-];
-
-const sensorRows: GridRowsProp = sensorsPlaceholder.map((sensor) => ({
-  id: sensor.id,
-  name: sensor.name,
-  outputs: sensor.outputs,
-}));
-
-const sessionsPlaceholder = [
-  {
-    id: 1,
-    name: 'Session #1',
-    status: 'takenFinished'
-  },
-  {
-    id: 2,
-    name: 'Session #2',
-    status: 'takenCollecting'
-  }
-];
-
-const sessionColumns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', flex: 1 },
-  {
-    field: 'status',
-    headerName: 'Status',
-    renderCell: (params) => (
-      <DeviceStatus status={params.value} project="" />
-    ),
-    flex: 1
-  }
-];
-
-const sessionRows: GridRowsProp = sessionsPlaceholder.map((session) => ({
-  id: session.id,
-  name: session.name,
-  status: session.status
-}));
-
 const DeviceDetail = () => {
-
-  // Placeholder data for device
-  const devicePlaceholder = {
-    name: 'Device 3',
-    type: 'M5Stack Core2',
-    macAddress: '00:00:00:00:00:03',
-    battery: '100',
-    project: 'Building Temperature Research',
-    status: 'takenCollecting'
+  interface GridRow {
+    id: string; // Unique identifier for each row
+    manufacturer: string;
+    model: string;
+    outputs: string[];
   }
+
+  const { deviceId } = useParams();
+  const [properties, setProperties] = useState<any>(null);
+  const [deviceManufacturer, setDeviceManufacturer] = useState('');
+  const [deviceBatteryLevel, setDeviceBatteryLevel] = useState('');
+  const [sensorRows, setSensorRows] = useState([]);
+
+  const getDeviceProperties = async (deviceId: string) => {
+    console.log("in getDeviceDetails api call");
+    const res:any = await fetch('/api/devices/properties/' + deviceId, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch device properties');
+    }
+
+    const data = await res.json();
+    return data;
+  };
+
+  const getDeviceDetails = async (deviceId: string) => {
+    console.log("in getdevice by id api call");
+    const res:any = await fetch('/api/devices/id/' + deviceId, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch device details');
+    }
+
+    const data = await res.json();
+    return data;
+  };
+
+  const handleDeviceDetails = async (deviceId: string) => {
+    getDeviceDetails(deviceId).then((data) => {
+      setDeviceManufacturer(data.manufacturerName);
+      setDeviceBatteryLevel(data.batteryLevel);
+    });
+  }
+
+  const deviceProperties = async (deviceId: string) => {
+      getDeviceProperties(deviceId).then((data) => {
+      setProperties(data);
+      console.log("properties: ", data);
+    });
+  };
+
+  const loadRows = async (properties) => {
+    console.log("properties ---------------: ", properties);
+    const sensorRows:GridRow[] = Object.keys(properties).flatMap((manufacturer) => {
+      const { model, properties: modelProperties } = properties[manufacturer];
+
+      return model.map((modelName, index) => ({
+        id: `${manufacturer}_${modelName}`, // Unique ID based on manufacturer and model
+        manufacturer,
+        model: modelName,
+        outputs: modelProperties[index].map(output => output.value || '')
+      }));
+    });
+
+    setSensorRows(sensorRows);
+    // return sensorRows;
+  }
+
+  useEffect(() => {
+    deviceProperties(deviceId);
+    handleDeviceDetails(deviceId);
+    // mapPropertiesToGridRows();
+  }, [deviceId]);
+
+  useEffect(() => {
+     loadRows(properties);
+  }, [properties]);
+
+  const sensorColumns: GridColDef[] = [
+    { headerName: 'Manufacturer', field: 'manufacturer' },
+    { headerName: 'Model', field: 'model' },
+    { headerName: 'Outputs', field: 'outputs' }
+  ]
+  //   { field: 'manufacturer', headerName: 'Manufacturer', flex: 1 },
+  //   { field: 'model', headerName: 'Model',
+  //     renderCell: (params) => (
+  //       <TableContainer >
+  //         <Table size="small">
+  //           <TableBody>
+  //             {params.value.map((model) => (
+  //               <TableRow key={model}>
+  //                 <TableCell>{model}</TableCell>
+  //               </TableRow>
+  //             ))}
+  //           </TableBody>
+  //         </Table>
+  //       </TableContainer>
+  //     ),
+  //     flex: 1
+  //   },
+  //   {
+  //     field: 'outputs',
+  //     headerName: 'Outputs',
+  //     renderCell: (params) => (
+  //       <TableContainer >
+  //         <Table size="small">
+  //           <TableBody>
+  //             {/* console.log("KEEEEEEY: ", key), */}
+  //             {Object.keys(params.value).map((key) => (
+  //               <TableRow key={key}>
+  //                 <TableCell sx={{ fontWeight: '600' }}>{key}</TableCell>
+  //                 <TableCell>{params.value[key]}</TableCell>
+  //               </TableRow>
+  //             ))}
+  //           </TableBody>
+  //         </Table>
+  //       </TableContainer>
+  //     ),
+  //     flex: 1
+  //   },
+  // ];
+
+  // const sensorRows: GridRowsProp = sensorsPlaceholder.map((sensor) => ({
+  //     id: sensor.id,
+  //     manufacturer: 'M5Stack',
+  //     outputs: sensor.outputs,
+  // }));
 
   return (
     <div>
       <Helmet>
-        <title>{devicePlaceholder.name}</title>
+        <title>{deviceManufacturer}</title>
       </Helmet>
       <PageTitleWrapper>
         <Stack spacing={1}>
           <Stack direction="row" spacing={2}>
             <Typography variant="h1">
-              {devicePlaceholder.name}
+              {deviceManufacturer}
             </Typography>
-            <Button variant="text" color="secondary" size="medium" startIcon={<EditOutlinedIcon />}>
-              Add Label
-            </Button>
           </Stack>
           <Stack
             direction="row"
             spacing={1}
             divider={<Divider orientation="vertical" flexItem />}
           >
-            <Typography variant="body1">{devicePlaceholder.type}</Typography>
-            <Typography variant="body1">{devicePlaceholder.macAddress}</Typography>
+            <Typography variant="body1">{deviceId}</Typography>
             <Stack direction="row">
               <BatteryFullIcon />
-              <Typography variant="body1">{devicePlaceholder.battery}%</Typography>
+              <Typography variant="body1">{deviceBatteryLevel}%</Typography>
             </Stack>
-            <DeviceStatus status={devicePlaceholder.status} project={devicePlaceholder.project} />
-          </Stack>
-          <Stack direction="row" spacing={1}>
-            <Button variant="outlined" color="primary" size="medium" startIcon={<PlaylistAddOutlinedIcon />}>
-              Add To Project
-            </Button>
           </Stack>
         </Stack>
       </PageTitleWrapper>
       <Container>
         <Stack spacing={2}>
-          {/* <Typography variant="h2">Status (Placeholder)</Typography> */}
           <Typography variant="h2">Sensors</Typography>
           <Paper>
             <DataGrid
@@ -234,27 +294,6 @@ const DeviceDetail = () => {
               getRowHeight={() => 'auto'}
               sx={{
                 '&.MuiDataGrid-root .MuiDataGrid-cell': { py: 1 }
-              }}
-            />
-          </Paper>
-          <Typography variant="h2" sx={{ pt: 2 }}>Sessions</Typography>
-          <Stack direction="row" spacing={1}>
-            <Button variant="outlined" color="primary" size="medium" startIcon={<AddIcon />}>
-              Create New Session
-            </Button>
-            <TextField id="outlined-basic" label="Search" variant="outlined" size="small" />
-          </Stack>
-          <Paper>
-            <DataGrid
-              rows={sessionRows}
-              columns={sessionColumns}
-              initialState={{
-                pagination: { paginationModel: { pageSize: 25 } },
-              }}
-              density="compact"
-              autosizeOnMount
-              autosizeOptions={{
-                includeOutliers: true
               }}
             />
           </Paper>

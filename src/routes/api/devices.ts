@@ -1,6 +1,12 @@
 import { Router } from 'express';
 import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession } from '../../services/Device.js';
 import SessionDeviceMapping from '../../models/mappings/SessionDeviceMapping.js';
+import { deviceProperties } from '../../services/Device.js';
+import Device from '../../models/Device.js';
+import SensorProperty from '../../models/SensorProperty.js';
+
+
+
 const router = Router()
 
 router.get("/all", async (_, res) => {
@@ -47,6 +53,20 @@ router.post("/addToSession", async (req, res) => {
         console.error("Error adding devices to session:", error);
         return res.status(500).json({ message: "Failed to add devices to session" });
     }
+});
+
+router.get("/properties/:deviceId", async (req, res) => {
+    const deviceId = req.params.deviceId;
+    const doc = await deviceProperties(deviceId);
+    if (!doc) return res.status(404).json({ message: "Device not found" });
+    return res.json(doc);
+});
+
+router.get("/properties/:deviceId", async (req, res) => {
+    const deviceId = req.params.deviceId;
+    const doc = await deviceProperties(deviceId);
+    if (!doc) return res.status(404).json({ message: "Device not found" });
+    return res.json(doc);
 });
 
 router.get("/available/:session", async (req, res) => {

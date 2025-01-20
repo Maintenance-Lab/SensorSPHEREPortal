@@ -177,7 +177,7 @@ function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, session
       </Stack>
     </GridToolbarContainer>
   );
-  
+
 }
 
 function CustomDevicesToolbar2({ selectedAddDeviceIds, setSelectedAddDeviceIds, sessionId, availableDevices, fetchSessionDevices,  fetchAvailableDevices}) {
@@ -206,7 +206,7 @@ function CustomDevicesToolbar2({ selectedAddDeviceIds, setSelectedAddDeviceIds, 
     fetchAvailableDevices(sessionId);
   };
 
-  
+
   const activeSelection = selectedAddDeviceIds.length > 0;
 
   return (
@@ -224,7 +224,7 @@ function CustomDevicesToolbar2({ selectedAddDeviceIds, setSelectedAddDeviceIds, 
       </Stack>
     </GridToolbarContainer>
   );
-  
+
 }
 
 const SessionDetail = () => {
@@ -240,7 +240,8 @@ const SessionDetail = () => {
   const [isDialogOpen, setDialogOpen] = useState(false);
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
-  const deviceId = Number(useParams().deviceId);
+
+  const deviceId = useParams().deviceId;
   const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
   const [selectedAddDeviceIds, setSelectedAddDeviceIds] = useState([]);
   const [devices, setDevices] = useState([]);
@@ -256,12 +257,12 @@ const SessionDetail = () => {
         credentials: 'include',
       },
     });
-  
+
     if (!availableDevices.ok) {
       console.error('Failed to fetch available devices');
       return [];
     }
-  
+
     const availableDevicesData = await availableDevices.json();
     console.log("-- De available devices zijn:", availableDevicesData)
     setAvailableDevices(availableDevicesData);
@@ -586,7 +587,7 @@ const SessionDetail = () => {
                   fetchSessionDevices={fetchSessionDevices}
                   fetchAvailableDevices={fetchAvailableDevices}
 
-                />}}              
+                />}}
                 sx={{
                 "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {
                   outline: "none !important",

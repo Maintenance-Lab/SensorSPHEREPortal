@@ -63,20 +63,20 @@ c.executemany('''
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ''', sessions)
 
-c.execute('DELETE FROM Device;')
-# Create dummy devices
-devices = [
-    (1, "manufacturer1", "connected", 100, 1000),
-    (2, "manufacturer2", "disconnected", 90, 2000),
-    (3, "manufacturer3", "connected", 80, 3000),
-    (4, "manufacturer4", "disconnected", 70, 4000),
-    (5, "manufacturer5", "connected", 60, 5000)
-]
+# c.execute('DELETE FROM Device;')
+# # Create dummy devices
+# devices = [
+#     (1, "manufacturer1", "connected", 100, 1000),
+#     (2, "manufacturer2", "disconnected", 90, 2000),
+#     (3, "manufacturer3", "connected", 80, 3000),
+#     (4, "manufacturer4", "disconnected", 70, 4000),
+#     (5, "manufacturer5", "connected", 60, 5000)
+# ]
 
-c.executemany('''
-    INSERT INTO Device (deviceId, manufacturerName, connectStatus, batteryLevel, maxHz)
-    VALUES (?, ?, ?, ?, ?)
-''', devices)
+# c.executemany('''
+#     INSERT INTO Device (deviceId, manufacturerName, connectStatus, batteryLevel, maxHz)
+#     VALUES (?, ?, ?, ?, ?)
+# ''', devices)
 
 c.execute('DELETE FROM SensorCategory;')
 # Create dummy sensor categories

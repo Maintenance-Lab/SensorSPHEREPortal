@@ -2,6 +2,9 @@ import Device from "../models/Device.js";
 import Project from "../models/Project.js";
 import Manufacturer from "../models/Manufacturer.js";
 import SessionDeviceMapping from "../models/mappings/SessionDeviceMapping.js";
+import DeviceSensorMapping from "../models/mappings/DeviceSensorMapping.js";
+import SensorProperty from "../models/SensorProperty.js";
+import Sensor from "../models/Sensor.js";
 
 
 export const getAllDevices = async (): Promise<Device[]> => {
@@ -78,4 +81,40 @@ export const getDeviceById = async (id: string): Promise<Device> => {
     });
 }
 
+export const deviceProperties = async (deviceId: string): Promise<SensorProperty[]> => {
+    return new Promise(async (resolve, reject) => {
+
+        const sensors = await DeviceSensorMapping.findAll({ where: { deviceId: deviceId } });
+        if (!sensors) return reject(new Error("Sensors not found"));
+
+        const properties:any = {};
+        for (const sensor of sensors) {
+            const model = sensor.dataValues.model;
+            const manufacturerName = sensor.dataValues.manufacturerName;
+            const sensorProperties = await SensorProperty.findAll({ where: { model: model, manufacturerName: manufacturerName } });
+            if (!sensorProperties) return reject(new Error("Sensor properties not found"));
+
+            if (!properties[manufacturerName]) {
+                properties[manufacturerName] = {model: [], properties: []};
+            }
+            // if (!properties[manufacturerName][model]) {
+            //     properties[manufacturerName][model] = [];
+            // }
+
+            // add the model to the dict
+            properties[manufacturerName]["model"].push(model);
+
+            // add the properties to the dict
+            const propertyNames = sensorProperties.map((sp) => sp.propertyName);
+            console.log("propertyNames: ", propertyNames);
+            properties[manufacturerName]["properties"].push(propertyNames);
+            // for (const sensorProperty of sensorProperties) {
+            //     properties[manufacturerName][model].push(sensorProperty.propertyName);
+            // }
+        }
+
+        console.log("properties: ", properties);
+        return resolve(properties);
+    });;
+};
 

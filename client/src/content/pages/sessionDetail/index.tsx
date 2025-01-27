@@ -33,7 +33,8 @@ import { useParams } from 'react-router-dom';
 import { add } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Session } from 'inspector';
-
+import { IconButton } from "@mui/material";
+import EditIcon from '@mui/icons-material/Edit';
 
 
 
@@ -63,6 +64,33 @@ const devicesColumns: GridColDef[] = [
   },
   { field: 'status', headerName: 'Status', flex: 1 },
   { field: 'maxHz', headerName: 'Max Hz', flex: 1 },
+  {
+    field: "info",
+    headerName: "",
+    width: 150,
+    renderCell: (params) => (
+      <Button
+        variant="outlined"
+        startIcon={<EditIcon />}
+        color="primary"
+        size="small"
+        onClick={(event) => {
+          event.stopPropagation(); // Prevent row selection
+          handleInfoClick(params.row.id);
+        }}
+        sx={{
+          textTransform: "none",
+          fontWeight: "bold",
+        }}
+      >
+        Configure
+      </Button>
+    ),
+    sortable: false,
+    filterable: false,
+  }
+  
+  
 ];
 
 const fetchDevices = async (sessionId) => {
@@ -152,6 +180,11 @@ const deleteSession = async (sessionId: number) => {
   console.log("DELETE SESSION RES", res);
   const data = await res.json();
   return data;
+};
+
+const handleInfoClick = (deviceId) => {
+  console.log("Info button clicked for device ID:", deviceId);
+  
 };
 
 function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, sessionId, sessionDevices, fetchSessionDevices, fetchAvailableDevices }) {

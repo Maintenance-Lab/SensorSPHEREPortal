@@ -74,13 +74,17 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
         switch (postfix) {
             case "msg":
                 console.log("Got message on msg topic");
-                await addDeviceToDatabase(message, deviceId);
+                // await addDeviceToDatabase(message, deviceId);
                 break;
             case "cfg":
                 console.log("Got message on cfg topic");
                 break;
             case "speedtest":
                 console.log("Got message on speedtest topic");
+                break;
+            case "initial":
+                console.log("Got message on initial topic");
+                await addDeviceToDatabase(message, deviceId);
                 break;
         }
 

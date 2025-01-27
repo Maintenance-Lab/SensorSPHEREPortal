@@ -180,14 +180,15 @@ const DeviceDetail = () => {
       const { model, properties: modelProperties } = properties[manufacturer];
 
       return model.map((modelName, index) => ({
-        id: `${manufacturer}_${modelName}`, // Unique ID based on manufacturer and model
+        id: `${manufacturer}_${modelName}`,
         manufacturer,
         model: modelName,
-        outputs: modelProperties[index].map(output => output.value || '')
+        outputs: modelProperties[index]
       }));
     });
 
     setSensorRows(sensorRows);
+    console.log("sensorRows: ", sensorRows);
     // return sensorRows;
   }
 
@@ -202,54 +203,10 @@ const DeviceDetail = () => {
   }, [properties]);
 
   const sensorColumns: GridColDef[] = [
-    { headerName: 'Manufacturer', field: 'manufacturer' },
-    { headerName: 'Model', field: 'model' },
-    { headerName: 'Outputs', field: 'outputs' }
-  ]
-  //   { field: 'manufacturer', headerName: 'Manufacturer', flex: 1 },
-  //   { field: 'model', headerName: 'Model',
-  //     renderCell: (params) => (
-  //       <TableContainer >
-  //         <Table size="small">
-  //           <TableBody>
-  //             {params.value.map((model) => (
-  //               <TableRow key={model}>
-  //                 <TableCell>{model}</TableCell>
-  //               </TableRow>
-  //             ))}
-  //           </TableBody>
-  //         </Table>
-  //       </TableContainer>
-  //     ),
-  //     flex: 1
-  //   },
-  //   {
-  //     field: 'outputs',
-  //     headerName: 'Outputs',
-  //     renderCell: (params) => (
-  //       <TableContainer >
-  //         <Table size="small">
-  //           <TableBody>
-  //             {/* console.log("KEEEEEEY: ", key), */}
-  //             {Object.keys(params.value).map((key) => (
-  //               <TableRow key={key}>
-  //                 <TableCell sx={{ fontWeight: '600' }}>{key}</TableCell>
-  //                 <TableCell>{params.value[key]}</TableCell>
-  //               </TableRow>
-  //             ))}
-  //           </TableBody>
-  //         </Table>
-  //       </TableContainer>
-  //     ),
-  //     flex: 1
-  //   },
-  // ];
-
-  // const sensorRows: GridRowsProp = sensorsPlaceholder.map((sensor) => ({
-  //     id: sensor.id,
-  //     manufacturer: 'M5Stack',
-  //     outputs: sensor.outputs,
-  // }));
+    { headerName: 'Manufacturer', field: 'manufacturer', flex: 1 },
+    { headerName: 'Model', field: 'model', flex: 1 },
+    { headerName: 'Outputs', field: 'outputs', flex: 1 }
+  ];
 
   return (
     <div>

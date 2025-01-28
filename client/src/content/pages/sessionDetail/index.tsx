@@ -37,62 +37,6 @@ import { IconButton } from "@mui/material";
 import EditIcon from '@mui/icons-material/Edit';
 
 
-
-const devicesColumns: GridColDef[] = [
-  {
-    // field: 'name', headerName: 'Name', renderCell: (params) => (
-    //   <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
-    field: 'name', headerName: 'Name', renderCell: (params) => (
-    <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
-    ),
-    flex: 1
-  },
-  // { field: 'macAddress', headerName: 'MAC Address', valueFormatter: (value?: string) => value?.toUpperCase() },
-  { field: 'id', headerName: 'MAC Address', flex: 1 },
-  {
-    field: 'battery', headerName: 'Battery', renderCell: (params) => (
-      <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
-        <BatteryFullIcon fontSize="small" />
-        {params.value ? (
-          <Typography variant="inherit">{params.value}%</Typography>
-        ) : (
-          <Typography variant="inherit">?</Typography>
-        )}
-      </Stack>
-    ),
-    flex: 1
-  },
-  { field: 'status', headerName: 'Status', flex: 1 },
-  { field: 'maxHz', headerName: 'Max Hz', flex: 1 },
-  {
-    field: "info",
-    headerName: "",
-    width: 150,
-    renderCell: (params) => (
-      <Button
-        variant="outlined"
-        startIcon={<EditIcon />}
-        color="primary"
-        size="small"
-        onClick={(event) => {
-          event.stopPropagation(); // Prevent row selection
-          handleInfoClick(params.row.id);
-        }}
-        sx={{
-          textTransform: "none",
-          fontWeight: "bold",
-        }}
-      >
-        Configure
-      </Button>
-    ),
-    sortable: false,
-    filterable: false,
-  }
-  
-  
-];
-
 const fetchDevices = async (sessionId) => {
   console.log("------ Fetching devices for session: ", sessionId);
   const devices = await fetch('/api/devices/all/' + sessionId, {
@@ -182,10 +126,6 @@ const deleteSession = async (sessionId: number) => {
   return data;
 };
 
-const handleInfoClick = (deviceId) => {
-  console.log("Info button clicked for device ID:", deviceId);
-  
-};
 
 function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, sessionId, sessionDevices, fetchSessionDevices, fetchAvailableDevices }) {
   const [open, setOpen] = useState(false);
@@ -271,6 +211,7 @@ const SessionDetail = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [isDialogOpen, setDialogOpen] = useState(false);
+  const [isDialogOpen2, setDialogOpen2] = useState(false);
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
 
@@ -280,6 +221,133 @@ const SessionDetail = () => {
   const [devices, setDevices] = useState([]);
   const [availableDevices, setAvailableDevices] = useState([]);
   const [allDevices, setAllDevices] = useState([]);
+  const [selectedDevice, setSelectedDevice] = useState(null); 
+  const [loading, setLoading] = useState(false);
+  const [deviceDetails, setDeviceDetails] = useState<any>(null);
+  const [sensorRows, setSensorRows] = useState([]);
+
+  interface GridRow {
+    id: string;
+    manufacturer: string;
+    model: string;
+  }
+
+  const loadRows = async (deviceData) => {
+    console.log("- - - -- -komt ie hier wel");
+    console.log("deviceData ---------------: ", deviceData);
+    
+    // Maak een array van alle modellen
+    const sensorRows = Object.keys(deviceData).flatMap((manufacturer) => {
+      const { model } = deviceData[manufacturer];
+      
+      // Check of model aanwezig is en het een array is
+      if (Array.isArray(model)) {
+        return model.map((modelName) => ({
+          id: `${manufacturer}_${modelName}`,
+          manufacturer,
+          model: modelName,
+        }));
+      }
+      return []; // Als er geen model is, geef een lege array terug
+    });
+  
+    // Sla de sensorRows op in de state
+    setSensorRows(sensorRows);
+    console.log("sensorRows1: ", sensorRows);
+  };
+  
+
+  const getDeviceDetails = async (deviceId: string) => {
+    const res: any = await fetch('/api/devices/id/' + deviceId, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include',
+      },
+    });
+    if (!res.ok) throw new Error('Failed to fetch device details');
+    return res.json();
+  };
+
+  
+
+  const handleOpenDialog2 = async (deviceId) => {
+    console.log("Info button clicked for device ID:", deviceId);
+    setLoading(true);
+    try {
+      // Haal device details op
+      const data = await getDeviceDetails(deviceId);
+      setDeviceDetails(data); 
+      loadRows(data); // Laad sensor gegevens
+      setDeviceDetails(data); 
+      console.log("---Dit is data", data);
+    } catch (error) {
+      console.error('Error fetching device details:', error);
+    } finally {
+      setLoading(false);
+      setDialogOpen2(true);
+    }
+  };
+
+  const handleCloseDialog2 = () => {
+    setDialogOpen2(false);
+    setDeviceDetails(null);
+  };
+  
+  const devicesColumns: GridColDef[] = [
+    {
+      // field: 'name', headerName: 'Name', renderCell: (params) => (
+      //   <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
+      field: 'name', headerName: 'Name', renderCell: (params) => (
+      <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
+      ),
+      flex: 1
+    },
+    // { field: 'macAddress', headerName: 'MAC Address', valueFormatter: (value?: string) => value?.toUpperCase() },
+    { field: 'id', headerName: 'MAC Address', flex: 1 },
+    {
+      field: 'battery', headerName: 'Battery', renderCell: (params) => (
+        <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
+          <BatteryFullIcon fontSize="small" />
+          {params.value ? (
+            <Typography variant="inherit">{params.value}%</Typography>
+          ) : (
+            <Typography variant="inherit">?</Typography>
+          )}
+        </Stack>
+      ),
+      flex: 1
+    },
+    { field: 'status', headerName: 'Status', flex: 1 },
+    { field: 'maxHz', headerName: 'Max Hz', flex: 1 },
+    {
+      field: "info",
+      headerName: "",
+      width: 150,
+      renderCell: (params) => (
+        <Button
+          variant="outlined"
+          startIcon={<EditIcon />}
+          color="primary"
+          size="small"
+          onClick={(event) => {
+            event.stopPropagation(); // Prevent row selection
+            handleOpenDialog2(params.row.id);
+          }}
+          sx={{
+            textTransform: "none",
+            fontWeight: "bold",
+          }}
+        >
+          Configure
+        </Button>
+      ),
+      sortable: false,
+      filterable: false,
+    }
+    
+    
+  ];
 
   const fetchAvailableDevices = async (sessionId) => {
     console.log("------ Fetching available devices for", sessionId);
@@ -416,6 +484,50 @@ const SessionDetail = () => {
       </DialogActions>
     </Dialog>
   );
+
+  const DeviceConfigDialog = ({ device, open, onClose }) => (
+    console.log("Device in dialog", device),
+    console.log("mioet niet leeg zijn sensorrows", sensorRows),
+    <Dialog open={open} onClose={handleCloseDialog2} maxWidth="sm" fullWidth>
+  <DialogTitle>Device Details</DialogTitle>
+  <DialogContent>
+    {loading ? (
+      <Typography>Loading...</Typography>
+    ) : (
+      <Box>
+        {deviceDetails && (
+          <>
+            <Typography variant="h6" gutterBottom>
+              Device Name: {deviceDetails.name}
+            </Typography>
+            <Typography variant="body1" gutterBottom>
+              MAC Address: {deviceDetails.id}
+            </Typography>
+            <Typography variant="body1" gutterBottom>
+              Manufacturer: {deviceDetails.manufacturer}
+            </Typography>
+            
+            <Typography variant="h6" gutterBottom>
+              Models:
+            </Typography>
+            <ul>
+              {sensorRows.map((row) => (
+                <li key={row.id}>{row.model}</li>
+              ))}
+            </ul>
+          </>
+        )}
+      </Box>
+    )}
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={handleCloseDialog2} color="primary">
+      Close
+    </Button>
+  </DialogActions>
+</Dialog>
+);
+
 
   return (
     <div>
@@ -633,6 +745,7 @@ const SessionDetail = () => {
           </Paper>
         </Stack>
       </Container>
+      <DeviceConfigDialog device={selectedDevice} open={isDialogOpen2} onClose={handleCloseDialog2} />
     </div>
   );
 };

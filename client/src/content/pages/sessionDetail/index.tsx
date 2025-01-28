@@ -6,39 +6,24 @@ import {
   Typography,
   Container,
   Box,
-  Chip,
   Paper,
-  List,
-  ListItem,
-  ListItemButton,
-  Checkbox,
-  Switch,
-  LinearProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Snackbar
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
 import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';
-import { ArchiveOutlined, DeleteOutline, Devices, Edit, EventNote, InfoOutlined, Inventory, MoreTime, Pause, PlayArrow, Router, Schedule, Stop, UnarchiveOutlined, Usb} from '@mui/icons-material';
-import { ListItemIcon, ListItemText } from '@mui/material';
+import { ArchiveOutlined, DeleteOutline, Devices, Inventory, UnarchiveOutlined} from '@mui/icons-material';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
-import { add } from 'date-fns';
-import { id } from 'date-fns/locale';
-import { Session } from 'inspector';
-import { IconButton } from "@mui/material";
 import EditIcon from '@mui/icons-material/Edit';
 
-
 const fetchDevices = async (sessionId) => {
-  console.log("------ Fetching devices for session: ", sessionId);
   const devices = await fetch('/api/devices/all/' + sessionId, {
     method: 'GET',
     headers: {
@@ -53,7 +38,6 @@ const fetchDevices = async (sessionId) => {
   }
 
   const devicesData = await devices.json();
-  console.log(devicesData)
   return devicesData;
 };
 
@@ -76,7 +60,6 @@ const removeDevicesFromSession = async (sessionId, selectedDeviceIds, fetchSessi
   }
 
   const data = await res.json();
-  console.log('Devices removed successfully:', data);
 
   fetchSessionDevices();
   fetchAvailableDevices(sessionId);
@@ -121,7 +104,7 @@ const deleteSession = async (sessionId: number) => {
     console.error('Failed to delete session');
     return;
   }
-  console.log("DELETE SESSION RES", res);
+
   const data = await res.json();
   return data;
 };
@@ -172,9 +155,6 @@ function CustomDevicesToolbar2({ selectedAddDeviceIds, setSelectedAddDeviceIds, 
       return;
     }
 
-    const data = await res.json();
-    console.log("Devices added successfully:", data);
-
     fetchSessionDevices();
     fetchAvailableDevices(sessionId);
   };
@@ -207,7 +187,6 @@ const SessionDetail = () => {
   const [projectId, setProjectId] = useState('');
   const [projectName, setProjectName] = useState('');
   const [isArchived, setIsArchived] = useState(false);
-  // const [sessionSensorUnits, setSessionSensorUnits] = useState([]);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [isDialogOpen, setDialogOpen] = useState(false);
@@ -215,47 +194,60 @@ const SessionDetail = () => {
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
 
-  const deviceId = useParams().deviceId;
   const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
   const [selectedAddDeviceIds, setSelectedAddDeviceIds] = useState([]);
   const [devices, setDevices] = useState([]);
   const [availableDevices, setAvailableDevices] = useState([]);
-  const [allDevices, setAllDevices] = useState([]);
-  const [selectedDevice, setSelectedDevice] = useState(null); 
+  const [selectedDevice, setSelectedDevice] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [deviceDetails, setDeviceDetails] = useState<any>(null);
   const [sensorRows, setSensorRows] = useState([]);
 
   interface GridRow {
     id: string;
     manufacturer: string;
     model: string;
+    outputs: string[];
   }
 
-  const loadRows = async (deviceData) => {
-    console.log("- - - -- -komt ie hier wel");
-    console.log("deviceData ---------------: ", deviceData);
-    
-    // Maak een array van alle modellen
-    const sensorRows = Object.keys(deviceData).flatMap((manufacturer) => {
-      const { model } = deviceData[manufacturer];
-      
-      // Check of model aanwezig is en het een array is
-      if (Array.isArray(model)) {
-        return model.map((modelName) => ({
+  const loadRows = async (properties) => {
+    const sensorRows:GridRow[] = Object.keys(properties).flatMap((manufacturer) => {
+      const { model, properties: modelProperties } = properties[manufacturer];
+
+      return model.map((modelName, index) => ({
           id: `${manufacturer}_${modelName}`,
-          manufacturer,
+          manufacturer: manufacturer,
           model: modelName,
-        }));
-      }
-      return []; // Als er geen model is, geef een lege array terug
+          outputs: modelProperties[index]
+      }));
     });
-  
-    // Sla de sensorRows op in de state
+
     setSensorRows(sensorRows);
     console.log("sensorRows1: ", sensorRows);
   };
-  
+
+  const getDeviceProperties = async (deviceId: string) => {
+    console.log("in getDeviceDetails api call: ", deviceId);
+    const res: any = await fetch('/api/devices/properties/' + deviceId, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch device properties');
+    }
+
+    const data = await res.json();
+    return data;
+  };
+
+  const deviceProperties = async (deviceId: string) => {
+    const properties = await getDeviceProperties(deviceId);
+    return properties;
+  };
+
 
   const getDeviceDetails = async (deviceId: string) => {
     const res: any = await fetch('/api/devices/id/' + deviceId, {
@@ -269,18 +261,13 @@ const SessionDetail = () => {
     return res.json();
   };
 
-  
 
   const handleOpenDialog2 = async (deviceId) => {
-    console.log("Info button clicked for device ID:", deviceId);
-    setLoading(true);
-    try {
-      // Haal device details op
+      const properties = await deviceProperties(deviceId);
       const data = await getDeviceDetails(deviceId);
-      setDeviceDetails(data); 
-      loadRows(data); // Laad sensor gegevens
-      setDeviceDetails(data); 
-      console.log("---Dit is data", data);
+
+    try {
+      loadRows(properties);
     } catch (error) {
       console.error('Error fetching device details:', error);
     } finally {
@@ -291,19 +278,15 @@ const SessionDetail = () => {
 
   const handleCloseDialog2 = () => {
     setDialogOpen2(false);
-    setDeviceDetails(null);
   };
-  
+
   const devicesColumns: GridColDef[] = [
     {
-      // field: 'name', headerName: 'Name', renderCell: (params) => (
-      //   <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
       field: 'name', headerName: 'Name', renderCell: (params) => (
       <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
       ),
       flex: 1
     },
-    // { field: 'macAddress', headerName: 'MAC Address', valueFormatter: (value?: string) => value?.toUpperCase() },
     { field: 'id', headerName: 'MAC Address', flex: 1 },
     {
       field: 'battery', headerName: 'Battery', renderCell: (params) => (
@@ -331,7 +314,8 @@ const SessionDetail = () => {
           color="primary"
           size="small"
           onClick={(event) => {
-            event.stopPropagation(); // Prevent row selection
+            // Prevent row selection
+            event.stopPropagation();
             handleOpenDialog2(params.row.id);
           }}
           sx={{
@@ -345,12 +329,15 @@ const SessionDetail = () => {
       sortable: false,
       filterable: false,
     }
-    
-    
+  ];
+
+  const sensorColumns: GridColDef[] = [
+    { headerName: 'Manufacturer', field: 'manufacturer', flex: 1 },
+    { headerName: 'Model', field: 'model', flex: 1 },
+    { headerName: 'Outputs', field: 'outputs', flex: 1 }
   ];
 
   const fetchAvailableDevices = async (sessionId) => {
-    console.log("------ Fetching available devices for", sessionId);
     const availableDevices = await fetch('/api/devices/available/' + sessionId, {
       method: 'GET',
       headers: {
@@ -365,12 +352,10 @@ const SessionDetail = () => {
     }
 
     const availableDevicesData = await availableDevices.json();
-    console.log("-- De available devices zijn:", availableDevicesData)
     setAvailableDevices(availableDevicesData);
   };
 
   const fetchSessionDevices = async () => {
-    console.log('--------- hij zit in fetchSessionDevices')
     const devices = await fetchDevices(sessionId);
     setDevices(devices);
   };
@@ -392,7 +377,6 @@ const SessionDetail = () => {
   }));
 
   const fetchSession = async () => {
-    console.log("SESSION ID", sessionId);
     const response = await fetch(`/api/sessions/id/${sessionId}`, {
       headers: { credentials: 'include' }
     });
@@ -403,7 +387,6 @@ const SessionDetail = () => {
     }
 
     const data = await response.json();
-    // setSessionId(data.sessionId);
     setProjectId(data.projectId);
     setSessionName(data.name);
     setIsArchived(data.archived);
@@ -448,7 +431,8 @@ const SessionDetail = () => {
     console.log("project id in delete session detail", projectId);
     await deleteSession(sessionId);
     if (!projectId) {
-      await fetchSession(); // Ensure `projectId` is loaded before proceeding
+      // Ensure `projectId` is loaded before proceeding
+      await fetchSession();
     }
     window.location.href = '/projects/detail/' + projectId;
   };
@@ -486,38 +470,28 @@ const SessionDetail = () => {
   );
 
   const DeviceConfigDialog = ({ device, open, onClose }) => (
-    console.log("Device in dialog", device),
-    console.log("mioet niet leeg zijn sensorrows", sensorRows),
     <Dialog open={open} onClose={handleCloseDialog2} maxWidth="sm" fullWidth>
   <DialogTitle>Device Details</DialogTitle>
   <DialogContent>
     {loading ? (
       <Typography>Loading...</Typography>
     ) : (
-      <Box>
-        {deviceDetails && (
-          <>
-            <Typography variant="h6" gutterBottom>
-              Device Name: {deviceDetails.name}
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              MAC Address: {deviceDetails.id}
-            </Typography>
-            <Typography variant="body1" gutterBottom>
-              Manufacturer: {deviceDetails.manufacturer}
-            </Typography>
-            
-            <Typography variant="h6" gutterBottom>
-              Models:
-            </Typography>
-            <ul>
-              {sensorRows.map((row) => (
-                <li key={row.id}>{row.model}</li>
-              ))}
-            </ul>
-          </>
-        )}
-      </Box>
+      <DataGrid
+        rows={sensorRows}
+        columns={sensorColumns}
+        initialState={{
+          pagination: { paginationModel: { pageSize: 25 } },
+        }}
+        density="compact"
+        autosizeOnMount
+        autosizeOptions={{
+          includeOutliers: true
+        }}
+        getRowHeight={() => 'auto'}
+        sx={{
+          '&.MuiDataGrid-root .MuiDataGrid-cell': { py: 1 }
+        }}
+      />
     )}
   </DialogContent>
   <DialogActions>
@@ -686,8 +660,6 @@ const SessionDetail = () => {
                   sortModel: [{ field: 'id', sort: 'desc' }],
                 },
               }}
-              // getRowHeight={() => 'auto'}
-              // disableRowSelectionOnClick
               checkboxSelection
               onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
               slots={{

@@ -1,125 +1,21 @@
 import { useState, useEffect } from 'react';
-import {
-  AppBar,
-  Toolbar,
-  Button,
-  TextField,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  Switch,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Typography,
-  Snackbar,
-  Container,
-  Modal,
-  Box,
-  Grid,
-  Autocomplete,
-  styled,
-  Popper,
-  Divider
-} from '@mui/material';
+import { Paper, Typography, Container, Divider } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
-import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
-import PlaylistAddOutlinedIcon from '@mui/icons-material/PlaylistAddOutlined';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import { DataGrid, GridColDef} from '@mui/x-data-grid';
 import { useParams } from 'react-router-dom';
-import { id } from 'date-fns/locale';
-
-// const DeviceStatus = ({ status, project }) => {
-//   let statusColor = '';
-//   let statusLabel = '';
-
-//   switch (status) {
-//     case 'takenFinished':
-//       statusColor = 'success.main';
-//       statusLabel = 'Finished Collecting Data';
-//       break;
-//     case 'takenCollecting':
-//       statusColor = 'primary.main';
-//       statusLabel = 'Collecting Data';
-//       break;
-//     case 'takenInactive':
-//       statusColor = '';
-//       statusLabel = 'Inactive';
-//       break;
-//     case 'unavailable':
-//       statusColor = 'gray';
-//       statusLabel = 'Unavailable';
-//       break;
-//     default:
-//       statusColor = '';
-//       statusLabel = 'Unknown';
-//   }
-
-//   return (
-//     <Stack spacing={1} sx={{ color: statusColor }}>
-//       <Stack direction="row" spacing={1} alignItems="center">
-//         {status === 'takenFinished' && (<CheckCircleIcon />)}
-//         {status === 'takenCollecting' && (<MoreHorizIcon />)}
-//         <Typography variant="inherit" sx={{ fontWeight: 600 }}>
-//           {statusLabel}
-//         </Typography>
-//       </Stack>
-//     </Stack>
-//   );
-// };
-
-const sensorsPlaceholder = [
-  {
-    id: 1,
-    name: 'ENV3',
-    outputs: {
-      t: '123456789',
-      hu: '30.31323334',
-      te: '24.69420'
-    }
-  },
-  {
-    id: 2,
-    name: 'IMU',
-    outputs: {
-      accX: '0.123456789',
-      accY: '0.31323334',
-      accZ: '0.69420',
-      gyroX: '0.123456789',
-      gyroY: '0.31323334',
-      gyroZ: '0.69420',
-      temp: '24.69420'
-    }
-  }
-]
 
 const DeviceDetail = () => {
   interface GridRow {
-    id: string; // Unique identifier for each row
+    id: string;
     manufacturer: string;
     model: string;
     outputs: string[];
   }
 
   const { deviceId } = useParams();
-  const [properties, setProperties] = useState<any>(null);
   const [deviceManufacturer, setDeviceManufacturer] = useState('');
   const [deviceBatteryLevel, setDeviceBatteryLevel] = useState('');
   const [sensorRows, setSensorRows] = useState([]);
@@ -161,46 +57,51 @@ const DeviceDetail = () => {
   };
 
   const handleDeviceDetails = async (deviceId: string) => {
-    getDeviceDetails(deviceId).then((data) => {
-      setDeviceManufacturer(data.manufacturerName);
-      setDeviceBatteryLevel(data.batteryLevel);
-    });
-  }
+    const data = await getDeviceDetails(deviceId);
+    setDeviceManufacturer(data.manufacturerName);
+    setDeviceBatteryLevel(data.batteryLevel);
+  };
 
   const deviceProperties = async (deviceId: string) => {
-      getDeviceProperties(deviceId).then((data) => {
-      setProperties(data);
-      console.log("properties: ", data);
-    });
+    let properties = {};
+    try {
+      properties = await getDeviceProperties(deviceId);
+    }
+    catch (e) {
+      console.error(e);
+    }
+    return properties;
   };
 
   const loadRows = async (properties) => {
-    console.log("properties ---------------: ", properties);
     const sensorRows:GridRow[] = Object.keys(properties).flatMap((manufacturer) => {
       const { model, properties: modelProperties } = properties[manufacturer];
 
       return model.map((modelName, index) => ({
         id: `${manufacturer}_${modelName}`,
-        manufacturer,
+        manufacturer: manufacturer,
         model: modelName,
         outputs: modelProperties[index]
       }));
     });
 
     setSensorRows(sensorRows);
-    console.log("sensorRows: ", sensorRows);
-    // return sensorRows;
+  }
+
+  const onLoad = async () => {
+    const properties = await deviceProperties(deviceId);
+    loadRows(properties);
   }
 
   useEffect(() => {
-    deviceProperties(deviceId);
     handleDeviceDetails(deviceId);
-    // mapPropertiesToGridRows();
+    try {
+      onLoad();
+    }
+    catch (e) {
+      console.error(e);
+    }
   }, [deviceId]);
-
-  useEffect(() => {
-     loadRows(properties);
-  }, [properties]);
 
   const sensorColumns: GridColDef[] = [
     { headerName: 'Manufacturer', field: 'manufacturer', flex: 1 },

@@ -253,7 +253,7 @@ const SessionDetail = () => {
   const getSelectedSensors = async (deviceId:string) => {
     console.log("in getselectedrows api call: ", deviceId);
     const res: any = await fetch('/api/devices/selectedSensors', {
-      method: 'GET',
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         credentials: 'include'
@@ -275,6 +275,7 @@ const SessionDetail = () => {
   // TODO: check
   const handleSelectedSensors= async (deviceId:string) => {
     const sensors = await getSelectedSensors(deviceId);
+    console.log("sensors that are activee: ", sensors);
     const rows = sensors.map((sensor) => {
       return `${sensor.manufacturer}_${sensor.model}`;
     });

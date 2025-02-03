@@ -10,7 +10,6 @@ import SensorCategory from '../models/SensorCategory.js';
 import DeviceSensorConfiguration from '../models/DeviceSensorConfiguration.js';
 import AccountProjectMapping from '../models/mappings/AccountProjectMapping.js';
 import SessionDeviceMapping from '../models/mappings/SessionDeviceMapping.js';
-// import SensorDeviceMapping from '../models/mappings/SessionDeviceMapping.js';
 import DeviceSensorMapping from '../models/mappings/DeviceSensorMapping.js';
 
 export const setupRelations = () => {
@@ -30,9 +29,9 @@ export const setupRelations = () => {
     Device.belongsToMany(Session, { through: SessionDeviceMapping, foreignKey: 'deviceId' });
 
     Session.hasMany(SessionDeviceMapping, { foreignKey: 'sessionId' });
-    SessionDeviceMapping.belongsTo(Session, { foreignKey: 'sessionId' });
+    // SessionDeviceMapping.belongsTo(Session, { foreignKey: 'sessionId' });
     Device.hasMany(SessionDeviceMapping, { foreignKey: 'deviceId' });
-    SessionDeviceMapping.belongsTo(Device, { foreignKey: 'deviceId' });
+    // SessionDeviceMapping.belongsTo(Device, { foreignKey: 'deviceId' });
 
     // Device Sensor Mapping
     Device.belongsToMany(Sensor, { through: DeviceSensorMapping, foreignKey: 'deviceId' });

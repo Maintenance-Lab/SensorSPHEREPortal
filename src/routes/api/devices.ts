@@ -84,11 +84,7 @@ router.post("/addToSession", async (req, res) => {
                 return properties;
             }));
 
-            console.log("sensorProperties: ", sensorProperties);
-
-            // add to DeviceSensorConfiguration
             const propertyMappings = sensorProperties.flat();
-
             const doc = await DeviceSensorConfiguration.bulkCreate(propertyMappings, { ignoreDuplicates: true });
             if (!doc) return res.status(500).json({ message: "Failed to add sensors to session" });
         }
@@ -121,12 +117,13 @@ router.get("/available/:session", async (req, res) => {
     return res.json(doc);
 });
 
-router.get("/selectedSensors", async (req, res) => {
-    const sessionId = Number(req.query.sessionId);
-    const deviceId = req.query.deviceId;
+router.put("/selectedSensors", async (req, res) => {
+    const sessionId = Number(req.body.sessionId);
+    const deviceId = req.body.deviceId;
 
-    const doc = await DeviceSensorConfiguration.findAll({ where: { sessionId: sessionId, deviceId: deviceId } });
+    const doc = await DeviceSensorConfiguration.findAll({ where: { sessionId: sessionId, deviceId: deviceId, active: true } });
     if (!doc) return res.status(404).json({ message: "Sensors not found" });
+    console.log("selected sensors: ", doc);
 
     return res.json(doc);
 

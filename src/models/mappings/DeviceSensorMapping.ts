@@ -4,7 +4,7 @@ import sequelize from '../../sequelize.js';
 
 class DeviceSensorMapping extends Model {
     deviceId: number;
-    sensorModel: string;
+    model: string;
     manufacturerName: string;
     channel: number;
 }

@@ -10,7 +10,6 @@ class Sensor extends Model {
     model : string;
     manufacturerName : string;
     categoryName : string;
-    // propertyName : string;
 }
 
 Sensor.init({

@@ -3,7 +3,13 @@ import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToS
 import SessionDeviceMapping from '../../models/mappings/SessionDeviceMapping.js';
 import { deviceProperties } from '../../services/Device.js';
 import Device from '../../models/Device.js';
+import Sensor from '../../models/Sensor.js';
 import SensorProperty from '../../models/SensorProperty.js';
+import DeviceSensorConfiguration from '../../models/DeviceSensorConfiguration.js';
+import DeviceSensorMapping from '../../models/mappings/DeviceSensorMapping.js';
+
+import { Op } from 'sequelize';
+
 
 
 
@@ -46,7 +52,52 @@ router.post("/addToSession", async (req, res) => {
             deviceId,
         }));
 
-        await SessionDeviceMapping.bulkCreate(mappings, { ignoreDuplicates: true });
+        // TODO: waarom ignoreDuplicates: true?
+        const doc = await SessionDeviceMapping.bulkCreate(mappings, { ignoreDuplicates: true });
+        if (!doc) return res.status(500).json({ message: "Failed to add devices to session" });
+
+        // add to DeviceSensorConfiguration
+        try {
+            const sensorsDeviceMappings = await DeviceSensorMapping.findAll({ where: { deviceId: deviceIds } });
+            if (!sensorsDeviceMappings) return res.status(404).json({ message: "Sensors not found" });
+            console.log("sensorsDeviceMappings: ", sensorsDeviceMappings);
+
+            const sensorProperties = await Promise.all(sensorsDeviceMappings.map(async (sensorMapping) => {
+                // Get sensor with device id
+                const sensorPropertiesForDevice = await SensorProperty.findAll({
+                    where: {
+                        model: sensorMapping.dataValues.model,
+                        manufacturerName: sensorMapping.dataValues.manufacturerName
+                    },
+                    attributes: ['propertyName'],
+                });
+
+                // Get properties for sensor
+                const properties = sensorPropertiesForDevice.map((property) => ({
+                    sessionId: sessionId,
+                    deviceId: sensorMapping.dataValues.deviceId,
+                    model: sensorMapping.dataValues.model,
+                    manufacturerName: sensorMapping.dataValues.manufacturerName,
+                    propertyName: property.propertyName,
+                }));
+
+                return properties;
+            }));
+
+            console.log("sensorProperties: ", sensorProperties);
+
+            // add to DeviceSensorConfiguration
+            const propertyMappings = sensorProperties.flat();
+
+            const doc = await DeviceSensorConfiguration.bulkCreate(propertyMappings, { ignoreDuplicates: true });
+            if (!doc) return res.status(500).json({ message: "Failed to add sensors to session" });
+        }
+        catch (error) {
+            console.error("Error fetching sensor: ", error);
+        }
+
+        // TODO: DeviceSensorConfiguration model aanpassen naar model/manufacturernaam ipv property
+        // await DeviceSensorConfiguration.bulkCreate(propertyMappings, { ignoreDuplicates: false });
 
         return res.status(200).json({ message: "Devices added successfully" });
     } catch (error) {
@@ -62,18 +113,23 @@ router.get("/properties/:deviceId", async (req, res) => {
     return res.json(doc);
 });
 
-router.get("/properties/:deviceId", async (req, res) => {
-    const deviceId = req.params.deviceId;
-    const doc = await deviceProperties(deviceId);
-    if (!doc) return res.status(404).json({ message: "Device not found" });
-    return res.json(doc);
-});
-
 router.get("/available/:session", async (req, res) => {
     console.log("in fetch available devices");
     const sessionId = Number(req.params.session);
     const doc = await getAllDevicesSession(sessionId);
+    if (!doc) return res.status(404).json({ message: "Devices not found" });
     return res.json(doc);
+});
+
+router.get("/selectedSensors", async (req, res) => {
+    const sessionId = Number(req.query.sessionId);
+    const deviceId = req.query.deviceId;
+
+    const doc = await DeviceSensorConfiguration.findAll({ where: { sessionId: sessionId, deviceId: deviceId } });
+    if (!doc) return res.status(404).json({ message: "Sensors not found" });
+
+    return res.json(doc);
+
 });
 
 

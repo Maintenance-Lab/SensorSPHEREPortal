@@ -22,6 +22,7 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import EditIcon from '@mui/icons-material/Edit';
+import { get } from 'http';
 
 const fetchDevices = async (sessionId) => {
   const devices = await fetch('/api/devices/all/' + sessionId, {
@@ -201,6 +202,7 @@ const SessionDetail = () => {
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sensorRows, setSensorRows] = useState([]);
+  const [selectedRows, setSelectedRows] = useState([]);
 
   interface GridRow {
     id: string;
@@ -248,25 +250,42 @@ const SessionDetail = () => {
     return properties;
   };
 
-
-  const getDeviceDetails = async (deviceId: string) => {
-    const res: any = await fetch('/api/devices/id/' + deviceId, {
+  const getSelectedSensors = async (deviceId:string) => {
+    console.log("in getselectedrows api call: ", deviceId);
+    const res: any = await fetch('/api/devices/selectedSensors', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        credentials: 'include',
+        credentials: 'include'
       },
+      body: JSON.stringify({
+        deviceId: deviceId,
+        sessionId: sessionId
+      }),
     });
-    if (!res.ok) throw new Error('Failed to fetch device details');
-    return res.json();
-  };
 
+    if (!res.ok) {
+      throw new Error('Failed to fetch device properties');
+    }
+
+    const data = await res.json();
+    return data;
+  }
+
+  // TODO: check
+  const handleSelectedSensors= async (deviceId:string) => {
+    const sensors = await getSelectedSensors(deviceId);
+    const rows = sensors.map((sensor) => {
+      return `${sensor.manufacturer}_${sensor.model}`;
+    });
+    console.log("rows to set selected: ", rows);
+    setSelectedRows(rows);
+  }
 
   const handleOpenDialog2 = async (deviceId) => {
-      const properties = await deviceProperties(deviceId);
-      const data = await getDeviceDetails(deviceId);
-
+    const properties = await deviceProperties(deviceId);
     try {
+      handleSelectedSensors(deviceId);
       loadRows(properties);
     } catch (error) {
       console.error('Error fetching device details:', error);
@@ -471,7 +490,9 @@ const SessionDetail = () => {
 
   const DeviceConfigDialog = ({ device, open, onClose }) => (
     <Dialog open={open} onClose={handleCloseDialog2} maxWidth="sm" fullWidth>
-  <DialogTitle>Device Details</DialogTitle>
+      <DialogContent>
+        <Typography variant="h4">Select sensor to include in data collection</Typography>
+      </DialogContent>
   <DialogContent>
     {loading ? (
       <Typography>Loading...</Typography>
@@ -479,14 +500,17 @@ const SessionDetail = () => {
       <DataGrid
         rows={sensorRows}
         columns={sensorColumns}
+        onRowSelectionModelChange={(newSelection) => setSelectedRows(newSelection)}
         initialState={{
-          pagination: { paginationModel: { pageSize: 25 } },
+          pagination: { paginationModel: { pageSize: 25} },
         }}
         density="compact"
         autosizeOnMount
         autosizeOptions={{
           includeOutliers: true
         }}
+        rowSelectionModel={selectedRows}
+        checkboxSelection={true}
         getRowHeight={() => 'auto'}
         sx={{
           '&.MuiDataGrid-root .MuiDataGrid-cell': { py: 1 }
@@ -495,6 +519,9 @@ const SessionDetail = () => {
     )}
   </DialogContent>
   <DialogActions>
+  <Button onClick={handleCloseDialog2} color="primary">
+      Save configuration
+    </Button>
     <Button onClick={handleCloseDialog2} color="primary">
       Close
     </Button>

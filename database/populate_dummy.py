@@ -182,26 +182,26 @@ c.executemany('''
     VALUES (?, ?, ?)
 ''', account_project_mappings)
 
-c.execute('DELETE FROM DeviceSensorConfiguration;')
-# Device sensor configurations
-device_sensor_configurations = [
-    (1, 1, "MaxTemperature", 1),  # Device 1 is configured to monitor MaxTemperature
-    (1, 1, "MinTemperature", 0),  # Device 1 is configured to monitor MinTemperature
-    (1, 1, "GyroX", 0),  # Device 1 is configured to monitor GyroX
-    (1, 1, "GyroY", 1),  # Device 1 is configured to monitor GyroY
-    (1, 1, "GyroZ", 0),  # Device 1 is configured to monitor GyroZ
-    (1, 2, "PressureLevel", 1),  # Device 2 is configured to monitor PressureLevel
-    (2, 3, "HumidityLevel", 1),  # Device 3 is configured to monitor HumidityLevel
-    (3, 4, "MaxTemperature", 0),  # Device 4 is configured to monitor MaxTemperature
-    (4, 1, "PressureLevel", 1),  # Device 1 is configured to monitor PressureLevel
-    (4, 5, "HumidityLevel", 0),  # Device 5 is configured to monitor HumidityLevel
-    (5, 2, "MaxTemperature", 1)   # Device 2 is configured to monitor MaxTemperature
-]
+# c.execute('DELETE FROM DeviceSensorConfiguration;')
+# # Device sensor configurations
+# device_sensor_configurations = [
+#     (1, 1, "MaxTemperature", 1),  # Device 1 is configured to monitor MaxTemperature
+#     (1, 1, "MinTemperature", 0),  # Device 1 is configured to monitor MinTemperature
+#     (1, 1, "GyroX", 0),  # Device 1 is configured to monitor GyroX
+#     (1, 1, "GyroY", 1),  # Device 1 is configured to monitor GyroY
+#     (1, 1, "GyroZ", 0),  # Device 1 is configured to monitor GyroZ
+#     (1, 2, "PressureLevel", 1),  # Device 2 is configured to monitor PressureLevel
+#     (2, 3, "HumidityLevel", 1),  # Device 3 is configured to monitor HumidityLevel
+#     (3, 4, "MaxTemperature", 0),  # Device 4 is configured to monitor MaxTemperature
+#     (4, 1, "PressureLevel", 1),  # Device 1 is configured to monitor PressureLevel
+#     (4, 5, "HumidityLevel", 0),  # Device 5 is configured to monitor HumidityLevel
+#     (5, 2, "MaxTemperature", 1)   # Device 2 is configured to monitor MaxTemperature
+# ]
 
-c.executemany('''
-    INSERT INTO DeviceSensorConfiguration (sessionId, deviceId, propertyName, active)
-    VALUES (?, ?, ?, ?)
-''', device_sensor_configurations)
+# c.executemany('''
+#     INSERT INTO DeviceSensorConfiguration (sessionId, deviceId, propertyName, active)
+#     VALUES (?, ?, ?, ?)
+# ''', device_sensor_configurations)
 
 c.execute('DELETE FROM LoginSession;')
 # add 1 loginsession

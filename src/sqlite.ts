@@ -110,10 +110,12 @@ const initDb = () => {
                 sessionId INTEGER NOT NULL,
                 deviceId INTEGER NOT NULL,
                 propertyName TEXT NOT NULL,
+                model TEXT NOT NULL,
+                manufacturerName TEXT NOT NULL,
                 active BOOLEAN NOT NULL,
-                PRIMARY KEY (sessionId, deviceId, propertyName),
+                PRIMARY KEY (sessionId, deviceId, propertyName, model, manufacturerName),
                 FOREIGN KEY (sessionId, deviceId) REFERENCES SessionDeviceMapping(sessionId, deviceId),
-                FOREIGN KEY (propertyName) REFERENCES SensorProperty(propertyName)
+                FOREIGN KEY (propertyName, model, manufacturerName) REFERENCES SensorProperty(propertyName, model, manufacturerName)
             );
         `);
 

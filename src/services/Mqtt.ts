@@ -18,11 +18,7 @@ import e from "express";
 //  - device toevoegen
 //  - device sensor mapping toevoegen
 //  - uitzoeken wat die sensor property is/doet en toevoegen
-//
-// TODO:
-// device sensor config komt later als user daadwerkelijk wil gaan meten
-
-
+//  ------------------------------------
 
 
 
@@ -74,7 +70,7 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
         switch (postfix) {
             case "msg":
                 console.log("Got message on msg topic");
-                // await addDeviceToDatabase(message, deviceId);
+                await addDeviceToDatabase(message, deviceId);
                 break;
             case "cfg":
                 console.log("Got message on cfg topic");
@@ -84,7 +80,7 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
                 break;
             case "initial":
                 console.log("Got message on initial topic");
-                await addDeviceToDatabase(message, deviceId);
+                // await addDeviceToDatabase(message, deviceId);
                 break;
         }
 

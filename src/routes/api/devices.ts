@@ -22,11 +22,11 @@ router.get("/all", async (_, res) => {
 });
 
 router.get("/all/:session", async (req, res) => {
-    console.log("----- hier moet ie in services get session devices");
+    // console.log("----- hier moet ie in services get session devices");
     const sessionId = Number(req.params.session);
     console.log("sessionId: ", sessionId);
     const docs = await getDevicesMappedToSession(sessionId);
-    console.log("--------- devices zijn: ", docs);
+    // console.log("--------- devices zijn: ", docs);
     if (!docs) return res.status(404).json({ message: "Devices not found" });
     return res.json(docs);
 });
@@ -117,13 +117,13 @@ router.get("/available/:session", async (req, res) => {
     return res.json(doc);
 });
 
-router.put("/selectedSensors", async (req, res) => {
+router.put("/selectedProperties", async (req, res) => {
     const sessionId = Number(req.body.sessionId);
     const deviceId = req.body.deviceId;
 
     const doc = await DeviceSensorConfiguration.findAll({ where: { sessionId: sessionId, deviceId: deviceId, active: true } });
     if (!doc) return res.status(404).json({ message: "Sensors not found" });
-    console.log("selected sensors: ", doc);
+    // console.log("selected props: ", doc);
 
     return res.json(doc);
 

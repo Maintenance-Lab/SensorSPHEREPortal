@@ -22,7 +22,10 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import EditIcon from '@mui/icons-material/Edit';
-import { get } from 'http';
+// import { Treeview } from '@mui/x-treeview';
+import { TreeView, TreeItem } from '@mui/lab'
+import { Checkbox, FormControlLabel } from '@mui/material'
+import { set } from 'date-fns';
 
 const fetchDevices = async (sessionId) => {
   const devices = await fetch('/api/devices/all/' + sessionId, {
@@ -182,6 +185,18 @@ function CustomDevicesToolbar2({ selectedAddDeviceIds, setSelectedAddDeviceIds, 
 }
 
 const SessionDetail = () => {
+  // interface RenderTree {
+  //   id: string;
+  //   name: string;
+  //   children?: RenderTree;
+  // }
+
+  type RenderTree = {
+    id: string;
+    name: string;
+    children?: RenderTree[];
+  };
+
   const sessionId = Number(useParams().sessionId);
   const [sessionName, setSessionName] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
@@ -201,31 +216,123 @@ const SessionDetail = () => {
   const [availableDevices, setAvailableDevices] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [sensorRows, setSensorRows] = useState([]);
-  const [selectedRows, setSelectedRows] = useState([]);
-
-  interface GridRow {
-    id: string;
-    manufacturer: string;
-    model: string;
-    outputs: string[];
-  }
+  // const [allProperties, setAllProperties] = useState(null);
+  // const [allProperties, setAllProperties] = useState<RenderTree>({ id: null, name: null, children: [] });
+  const [allProperties, setAllProperties] = useState<RenderTree[]>([]);
+  const [sensorTree, setSensorTree] = useState<{ id: string; name: string; children: any[] }[]>([]);
+  const [selectedProperties, setSelectedProperties] = useState([]);
 
   const loadRows = async (properties) => {
-    const sensorRows:GridRow[] = Object.keys(properties).flatMap((manufacturer) => {
+    console.log("in load rows: ", properties);
+
+    const initialSensorTree = Object.keys(properties).map((manufacturer, manufacturerIndex) => {
       const { model, properties: modelProperties } = properties[manufacturer];
 
-      return model.map((modelName, index) => ({
-          id: `${manufacturer}_${modelName}`,
-          manufacturer: manufacturer,
-          model: modelName,
-          outputs: modelProperties[index]
-      }));
+      return {
+        id: `${manufacturerIndex + 1}`,
+        name: manufacturer,
+        children: model.map((modelName, modelIndex) => {
+          return {
+            id: `${manufacturerIndex + 1}-${modelIndex + 1}`,
+            name: modelName,
+            children: modelProperties[modelIndex].map((property, propertyIndex) => {
+              return {
+                id: `${manufacturerIndex + 1}-${modelIndex + 1}-${propertyIndex + 1}`,
+                name: property
+              };
+            })
+          };
+        })
+      };
     });
 
-    setSensorRows(sensorRows);
-    console.log("sensorRows1: ", sensorRows);
+    setAllProperties(initialSensorTree);
+    return initialSensorTree;
   };
+
+  const renderTree = (nodes: RenderTree[] | RenderTree) => {
+    if (Array.isArray(nodes)) {
+      return nodes.map(node => renderTree(node));
+    }
+
+    // If nodes is a single object
+    return (
+      <TreeItem
+          key={nodes.id}
+          nodeId={nodes.id}
+          label={
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={selectedProperties.some(item => item === nodes.id)}
+                  onChange={event =>
+                    getOnChange(event.currentTarget.checked, nodes)
+                  }
+                  onClick={e => e.stopPropagation()}
+                />
+              }
+              label={<>{nodes.name}</>}
+              key={nodes.id}
+            />
+          }
+        >
+          {Array.isArray(nodes.children)
+            ? nodes.children.map(node => renderTree(node))
+            : null}
+        </TreeItem>
+    );
+  };
+
+  const getChildById = (node: RenderTree, id: string) => {
+    console.log("in getChildById: ", node, id);
+    let array: string[] = [];
+
+    const getAllChild = (nodes: RenderTree | null) => {
+      if (nodes === null) return [];
+      array.push(nodes.id);
+      if (Array.isArray(nodes.children)) {
+        nodes.children.forEach(node => {
+          array = [...array, ...getAllChild(node)];
+          array = array.filter((v, i) => array.indexOf(v) === i);
+        });
+      }
+      return array;
+    }
+
+    const getNodeById = (nodes: RenderTree, id: string) => {
+      if (nodes.id === id) {
+        return nodes;
+      } else if (Array.isArray(nodes.children)) {
+        let result = null;
+        nodes.children.forEach(node => {
+          if (!!getNodeById(node, id)) {
+            result = getNodeById(node, id);
+          }
+        });
+        return result;
+      }
+
+      return null;
+    }
+
+    return getAllChild(getNodeById(node, id));
+  }
+
+  const getOnChange = async (checked: boolean, nodes: RenderTree) => {
+    const data = await loadRows(allProperties);
+    console.log("DATA: ", data);
+    data.forEach((node) => {
+      console.log("node: ", node);
+      const allNode = getChildById(node, nodes.id);
+
+      let array = checked
+      ? [...selectedProperties, ...allNode]
+      : selectedProperties.filter(value => !allNode.includes(value));
+
+      array = array.filter((v, i) => array.indexOf(v) === i);
+      setSelectedProperties(array);
+    });
+  }
 
   const getDeviceProperties = async (deviceId: string) => {
     console.log("in getDeviceDetails api call: ", deviceId);
@@ -250,9 +357,9 @@ const SessionDetail = () => {
     return properties;
   };
 
-  const getSelectedSensors = async (deviceId:string) => {
+  const getSelectedProperties = async (deviceId:string) => {
     console.log("in getselectedrows api call: ", deviceId);
-    const res: any = await fetch('/api/devices/selectedSensors', {
+    const res: any = await fetch('/api/devices/selectedProperties', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -272,21 +379,23 @@ const SessionDetail = () => {
     return data;
   }
 
-  // TODO: check
-  const handleSelectedSensors= async (deviceId:string) => {
-    const sensors = await getSelectedSensors(deviceId);
-    console.log("sensors that are activee: ", sensors);
-    const rows = sensors.map((sensor) => {
-      return `${sensor.manufacturer}_${sensor.model}`;
+
+  // TODO: adjust to tree view
+  const handleSelectedProperties= async (deviceId:string) => {
+    const properties = await getSelectedProperties(deviceId);
+    console.log("sensors that are activee: ", properties);
+
+    const selectedPropertiesIds = properties.map((property) => {
+      return `${property.manufacturer}_${property.model}_${property.property}`;
     });
-    console.log("rows to set selected: ", rows);
-    setSelectedRows(rows);
+
+    setSelectedProperties(selectedPropertiesIds);
   }
 
   const handleOpenDialog2 = async (deviceId) => {
     const properties = await deviceProperties(deviceId);
     try {
-      handleSelectedSensors(deviceId);
+      handleSelectedProperties(deviceId);
       loadRows(properties);
     } catch (error) {
       console.error('Error fetching device details:', error);
@@ -492,31 +601,19 @@ const SessionDetail = () => {
   const DeviceConfigDialog = ({ device, open, onClose }) => (
     <Dialog open={open} onClose={handleCloseDialog2} maxWidth="sm" fullWidth>
       <DialogContent>
-        <Typography variant="h4">Select sensor to include in data collection</Typography>
+        <Typography variant="h4">Select properties to include in data collection</Typography>
       </DialogContent>
   <DialogContent>
     {loading ? (
       <Typography>Loading...</Typography>
     ) : (
-      <DataGrid
-        rows={sensorRows}
-        columns={sensorColumns}
-        onRowSelectionModelChange={(newSelection) => setSelectedRows(newSelection)}
-        initialState={{
-          pagination: { paginationModel: { pageSize: 25} },
-        }}
-        density="compact"
-        autosizeOnMount
-        autosizeOptions={{
-          includeOutliers: true
-        }}
-        rowSelectionModel={selectedRows}
-        checkboxSelection={true}
-        getRowHeight={() => 'auto'}
-        sx={{
-          '&.MuiDataGrid-root .MuiDataGrid-cell': { py: 1 }
-        }}
-      />
+      <TreeView
+        multiSelect={true}
+        selected={selectedProperties}
+        // onSelectedItemsChange={handleSelectedPropertiesChange}
+        >
+         {renderTree(allProperties)}
+      </TreeView>
     )}
   </DialogContent>
   <DialogActions>

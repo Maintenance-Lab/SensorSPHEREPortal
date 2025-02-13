@@ -26,6 +26,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import { TreeView, TreeItem } from '@mui/lab'
 import { Checkbox, FormControlLabel } from '@mui/material'
 import { set } from 'date-fns';
+import { render } from 'react-dom';
+import React from 'react';
 
 const fetchDevices = async (sessionId) => {
   const devices = await fetch('/api/devices/all/' + sessionId, {
@@ -185,16 +187,10 @@ function CustomDevicesToolbar2({ selectedAddDeviceIds, setSelectedAddDeviceIds, 
 }
 
 const SessionDetail = () => {
-  // interface RenderTree {
-  //   id: string;
-  //   name: string;
-  //   children?: RenderTree;
-  // }
-
   type RenderTree = {
     id: string;
     name: string;
-    children?: RenderTree[];
+    children?: { [key: string]: RenderTree };
   };
 
   const sessionId = Number(useParams().sessionId);
@@ -216,71 +212,49 @@ const SessionDetail = () => {
   const [availableDevices, setAvailableDevices] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [loading, setLoading] = useState(false);
-  // const [allProperties, setAllProperties] = useState(null);
-  // const [allProperties, setAllProperties] = useState<RenderTree>({ id: null, name: null, children: [] });
-  const [allProperties, setAllProperties] = useState<RenderTree[]>([]);
+  const [allProperties, setAllProperties] = useState<RenderTree>();
   const [sensorTree, setSensorTree] = useState<{ id: string; name: string; children: any[] }[]>([]);
   const [selectedProperties, setSelectedProperties] = useState([]);
 
   const loadRows = async (properties) => {
-    console.log("in load rows: ", properties);
+    console.log("in load rows: ");
 
-    const initialSensorTree = Object.keys(properties).map((manufacturer, manufacturerIndex) => {
-      const { model, properties: modelProperties } = properties[manufacturer];
+    // Create a root object
+    const root: RenderTree = {
+      id: "root",
+      name: "Root",
+      children: Object.keys(properties).reduce((acc, manufacturer) => {
+        const { model, properties: modelProperties } = properties[manufacturer];
 
-      return {
-        id: `${manufacturerIndex + 1}`,
-        name: manufacturer,
-        children: model.map((modelName, modelIndex) => {
-          return {
-            id: `${manufacturerIndex + 1}-${modelIndex + 1}`,
-            name: modelName,
-            children: modelProperties[modelIndex].map((property, propertyIndex) => {
-              return {
-                id: `${manufacturerIndex + 1}-${modelIndex + 1}-${propertyIndex + 1}`,
-                name: property
-              };
-            })
-          };
-        })
-      };
-    });
+        // Add each manufacturer as a child to the root
+        acc[manufacturer] = {
+          id: `manufacturer_${manufacturer.replace(/\s+/g, '_')}`,
+          name: manufacturer,
+          children: model.reduce((modelAcc, modelName, modelIndex) => {
+            // Add each model as a child to the manufacturer
+            modelAcc[modelName] = {
+              id: `model_${manufacturer.replace(/\s+/g, '_')}_${modelName.replace(/\s+/g, '_')}`,
+              name: modelName,
+              children: modelProperties[modelIndex].reduce((propertyAcc, property) => {
+                // Add each property as a child to the model
+                propertyAcc[property] = {
+                  id: `property_${manufacturer.replace(/\s+/g, '_')}_${modelName.replace(/\s+/g, '_')}_${property.replace(/\s+/g, '_')}`,
+                  name: property
+                };
+                return propertyAcc;
+              }, {})
+            };
+            return modelAcc;
+          }, {})
+        };
 
-    setAllProperties(initialSensorTree);
-    return initialSensorTree;
-  };
+        return acc;
+      }, {})
+    };
 
-  const renderTree = (nodes: RenderTree[] | RenderTree) => {
-    if (Array.isArray(nodes)) {
-      return nodes.map(node => renderTree(node));
-    }
-
-    // If nodes is a single object
-    return (
-      <TreeItem
-          key={nodes.id}
-          nodeId={nodes.id}
-          label={
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={selectedProperties.some(item => item === nodes.id)}
-                  onChange={event =>
-                    getOnChange(event.currentTarget.checked, nodes)
-                  }
-                  onClick={e => e.stopPropagation()}
-                />
-              }
-              label={<>{nodes.name}</>}
-              key={nodes.id}
-            />
-          }
-        >
-          {Array.isArray(nodes.children)
-            ? nodes.children.map(node => renderTree(node))
-            : null}
-        </TreeItem>
-    );
+    console.log("root: ", root);
+    setAllProperties(root);
+    return root;
   };
 
   const getChildById = (node: RenderTree, id: string) => {
@@ -319,20 +293,47 @@ const SessionDetail = () => {
   }
 
   const getOnChange = async (checked: boolean, nodes: RenderTree) => {
-    const data = await loadRows(allProperties);
-    console.log("DATA: ", data);
-    data.forEach((node) => {
-      console.log("node: ", node);
-      const allNode = getChildById(node, nodes.id);
+    console.log("in getOnChange: ", checked, nodes);
+    const allNode = getChildById(allProperties, nodes.id);
 
-      let array = checked
-      ? [...selectedProperties, ...allNode]
-      : selectedProperties.filter(value => !allNode.includes(value));
+    let array = checked
+    ? [...selectedProperties, ...allNode]
+    : selectedProperties.filter(value => !allNode.includes(value));
 
-      array = array.filter((v, i) => array.indexOf(v) === i);
-      setSelectedProperties(array);
-    });
+    array = array.filter((v, i) => array.indexOf(v) === i);
+    setSelectedProperties(array);
   }
+
+  const renderTree = React.useCallback((nodes: RenderTree) => {
+      if (!nodes || !nodes.id) return null;
+        console.log("IN RENDER TREE: ", nodes);
+        return (
+          <TreeItem
+          key={nodes.id}
+          nodeId={String(nodes.id)}
+          label={
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={selectedProperties.includes(nodes.id)}
+                  onChange={(event) =>
+                    getOnChange(event.currentTarget.checked, nodes)
+                  }
+                  onClick={(e) => e.stopPropagation()}
+                />
+              }
+              label={nodes.name}
+            />
+          }
+        >
+          {nodes.children &&
+            Object.values(nodes.children).map((child) =>
+              renderTree(child)
+            )}
+        </TreeItem>
+      );
+    }, [selectedProperties, getOnChange]
+  );
 
   const getDeviceProperties = async (deviceId: string) => {
     console.log("in getDeviceDetails api call: ", deviceId);
@@ -393,6 +394,7 @@ const SessionDetail = () => {
   }
 
   const handleOpenDialog2 = async (deviceId) => {
+    console.log("IN OPEN DIALOG 2: ", deviceId);
     const properties = await deviceProperties(deviceId);
     try {
       handleSelectedProperties(deviceId);
@@ -408,6 +410,35 @@ const SessionDetail = () => {
   const handleCloseDialog2 = () => {
     setDialogOpen2(false);
   };
+
+  const DeviceConfigDialog = ({ device, open, onClose }) => (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogContent>
+        <Typography variant="h4">Select properties to include in data collection</Typography>
+      </DialogContent>
+      <DialogContent>
+        {loading ? (
+          <Typography>Loading...</Typography>
+        ) : (
+          <TreeView
+            multiSelect={true}
+            selected={selectedProperties}
+            >
+            {open && allProperties && renderTree(allProperties)}
+
+          </TreeView>
+        )}
+      </DialogContent>
+      <DialogActions>
+      <Button onClick={handleCloseDialog2} color="primary">
+          Save configuration
+        </Button>
+        <Button onClick={handleCloseDialog2} color="primary">
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
 
   const devicesColumns: GridColDef[] = [
     {
@@ -437,6 +468,7 @@ const SessionDetail = () => {
       headerName: "",
       width: 150,
       renderCell: (params) => (
+        <div>
         <Button
           variant="outlined"
           startIcon={<EditIcon />}
@@ -454,6 +486,12 @@ const SessionDetail = () => {
         >
           Configure
         </Button>
+        <DeviceConfigDialog
+          open={isDialogOpen2}
+          onClose={handleCloseDialog2}
+          device={selectedDevice}
+        />
+        </div>
       ),
       sortable: false,
       filterable: false,
@@ -598,36 +636,6 @@ const SessionDetail = () => {
     </Dialog>
   );
 
-  const DeviceConfigDialog = ({ device, open, onClose }) => (
-    <Dialog open={open} onClose={handleCloseDialog2} maxWidth="sm" fullWidth>
-      <DialogContent>
-        <Typography variant="h4">Select properties to include in data collection</Typography>
-      </DialogContent>
-  <DialogContent>
-    {loading ? (
-      <Typography>Loading...</Typography>
-    ) : (
-      <TreeView
-        multiSelect={true}
-        selected={selectedProperties}
-        // onSelectedItemsChange={handleSelectedPropertiesChange}
-        >
-         {renderTree(allProperties)}
-      </TreeView>
-    )}
-  </DialogContent>
-  <DialogActions>
-  <Button onClick={handleCloseDialog2} color="primary">
-      Save configuration
-    </Button>
-    <Button onClick={handleCloseDialog2} color="primary">
-      Close
-    </Button>
-  </DialogActions>
-</Dialog>
-);
-
-
   return (
     <div>
       <Helmet>
@@ -760,13 +768,13 @@ const SessionDetail = () => {
               Delete Session
             </Button>
             <ConfirmationDialog
-            open={isDialogOpen}
-            onClose={handleCloseDialog}
-            onConfirm={async (sessionId) => {
-              await handleDeleteSession(sessionId);
-            }}
-            sessionId={sessionId}
-          />
+              open={isDialogOpen}
+              onClose={handleCloseDialog}
+              onConfirm={async (sessionId) => {
+                await handleDeleteSession(sessionId);
+              }}
+              sessionId={sessionId}
+            />
           </Stack>
         </Stack>
       </PageTitleWrapper>
@@ -842,7 +850,6 @@ const SessionDetail = () => {
           </Paper>
         </Stack>
       </Container>
-      <DeviceConfigDialog device={selectedDevice} open={isDialogOpen2} onClose={handleCloseDialog2} />
     </div>
   );
 };

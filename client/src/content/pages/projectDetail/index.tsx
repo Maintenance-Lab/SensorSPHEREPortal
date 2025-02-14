@@ -189,7 +189,11 @@ const deviceColumns: GridColDef[] = [
 const sessionColumns: GridColDef[] = [
   {
     field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
-      <Link href={`/sessions/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
+      <Link href={`/sessions/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}
+        onClick={(event) => {
+        event.stopPropagation();
+      }}>
+      {params.value}</Link>
     )
   },
   { field: 'status', headerName: 'Status', flex: 1 },
@@ -761,8 +765,8 @@ const ProjectDetail = () => {
     projectId: session.projectId,
     meta: session.meta,
     createdAt: session.createdAt,
-    lastActive: session.lastActive,
-    // lastActive: dateFormat(session.lastActive),
+    // lastActive: session.lastActive,
+    lastActive: dateFormat(session.lastActive),
     archived: session.archived,
   }));
 

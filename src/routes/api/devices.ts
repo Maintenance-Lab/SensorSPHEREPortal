@@ -121,12 +121,19 @@ router.put("/selectedProperties", async (req, res) => {
     const sessionId = Number(req.body.sessionId);
     const deviceId = req.body.deviceId;
 
-    const doc = await DeviceSensorConfiguration.findAll({ where: { sessionId: sessionId, deviceId: deviceId, active: true } });
-    if (!doc) return res.status(404).json({ message: "Sensors not found" });
-    // console.log("selected props: ", doc);
+    try {
+        const properties = await DeviceSensorConfiguration.findAll({
+            where: { sessionId: sessionId, deviceId: deviceId, active: true },
+            attributes: ["sessionId", "deviceId", "propertyName", "active"],
+        });
 
-    return res.json(doc);
+        console.log("Fetched properties:", properties);
 
+        return res.json(properties.length > 0 ? properties : []);
+    }   catch (error) {
+        console.error("Database query failed:", error);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
 });
 
 

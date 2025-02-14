@@ -346,7 +346,11 @@ const Projects = () => {
   const projectsColumns: GridColDef[] = [
     {
       field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
-        <Link href={`/projects/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
+        <Link href={`/projects/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}
+          onClick={(event) => {
+            event.stopPropagation();
+          }}>
+        {params.value}</Link>
       )
     },
     { field: 'lastActive', headerName: 'Last Activity', flex: 1 },

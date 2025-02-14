@@ -443,7 +443,12 @@ const SessionDetail = () => {
   const devicesColumns: GridColDef[] = [
     {
       field: 'name', headerName: 'Name', renderCell: (params) => (
-      <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
+      <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }} 
+        onClick={(event) => {
+        event.stopPropagation();
+      }}>
+        {params.value}
+      </Link>
       ),
       flex: 1
     },
@@ -468,30 +473,44 @@ const SessionDetail = () => {
       headerName: "",
       width: 150,
       renderCell: (params) => (
-        <div>
-        <Button
-          variant="outlined"
-          startIcon={<EditIcon />}
-          color="primary"
-          size="small"
-          onClick={(event) => {
-            // Prevent row selection
-            event.stopPropagation();
-            handleOpenDialog2(params.row.id);
-          }}
+        <Box
           sx={{
-            textTransform: "none",
-            fontWeight: "bold",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "95%",
+            width: "100%",
           }}
         >
-          Configure
-        </Button>
-        <DeviceConfigDialog
-          open={isDialogOpen2}
-          onClose={handleCloseDialog2}
-          device={selectedDevice}
-        />
-        </div>
+          <div>
+          <Button
+            variant="outlined"
+            startIcon={<EditIcon />}
+            color="primary"
+            size="small"
+            onClick={(event) => {
+              // Prevent row selection
+              event.stopPropagation();
+              handleOpenDialog2(params.row.id);
+            }}
+            sx={{
+              textTransform: "none",
+              fontWeight: "bold",
+              display: "flex",
+              alignItems: "center", // Centreert de inhoud verticaal
+              height: "auto", // Laat de knop zich aanpassen aan de inhoud
+              margin: "auto", // Zorgt ervoor dat de knop gecentreerd blijft in de cel
+            }}
+          >
+            Configure
+          </Button>
+          <DeviceConfigDialog
+            open={isDialogOpen2}
+            onClose={handleCloseDialog2}
+            device={selectedDevice}
+          />
+          </div>
+        </Box>
       ),
       sortable: false,
       filterable: false,

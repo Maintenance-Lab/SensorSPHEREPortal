@@ -124,7 +124,7 @@ router.put("/selectedProperties", async (req, res) => {
     try {
         const properties = await DeviceSensorConfiguration.findAll({
             where: { sessionId: sessionId, deviceId: deviceId, active: true },
-            attributes: ["sessionId", "deviceId", "propertyName", "active"],
+            attributes: ["sessionId", "deviceId", "propertyName", "model", "manufacturerName", "active"],
         });
 
         console.log("Fetched properties:", properties);

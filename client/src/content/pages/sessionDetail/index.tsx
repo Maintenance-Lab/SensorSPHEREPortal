@@ -25,9 +25,9 @@ import EditIcon from '@mui/icons-material/Edit';
 // import { Treeview } from '@mui/x-treeview';
 import { TreeView, TreeItem } from '@mui/lab'
 import { Checkbox, FormControlLabel } from '@mui/material'
-import { set } from 'date-fns';
-import { render } from 'react-dom';
 import React from 'react';
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 const fetchDevices = async (sessionId) => {
   const devices = await fetch('/api/devices/all/' + sessionId, {
@@ -217,28 +217,25 @@ const SessionDetail = () => {
   const [selectedProperties, setSelectedProperties] = useState([]);
 
   const loadRows = async (properties) => {
-    console.log("in load rows: ");
-
-    // Create a root object
     const root: RenderTree = {
       id: "root",
-      name: "Root",
+      name: "All Properties",
       children: Object.keys(properties).reduce((acc, manufacturer) => {
         const { model, properties: modelProperties } = properties[manufacturer];
 
         // Add each manufacturer as a child to the root
         acc[manufacturer] = {
-          id: `manufacturer_${manufacturer.replace(/\s+/g, '_')}`,
+          id: `${manufacturer.replace(/\s+/g, '_')}`,
           name: manufacturer,
           children: model.reduce((modelAcc, modelName, modelIndex) => {
             // Add each model as a child to the manufacturer
             modelAcc[modelName] = {
-              id: `model_${manufacturer.replace(/\s+/g, '_')}_${modelName.replace(/\s+/g, '_')}`,
+              id: `${manufacturer.replace(/\s+/g, '_')}_${modelName.replace(/\s+/g, '_')}`,
               name: modelName,
               children: modelProperties[modelIndex].reduce((propertyAcc, property) => {
                 // Add each property as a child to the model
                 propertyAcc[property] = {
-                  id: `property_${manufacturer.replace(/\s+/g, '_')}_${modelName.replace(/\s+/g, '_')}_${property.replace(/\s+/g, '_')}`,
+                  id: `${manufacturer.replace(/\s+/g, '_')}_${modelName.replace(/\s+/g, '_')}_${property.replace(/\s+/g, '_')}`,
                   name: property
                 };
                 return propertyAcc;
@@ -306,7 +303,7 @@ const SessionDetail = () => {
 
   const renderTree = React.useCallback((nodes: RenderTree) => {
       if (!nodes || !nodes.id) return null;
-        console.log("IN RENDER TREE: ", nodes);
+        // console.log("IN RENDER TREE: ", nodes);
         return (
           <TreeItem
           key={nodes.id}
@@ -319,7 +316,7 @@ const SessionDetail = () => {
                   onChange={(event) =>
                     getOnChange(event.currentTarget.checked, nodes)
                   }
-                  onClick={(e) => e.stopPropagation()}
+                  // onClick={(e) => e.stopPropagation()}
                 />
               }
               label={nodes.name}
@@ -381,16 +378,56 @@ const SessionDetail = () => {
   }
 
 
+  const updateSelection = (selectedIds: string[], allProperties: RenderTree) => {
+    const newSelection = [...selectedIds]; // Clone array
+
+    const checkAndSelectParent = (node: RenderTree) => {
+      if (!node || !node.children) return;
+
+      Object.values(node.children).forEach((child) => {
+        checkAndSelectParent(child);
+
+        if (!child?.children) return;
+
+        // Check if all children of this node are selected
+        const allChildrenSelected = Object.values(child.children).every((c) =>
+          newSelection.includes(c.id)
+        );
+
+        if (allChildrenSelected && !newSelection.includes(child.id)) {
+          newSelection.push(child.id);
+        }
+      });
+    };
+
+    checkAndSelectParent(allProperties);
+
+    const allRootChildrenSelected = Object.values(allProperties.children || {}).every((child) =>
+      newSelection.includes(child.id)
+    );
+
+    if (allRootChildrenSelected && !newSelection.includes(allProperties.id)) {
+      newSelection.push(allProperties.id);
+    }
+
+    return newSelection;
+  };
+
+
   // TODO: adjust to tree view
   const handleSelectedProperties= async (deviceId:string) => {
     const properties = await getSelectedProperties(deviceId);
-    console.log("sensors that are activee: ", properties);
-
     const selectedPropertiesIds = properties.map((property) => {
-      return `${property.manufacturer}_${property.model}_${property.property}`;
+      return `${property.manufacturerName}_${property.model}_${property.propertyName}`;
     });
 
-    setSelectedProperties(selectedPropertiesIds);
+    const allProperties = await loadRows( await getDeviceProperties(deviceId));
+    const updatedSelection = updateSelection(selectedPropertiesIds, allProperties);
+
+    // console.log("SELECTED PROPERTIES: ", selectedPropertiesIds);
+    console.log("SELECTED PROPERTIES: ", updatedSelection);
+    setSelectedProperties(updatedSelection);
+    // setSelectedProperties(selectedPropertiesIds);
   }
 
   const handleOpenDialog2 = async (deviceId) => {
@@ -417,17 +454,23 @@ const SessionDetail = () => {
         <Typography variant="h4">Select properties to include in data collection</Typography>
       </DialogContent>
       <DialogContent>
-        {loading ? (
+        {/* {loading ? (
           <Typography>Loading...</Typography>
-        ) : (
+        ) : ( */}
+        {open && allProperties && selectedProperties !== null && (
           <TreeView
-            multiSelect={true}
-            selected={selectedProperties}
+          // defaultExpanded={selectedProperties}
+          multiSelect={true}
+          selected={selectedProperties}
+          defaultExpandIcon={<ChevronRightIcon/>}
+          defaultCollapseIcon={<ExpandMoreIcon />}
             >
             {open && allProperties && renderTree(allProperties)}
 
           </TreeView>
-        )}
+        // )
+        // }
+      )}
       </DialogContent>
       <DialogActions>
       <Button onClick={handleCloseDialog2} color="primary">
@@ -443,7 +486,7 @@ const SessionDetail = () => {
   const devicesColumns: GridColDef[] = [
     {
       field: 'name', headerName: 'Name', renderCell: (params) => (
-      <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }} 
+      <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}
         onClick={(event) => {
         event.stopPropagation();
       }}>

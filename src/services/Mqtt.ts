@@ -18,6 +18,9 @@ import e from "express";
 //  - device toevoegen
 //  - device sensor mapping toevoegen
 //  - uitzoeken wat die sensor property is/doet en toevoegen
+//
+// TODO:
+// device sensor config komt later als user daadwerkelijk wil gaan meten
 //  ------------------------------------
 
 
@@ -66,14 +69,20 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
         console.log("Device ID: ", deviceId);
         const postfix = topic.split("/")[2];
         message = JSON.parse(message.toString());
+        console.log(postfix)
 
         switch (postfix) {
             case "msg":
                 console.log("Got message on msg topic");
                 await addDeviceToDatabase(message, deviceId);
                 break;
-            case "cfg":
-                console.log("Got message on cfg topic");
+            case "heartbeat":
+                console.log("heartbeat");
+                break;
+            case "handshake":
+                console.log("Got message on handshake topic");
+                console.log(message, deviceId)
+                await addDeviceToDatabase(message, deviceId);
                 break;
             case "speedtest":
                 console.log("Got message on speedtest topic");
@@ -144,41 +153,49 @@ const addOrUpdateDevice = async (entry: any) => {
 
 
 const addDeviceToDatabase = async (message: any, deviceId: string) => {
+    // {"deviceId":"FC:E8:C0:A7:31:A0","sensors":[{"manufacturerName":"M5Stack","model":"IMU_int"},{"manufacturerName":"M5Stack","model":"Ultrasonic"}]}
     return new Promise(async (resolve, _) => {
         console.log("In add device to database: ", message, deviceId);
 
         // ONZE DUMMYDATA
-        message.manufacturerName = "Philips";
+        message.manufacturerName = "M5Stack";
         message.batteryLevel = 97;
         message.maxHz = 80;
         message.channel = 3;
 
         // If device manufacturer does not exist, add it to database
+        // await addNewEntryToTable(Manufacturer, { manufacturerName: message.manufacturerName })
+        // TEMPORARY 
         await addNewEntryToTable(Manufacturer, { manufacturerName: message.manufacturerName })
 
+
         // Add device to database if device does not exist
+        // await addOrUpdateDevice({ deviceId: deviceId, manufacturerName: message.manufacturerName, connectStatus: "connected", batteryLevel: message.batteryLevel, maxHz: message.maxHz })
         await addOrUpdateDevice({ deviceId: deviceId, manufacturerName: message.manufacturerName, connectStatus: "connected", batteryLevel: message.batteryLevel, maxHz: message.maxHz })
+
 
 
         // If sensor category or manufacturer does not exist, add it to database
         // Then add sensor to database
-        for (const sensor of message.connected) {
-            console.log("SENSOR: ", sensor, "SENSOR UNIT: ", sensor.unit);
+        for (const sensor of message.sensors) {
+            console.log("SENSOR: ", sensor, "SENSOR UNIT: ", sensor);
 
             // NOG MEER DUMMYDATA
             sensor.categoryName = "category1";
-            sensor.manufacturerName = "Philips123";
+            // sensor.manufacturerName = "Philips123";
+            // sensor.unit = message.model;
 
             await addNewEntryToTable(SensorCategory, { categoryName: sensor.categoryName })
             await addNewEntryToTable(Manufacturer, { manufacturerName: sensor.manufacturerName })
-            await addNewEntryToTable(Sensor, { model: sensor.unit, manufacturerName: sensor.manufacturerName, categoryName: sensor.categoryName })
+            await addNewEntryToTable(Sensor, { model: sensor.model, manufacturerName: sensor.manufacturerName, categoryName: sensor.categoryName })
 
             // Add device sensor mapping to database if it does not exist
-            await addNewEntryToTable(DeviceSensorMapping, { deviceId: deviceId, model: sensor.unit, manufacturerName: sensor.manufacturerName, channel: message.channel })
+            await addNewEntryToTable(DeviceSensorMapping, { deviceId: deviceId, model: sensor.model, manufacturerName: sensor.manufacturerName, channel: message.channel })
 
+            sensor.variables = ["accX", "accY", "accZ", "gyroX", "gyroY", "gyroZ"]
             // Add sensor properties to database if they do not exist
             for (const property of sensor.variables) {
-                await addNewEntryToTable(SensorProperty, { propertyName: property, model: sensor.unit, manufacturerName: sensor.manufacturerName })
+                await addNewEntryToTable(SensorProperty, { propertyName: property, model: sensor.model, manufacturerName: sensor.manufacturerName })
             }
         }
 

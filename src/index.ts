@@ -12,6 +12,8 @@ startDb();
 
 mqtt.subscribe('data/+/msg');
 mqtt.subscribe('data/+/cfg');
+mqtt.subscribe('data/+/handshake');
+mqtt.subscribe('data/+/heartbeat');
 console.log("Subscribed to data/+/msg and data/+/cfg");
 
 export default mqtt;

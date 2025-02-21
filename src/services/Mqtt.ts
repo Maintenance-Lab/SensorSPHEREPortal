@@ -69,7 +69,7 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
         console.log("Device ID: ", deviceId);
         const postfix = topic.split("/")[2];
         message = JSON.parse(message.toString());
-        console.log(postfix)
+        console.log("postfix:", postfix)
 
         switch (postfix) {
             case "msg":
@@ -77,10 +77,8 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
                 await addDeviceToDatabase(message, deviceId);
                 break;
             case "heartbeat":
-                console.log("heartbeat");
                 break;
-            case "handshake":
-                console.log("Got message on handshake topic");
+            case "announce":
                 console.log(message, deviceId)
                 await addDeviceToDatabase(message, deviceId);
                 break;

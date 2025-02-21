@@ -77,6 +77,7 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
                 await addDeviceToDatabase(message, deviceId);
                 break;
             case "heartbeat":
+                await updateDeviceStatus(message, deviceId);
                 break;
             case "announce":
                 console.log(message, deviceId)
@@ -198,6 +199,25 @@ const addDeviceToDatabase = async (message: any, deviceId: string) => {
         }
 
         return resolve({ message: "Device created" });
+    });
+}
+
+const updateDeviceStatus = async (message: any, deviceId: string) => {
+    return new Promise(async (resolve, _) => {
+        console.log("In update device status: ", message, deviceId);
+        const existingDevice = await Device.findOne({ where: { deviceId: deviceId } });
+
+        if (!existingDevice) {
+            return resolve({ message: "Device does not exist in database yet" });
+        }
+
+        // Set right battery level for device
+        await Device.update({ batteryLevel: message.batteryLevel }, { where: { deviceId } });
+        // Set right connection status for device
+        await Device.update({ connectStatus: message.connectStatus }, { where: { deviceId } });
+
+
+        return resolve({ message: "Device status updated" });
     });
 }
 

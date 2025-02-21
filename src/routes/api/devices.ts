@@ -53,8 +53,9 @@ router.post("/addToSession", async (req, res) => {
         }));
 
         // TODO: waarom ignoreDuplicates: true?
-        const doc = await SessionDeviceMapping.bulkCreate(mappings, { ignoreDuplicates: true });
-        if (!doc) return res.status(500).json({ message: "Failed to add devices to session" });
+        const doc = await SessionDeviceMapping.bulkCreate(mappings, { ignoreDuplicates: false });
+        // const doc = await SessionDeviceMapping.create({ sessionId: sessionId, deviceId: deviceIds });
+        if (!doc) return res.status(500).json({ message: "Bulk mapping failed;Some devices might already be added" });
 
         // add to DeviceSensorConfiguration
         try {
@@ -98,7 +99,7 @@ router.post("/addToSession", async (req, res) => {
         return res.status(200).json({ message: "Devices added successfully" });
     } catch (error) {
         console.error("Error adding devices to session:", error);
-        return res.status(500).json({ message: "Failed to add devices to session" });
+        return res.status(500).json({ message: "Bulk mapping failed;Some devices might already be added" });
     }
 });
 

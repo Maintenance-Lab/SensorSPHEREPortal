@@ -28,6 +28,7 @@ import { Checkbox, FormControlLabel } from '@mui/material'
 import React from 'react';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { useCallback } from 'react';
 
 const fetchDevices = async (sessionId) => {
   const devices = await fetch('/api/devices/all/' + sessionId, {
@@ -217,6 +218,7 @@ const SessionDetail = () => {
   const [selectedProperties, setSelectedProperties] = useState([]);
 
   const [selectedNodes, setSelectedNodes] = useState([]);
+  const [expandedNodes, setExpandedNodes] = useState<string[]>(['root']);
 
   const loadRows = async (properties) => {
     const root: RenderTree = {
@@ -256,44 +258,6 @@ const SessionDetail = () => {
     return root;
   };
 
-  // const getChildById = (node: RenderTree, id: string) => {
-  //   console.log("in getChildById: ", node, id);
-  //   let array: string[] = [];
-
-  //   const getAllChild = (nodes: RenderTree | null) => {
-  //     if (nodes === null) return [];
-  //     array.push(nodes.id);
-  //     if (Array.isArray(nodes.children)) {
-  //       nodes.children.forEach(node => {
-  //         array = [...array, ...getAllChild(node)];
-  //         array = array.filter((v, i) => array.indexOf(v) === i);
-  //       });
-  //     }
-  //     console.log("array with all children: ", array);
-  //     return array;
-  //   }
-
-  //   const getNodeById = (nodes: RenderTree, id: string) => {
-  //     if (nodes.id === id) {
-  //       return nodes;
-  //     } else if (Array.isArray(nodes.children)) {
-  //       let result = null;
-  //       nodes.children.forEach(node => {
-  //         if (!!getNodeById(node, id)) {
-  //           result = getNodeById(node, id);
-  //         }
-  //       });
-  //       console.log("result from getNodeById: ", result);
-  //       return result;
-  //     }
-
-  //     return null;
-  //   }
-
-
-  //   return getAllChild(getNodeById(node, id));
-  // }
-
   const getAllChild = (nodes: RenderTree | null): string[] => {
     if (!nodes) return [];
 
@@ -308,7 +272,8 @@ const SessionDetail = () => {
     return [...new Set(array)]; // Remove duplicates (if any)
   };
 
-  const getOnChange = async (checked: boolean, nodes: RenderTree) => {
+  // const getOnChange = async (checked: boolean, nodes: RenderTree) => {
+  const getOnChange = useCallback(async (checked: boolean, nodes: RenderTree) => {
     console.log("in getOnChange: ", checked, nodes);
     const allNodeIds = getAllChild(nodes);
 
@@ -319,7 +284,8 @@ const SessionDetail = () => {
           return prevSelected.filter(id => !allNodeIds.includes(id));
       }
     });
-  }
+
+  }, []);
 
   const renderTree = React.useCallback((nodes: RenderTree) => {
       if (!nodes || !nodes.id) return null;
@@ -328,6 +294,7 @@ const SessionDetail = () => {
           <TreeItem
           key={nodes.id}
           nodeId={String(nodes.id)}
+          // onNodeToggle={(e, nodeId: string) => handleNodeToggle(nodeId)}
           label={
             <FormControlLabel
               control={
@@ -336,8 +303,7 @@ const SessionDetail = () => {
                   onChange={(event) =>
                     getOnChange(event.currentTarget.checked, nodes)
                   }
-                  // onClick={(e) => e.stopPropagation()}
-                  // onClick={(e) => handleClick(e, nodes.id)}
+                  onClick={e => handleNodeToggle(nodes.id)}
                 />
               }
               label={nodes.name}
@@ -350,7 +316,7 @@ const SessionDetail = () => {
             )}
         </TreeItem>
       );
-    }, [selectedProperties, getOnChange]
+    }, [selectedProperties, getOnChange, expandedNodes]
   );
 
   const getDeviceProperties = async (deviceId: string) => {
@@ -400,7 +366,7 @@ const SessionDetail = () => {
 
 
   const updateSelection = (selectedIds: string[], allProperties: RenderTree) => {
-    const newSelection = [...selectedIds]; // Clone array
+    const newSelection = [...selectedIds];
 
     const checkAndSelectParent = (node: RenderTree) => {
       if (!node || !node.children) return;
@@ -448,8 +414,16 @@ const SessionDetail = () => {
     // console.log("SELECTED PROPERTIES: ", selectedPropertiesIds);
     console.log("SELECTED PROPERTIES: ", updatedSelection);
     setSelectedProperties(updatedSelection);
-    // setSelectedProperties(selectedPropertiesIds);
   }
+
+  const handleNodeToggle = (nodeId: string) => {
+    console.log("IN HANDLE NODE TOGGLE: ", nodeId);
+    setExpandedNodes((prevExpanded) =>
+        prevExpanded.includes(nodeId)
+            ? prevExpanded.filter((id) => id !== nodeId)
+            : [...prevExpanded, nodeId]
+    );
+  };
 
   const handleOpenDialog2 = async (deviceId) => {
     console.log("IN OPEN DIALOG 2: ", deviceId);
@@ -469,41 +443,26 @@ const SessionDetail = () => {
     setDialogOpen2(false);
   };
 
-  // function handleClick(e, nodes_ids) {
-  //   console.log("IN HANDLE CLICK: ", e.target.className);
-  //   console.log("with nodes: ", nodes_ids);
-  //   if (e.target.className == "MuiTreeItem-label") {
-  //     console.log('current selected nodes: ', selectedNodes);
-  //     setSelectedNodes(nodes_ids);
-
-  //   }
-  // }
-
   const DeviceConfigDialog = ({ device, open, onClose }) => (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogContent>
         <Typography variant="h4">Select properties to include in data collection</Typography>
       </DialogContent>
       <DialogContent>
-        {/* {loading ? (
-          <Typography>Loading...</Typography>
-        ) : ( */}
         {open && allProperties && selectedProperties !== null && (
           <TreeView
-          // onNodeSelect={(e, node_ids) => {handleClick(e, node_ids)}}
           multiSelect={true}
           defaultExpandIcon={<ChevronRightIcon/>}
           defaultCollapseIcon={<ExpandMoreIcon />}
           defaultSelected={selectedProperties}
-          // onNodeSelect={(e, node_ids) => {
-          //   handleClick(e, node_ids);
-          // }}
+          expanded={expandedNodes}
+          selected={selectedProperties}
+          onNodeToggle={(e, nodeIds) => {
+            setExpandedNodes(nodeIds);
+          }}
           >
             {open && allProperties && renderTree(allProperties)}
-
           </TreeView>
-        // )
-        // }
       )}
       </DialogContent>
       <DialogActions>

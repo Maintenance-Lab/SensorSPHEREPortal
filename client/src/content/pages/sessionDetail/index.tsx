@@ -216,6 +216,8 @@ const SessionDetail = () => {
   const [sensorTree, setSensorTree] = useState<{ id: string; name: string; children: any[] }[]>([]);
   const [selectedProperties, setSelectedProperties] = useState([]);
 
+  const [selectedNodes, setSelectedNodes] = useState([]);
+
   const loadRows = async (properties) => {
     const root: RenderTree = {
       id: "root",
@@ -254,51 +256,69 @@ const SessionDetail = () => {
     return root;
   };
 
-  const getChildById = (node: RenderTree, id: string) => {
-    console.log("in getChildById: ", node, id);
-    let array: string[] = [];
+  // const getChildById = (node: RenderTree, id: string) => {
+  //   console.log("in getChildById: ", node, id);
+  //   let array: string[] = [];
 
-    const getAllChild = (nodes: RenderTree | null) => {
-      if (nodes === null) return [];
-      array.push(nodes.id);
-      if (Array.isArray(nodes.children)) {
-        nodes.children.forEach(node => {
-          array = [...array, ...getAllChild(node)];
-          array = array.filter((v, i) => array.indexOf(v) === i);
-        });
-      }
-      return array;
+  //   const getAllChild = (nodes: RenderTree | null) => {
+  //     if (nodes === null) return [];
+  //     array.push(nodes.id);
+  //     if (Array.isArray(nodes.children)) {
+  //       nodes.children.forEach(node => {
+  //         array = [...array, ...getAllChild(node)];
+  //         array = array.filter((v, i) => array.indexOf(v) === i);
+  //       });
+  //     }
+  //     console.log("array with all children: ", array);
+  //     return array;
+  //   }
+
+  //   const getNodeById = (nodes: RenderTree, id: string) => {
+  //     if (nodes.id === id) {
+  //       return nodes;
+  //     } else if (Array.isArray(nodes.children)) {
+  //       let result = null;
+  //       nodes.children.forEach(node => {
+  //         if (!!getNodeById(node, id)) {
+  //           result = getNodeById(node, id);
+  //         }
+  //       });
+  //       console.log("result from getNodeById: ", result);
+  //       return result;
+  //     }
+
+  //     return null;
+  //   }
+
+
+  //   return getAllChild(getNodeById(node, id));
+  // }
+
+  const getAllChild = (nodes: RenderTree | null): string[] => {
+    if (!nodes) return [];
+
+    let array = [nodes.id]; // Start with the node itself
+
+    if (nodes.children && typeof nodes.children === "object") {
+      Object.values(nodes.children).forEach((child) => {
+        array = [...array, ...getAllChild(child)];
+      });
     }
 
-    const getNodeById = (nodes: RenderTree, id: string) => {
-      if (nodes.id === id) {
-        return nodes;
-      } else if (Array.isArray(nodes.children)) {
-        let result = null;
-        nodes.children.forEach(node => {
-          if (!!getNodeById(node, id)) {
-            result = getNodeById(node, id);
-          }
-        });
-        return result;
-      }
-
-      return null;
-    }
-
-    return getAllChild(getNodeById(node, id));
-  }
+    return [...new Set(array)]; // Remove duplicates (if any)
+  };
 
   const getOnChange = async (checked: boolean, nodes: RenderTree) => {
     console.log("in getOnChange: ", checked, nodes);
-    const allNode = getChildById(allProperties, nodes.id);
+    const allNodeIds = getAllChild(nodes);
 
-    let array = checked
-    ? [...selectedProperties, ...allNode]
-    : selectedProperties.filter(value => !allNode.includes(value));
-
-    array = array.filter((v, i) => array.indexOf(v) === i);
-    setSelectedProperties(array);
+    setSelectedProperties((prevSelected) => {
+      if (checked) {
+        return [...new Set([...prevSelected, ...allNodeIds])];
+      } else {
+          return prevSelected.filter(id => !allNodeIds.includes(id));
+      }
+    });
   }
 
   const renderTree = React.useCallback((nodes: RenderTree) => {
@@ -317,6 +337,7 @@ const SessionDetail = () => {
                     getOnChange(event.currentTarget.checked, nodes)
                   }
                   // onClick={(e) => e.stopPropagation()}
+                  // onClick={(e) => handleClick(e, nodes.id)}
                 />
               }
               label={nodes.name}
@@ -448,6 +469,16 @@ const SessionDetail = () => {
     setDialogOpen2(false);
   };
 
+  // function handleClick(e, nodes_ids) {
+  //   console.log("IN HANDLE CLICK: ", e.target.className);
+  //   console.log("with nodes: ", nodes_ids);
+  //   if (e.target.className == "MuiTreeItem-label") {
+  //     console.log('current selected nodes: ', selectedNodes);
+  //     setSelectedNodes(nodes_ids);
+
+  //   }
+  // }
+
   const DeviceConfigDialog = ({ device, open, onClose }) => (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogContent>
@@ -459,12 +490,15 @@ const SessionDetail = () => {
         ) : ( */}
         {open && allProperties && selectedProperties !== null && (
           <TreeView
-          // defaultExpanded={selectedProperties}
+          // onNodeSelect={(e, node_ids) => {handleClick(e, node_ids)}}
           multiSelect={true}
-          selected={selectedProperties}
           defaultExpandIcon={<ChevronRightIcon/>}
           defaultCollapseIcon={<ExpandMoreIcon />}
-            >
+          defaultSelected={selectedProperties}
+          // onNodeSelect={(e, node_ids) => {
+          //   handleClick(e, node_ids);
+          // }}
+          >
             {open && allProperties && renderTree(allProperties)}
 
           </TreeView>

@@ -261,31 +261,87 @@ const SessionDetail = () => {
   const getAllChild = (nodes: RenderTree | null): string[] => {
     if (!nodes) return [];
 
-    let array = [nodes.id]; // Start with the node itself
-
+    let array = [nodes.id];
     if (nodes.children && typeof nodes.children === "object") {
       Object.values(nodes.children).forEach((child) => {
         array = [...array, ...getAllChild(child)];
       });
     }
 
-    return [...new Set(array)]; // Remove duplicates (if any)
+    // Remove duplicates
+    return [...new Set(array)];
   };
 
+  const findParent = (nodeId: string, nodes: RenderTree): RenderTree | null => {
+    if (!nodes || !nodes.children) return null;
+
+    for (const key in nodes.children) {
+      if (nodes.children[key].id === nodeId) {
+        return nodes;
+      }
+      const found = findParent(nodeId, nodes.children[key]);
+      if (found) return found;
+    }
+    return null;
+  };
+
+  const areAllChildrenSelected = (parent: RenderTree, selectedSet: Set<string>): boolean => {
+    if (!parent.children) return false;
+    return Object.values(parent.children).every(child => selectedSet.has(child.id));
+  };
+
+
   // const getOnChange = async (checked: boolean, nodes: RenderTree) => {
-  const getOnChange = useCallback(async (checked: boolean, nodes: RenderTree) => {
+  //   console.log("in getOnChange: ", checked, nodes);
+  //   const allNodeIds = getAllChild(nodes);
+
+  //   setSelectedProperties((prevSelected) => {
+  //     if (checked) {
+  //       return [...new Set([...prevSelected, ...allNodeIds])];
+  //     } else {
+  //         return prevSelected.filter(id => !allNodeIds.includes(id));
+  //     }
+  //   });
+
+  // };
+
+  const getOnChange = async (checked: boolean, nodes: RenderTree) => {
     console.log("in getOnChange: ", checked, nodes);
+
     const allNodeIds = getAllChild(nodes);
 
     setSelectedProperties((prevSelected) => {
-      if (checked) {
-        return [...new Set([...prevSelected, ...allNodeIds])];
-      } else {
-          return prevSelected.filter(id => !allNodeIds.includes(id));
-      }
-    });
+      let newSelection = new Set(prevSelected);
 
-  }, []);
+      if (checked) {
+        // Selecting node: Add itself and all its children
+        allNodeIds.forEach((id) => newSelection.add(id));
+
+        // Check and update parent nodes recursively
+        let parent = findParent(nodes.id, allProperties);
+        while (parent) {
+          if (areAllChildrenSelected(parent, newSelection)) {
+            newSelection.add(parent.id);
+          }
+          parent = findParent(parent.id, allProperties);
+        }
+      } else {
+        // Deselecting node: Remove itself and all children
+        allNodeIds.forEach((id) => newSelection.delete(id));
+
+        // Also deselect parent if necessary
+        let parent = findParent(nodes.id, allProperties);
+        while (parent) {
+          if (!areAllChildrenSelected(parent, newSelection)) {
+            newSelection.delete(parent.id);
+          }
+          parent = findParent(parent.id, allProperties);
+        }
+      }
+
+      return [...newSelection];
+    });
+  };
 
   const renderTree = React.useCallback((nodes: RenderTree) => {
       if (!nodes || !nodes.id) return null;
@@ -294,7 +350,6 @@ const SessionDetail = () => {
           <TreeItem
           key={nodes.id}
           nodeId={String(nodes.id)}
-          // onNodeToggle={(e, nodeId: string) => handleNodeToggle(nodeId)}
           label={
             <FormControlLabel
               control={
@@ -303,7 +358,6 @@ const SessionDetail = () => {
                   onChange={(event) =>
                     getOnChange(event.currentTarget.checked, nodes)
                   }
-                  onClick={e => handleNodeToggle(nodes.id)}
                 />
               }
               label={nodes.name}
@@ -316,7 +370,7 @@ const SessionDetail = () => {
             )}
         </TreeItem>
       );
-    }, [selectedProperties, getOnChange, expandedNodes]
+    }, [selectedProperties, getOnChange]
   );
 
   const getDeviceProperties = async (deviceId: string) => {
@@ -364,7 +418,6 @@ const SessionDetail = () => {
     return data;
   }
 
-
   const updateSelection = (selectedIds: string[], allProperties: RenderTree) => {
     const newSelection = [...selectedIds];
 
@@ -400,8 +453,6 @@ const SessionDetail = () => {
     return newSelection;
   };
 
-
-  // TODO: adjust to tree view
   const handleSelectedProperties= async (deviceId:string) => {
     const properties = await getSelectedProperties(deviceId);
     const selectedPropertiesIds = properties.map((property) => {
@@ -411,19 +462,9 @@ const SessionDetail = () => {
     const allProperties = await loadRows( await getDeviceProperties(deviceId));
     const updatedSelection = updateSelection(selectedPropertiesIds, allProperties);
 
-    // console.log("SELECTED PROPERTIES: ", selectedPropertiesIds);
     console.log("SELECTED PROPERTIES: ", updatedSelection);
     setSelectedProperties(updatedSelection);
   }
-
-  const handleNodeToggle = (nodeId: string) => {
-    console.log("IN HANDLE NODE TOGGLE: ", nodeId);
-    setExpandedNodes((prevExpanded) =>
-        prevExpanded.includes(nodeId)
-            ? prevExpanded.filter((id) => id !== nodeId)
-            : [...prevExpanded, nodeId]
-    );
-  };
 
   const handleOpenDialog2 = async (deviceId) => {
     console.log("IN OPEN DIALOG 2: ", deviceId);
@@ -455,8 +496,8 @@ const SessionDetail = () => {
           defaultExpandIcon={<ChevronRightIcon/>}
           defaultCollapseIcon={<ExpandMoreIcon />}
           defaultSelected={selectedProperties}
-          expanded={expandedNodes}
           selected={selectedProperties}
+          expanded={expandedNodes}
           onNodeToggle={(e, nodeIds) => {
             setExpandedNodes(nodeIds);
           }}

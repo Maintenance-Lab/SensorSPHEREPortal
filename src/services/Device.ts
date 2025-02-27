@@ -5,6 +5,7 @@ import SessionDeviceMapping from "../models/mappings/SessionDeviceMapping.js";
 import DeviceSensorMapping from "../models/mappings/DeviceSensorMapping.js";
 import SensorProperty from "../models/SensorProperty.js";
 import Sensor from "../models/Sensor.js";
+import DeviceSensorConfiguration from "../models/DeviceSensorConfiguration.js";
 
 
 export const getAllDevices = async (): Promise<Device[]> => {
@@ -97,24 +98,77 @@ export const deviceProperties = async (deviceId: string): Promise<SensorProperty
             if (!properties[manufacturerName]) {
                 properties[manufacturerName] = {model: [], properties: []};
             }
-            // if (!properties[manufacturerName][model]) {
-            //     properties[manufacturerName][model] = [];
-            // }
 
             // add the model to the dict
             properties[manufacturerName]["model"].push(model);
 
             // add the properties to the dict
             const propertyNames = sensorProperties.map((sp) => sp.propertyName);
-            console.log("propertyNames: ", propertyNames);
             properties[manufacturerName]["properties"].push(propertyNames);
-            // for (const sensorProperty of sensorProperties) {
-            //     properties[manufacturerName][model].push(sensorProperty.propertyName);
-            // }
         }
 
         console.log("properties: ", properties);
         return resolve(properties);
     });;
 };
+
+export const getSelectedProperties = async (sessionId: number, deviceId: string): Promise<any> => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const properties = await DeviceSensorConfiguration.findAll({
+                where: { sessionId: sessionId, deviceId: deviceId, active: true },
+                attributes: ["sessionId", "deviceId", "propertyName", "model", "manufacturerName", "active"],
+            });
+            if (!properties) return reject(new Error("Failed to fetch properties"));
+
+            console.log("Fetched properties:", properties);
+
+            return resolve(properties);
+        }   catch (error) {
+            console.error("Database query failed:", error);
+            return resolve("Failed to fetch properties");
+        }
+    });
+}
+
+export const updateSelectedProperties = async (sessionId: number, deviceId: string, selectedProperties: any): Promise<any> => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            // set all properties from device and session to inactive
+            const updatedPropertiesFalse = await DeviceSensorConfiguration.update(
+                { active: false },
+                { where: { sessionId: sessionId, deviceId: deviceId } }
+            );
+            if (!updatedPropertiesFalse) return reject(new Error("Failed to update properties"));
+
+            for (const p of selectedProperties) {
+                if (p.split(":").length === 3) {
+                    const manufacturerName = p.split(":")[0];
+                    const model = p.split(":")[1];
+                    const propertyName = p.split(":")[2];
+
+                    // set all selected properties to active
+                    const updatedPropertyTrue = await DeviceSensorConfiguration.update(
+                        { active: true },
+                        { where: { sessionId: sessionId, deviceId: deviceId, manufacturerName: manufacturerName, model: model, propertyName: propertyName } }
+                    );
+                    if (!updatedPropertyTrue) return reject(new Error("Failed to update properties"));
+                }
+            }
+            return resolve("Properties updated successfully");
+        }   catch (error) {
+            console.error("Database query failed:", error);
+            return resolve("Failed to update properties");
+        }
+    });
+
+}
+
+
+
+
+
+
+
+
 

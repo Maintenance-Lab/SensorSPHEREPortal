@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession } from '../../services/Device.js';
+import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties } from '../../services/Device.js';
 import SessionDeviceMapping from '../../models/mappings/SessionDeviceMapping.js';
 import { deviceProperties } from '../../services/Device.js';
 import Device from '../../models/Device.js';
@@ -122,19 +122,19 @@ router.put("/selectedProperties", async (req, res) => {
     const sessionId = Number(req.body.sessionId);
     const deviceId = req.body.deviceId;
 
-    try {
-        const properties = await DeviceSensorConfiguration.findAll({
-            where: { sessionId: sessionId, deviceId: deviceId, active: true },
-            attributes: ["sessionId", "deviceId", "propertyName", "model", "manufacturerName", "active"],
-        });
+    const doc = await getSelectedProperties(sessionId, deviceId);
+    if (!doc) return res.status(500).json({ message: "Failed to fetch properties" });
+    return res.json(doc);
+});
 
-        console.log("Fetched properties:", properties);
+router.put("/updateSelectedProperties", async (req, res) => {
+    const sessionId = Number(req.body.sessionId);
+    const deviceId = req.body.deviceId;
+    const selectedProperties = req.body.selectedProperties;
 
-        return res.json(properties.length > 0 ? properties : []);
-    }   catch (error) {
-        console.error("Database query failed:", error);
-        return res.status(500).json({ error: "Internal Server Error" });
-    }
+    const doc = await updateSelectedProperties(sessionId, deviceId, selectedProperties);
+    if (!doc) return res.status(500).json({ message: "Failed to update properties" });
+    return res.json(doc);
 });
 
 

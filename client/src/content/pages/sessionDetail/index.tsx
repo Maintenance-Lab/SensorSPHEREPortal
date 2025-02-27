@@ -212,9 +212,7 @@ const SessionDetail = () => {
   const [devices, setDevices] = useState([]);
   const [availableDevices, setAvailableDevices] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [allProperties, setAllProperties] = useState<RenderTree>();
-  const [sensorTree, setSensorTree] = useState<{ id: string; name: string; children: any[] }[]>([]);
   const [selectedProperties, setSelectedProperties] = useState([]);
 
   const [selectedNodes, setSelectedNodes] = useState([]);
@@ -229,17 +227,17 @@ const SessionDetail = () => {
 
         // Add each manufacturer as a child to the root
         acc[manufacturer] = {
-          id: `${manufacturer.replace(/\s+/g, '_')}`,
+          id: `${manufacturer.replace(/\s+/g, ':')}`,
           name: manufacturer,
           children: model.reduce((modelAcc, modelName, modelIndex) => {
             // Add each model as a child to the manufacturer
             modelAcc[modelName] = {
-              id: `${manufacturer.replace(/\s+/g, '_')}_${modelName.replace(/\s+/g, '_')}`,
+              id: `${manufacturer.replace(/\s+/g, ':')}:${modelName.replace(/\s+/g, ':')}`,
               name: modelName,
               children: modelProperties[modelIndex].reduce((propertyAcc, property) => {
                 // Add each property as a child to the model
                 propertyAcc[property] = {
-                  id: `${manufacturer.replace(/\s+/g, '_')}_${modelName.replace(/\s+/g, '_')}_${property.replace(/\s+/g, '_')}`,
+                  id: `${manufacturer.replace(/\s+/g, ':')}:${modelName.replace(/\s+/g, ':')}:${property.replace(/\s+/g, ':')}`,
                   name: property
                 };
                 return propertyAcc;
@@ -258,6 +256,7 @@ const SessionDetail = () => {
     return root;
   };
 
+
   const getAllChild = (nodes: RenderTree | null): string[] => {
     if (!nodes) return [];
 
@@ -272,6 +271,7 @@ const SessionDetail = () => {
     return [...new Set(array)];
   };
 
+
   const findParent = (nodeId: string, nodes: RenderTree): RenderTree | null => {
     if (!nodes || !nodes.children) return null;
 
@@ -285,25 +285,12 @@ const SessionDetail = () => {
     return null;
   };
 
+
   const areAllChildrenSelected = (parent: RenderTree, selectedSet: Set<string>): boolean => {
     if (!parent.children) return false;
     return Object.values(parent.children).every(child => selectedSet.has(child.id));
   };
 
-
-  // const getOnChange = async (checked: boolean, nodes: RenderTree) => {
-  //   console.log("in getOnChange: ", checked, nodes);
-  //   const allNodeIds = getAllChild(nodes);
-
-  //   setSelectedProperties((prevSelected) => {
-  //     if (checked) {
-  //       return [...new Set([...prevSelected, ...allNodeIds])];
-  //     } else {
-  //         return prevSelected.filter(id => !allNodeIds.includes(id));
-  //     }
-  //   });
-
-  // };
 
   const getOnChange = async (checked: boolean, nodes: RenderTree) => {
     console.log("in getOnChange: ", checked, nodes);
@@ -343,9 +330,9 @@ const SessionDetail = () => {
     });
   };
 
+
   const renderTree = React.useCallback((nodes: RenderTree) => {
       if (!nodes || !nodes.id) return null;
-        // console.log("IN RENDER TREE: ", nodes);
         return (
           <TreeItem
           key={nodes.id}
@@ -456,7 +443,7 @@ const SessionDetail = () => {
   const handleSelectedProperties= async (deviceId:string) => {
     const properties = await getSelectedProperties(deviceId);
     const selectedPropertiesIds = properties.map((property) => {
-      return `${property.manufacturerName}_${property.model}_${property.propertyName}`;
+      return `${property.manufacturerName}:${property.model}:${property.propertyName}`;
     });
 
     const allProperties = await loadRows( await getDeviceProperties(deviceId));
@@ -467,6 +454,7 @@ const SessionDetail = () => {
   }
 
   const handleOpenDialog2 = async (deviceId) => {
+    setSelectedDevice(deviceId);
     console.log("IN OPEN DIALOG 2: ", deviceId);
     const properties = await deviceProperties(deviceId);
     try {
@@ -475,12 +463,33 @@ const SessionDetail = () => {
     } catch (error) {
       console.error('Error fetching device details:', error);
     } finally {
-      setLoading(false);
       setDialogOpen2(true);
     }
   };
 
-  const handleCloseDialog2 = () => {
+  const handleCloseDialog2 = async () => {
+    // save selected properties to database
+    console.log("selected properties: ", selectedProperties);
+    console.log("selected device: ", selectedDevice);
+
+    const selectedPropertiesIds = await selectedProperties.filter((id) => id !== 'root');
+    const res = await fetch('/api/devices/updateSelectedProperties', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        credentials: 'include'
+      },
+      body: JSON.stringify({
+        sessionId: sessionId,
+        deviceId: selectedDevice,
+        selectedProperties: selectedPropertiesIds
+      })
+    });
+    if (!res.ok) {
+      console.error('Failed to update selected properties');
+      return;
+    }
+
     setDialogOpen2(false);
   };
 
@@ -509,9 +518,6 @@ const SessionDetail = () => {
       <DialogActions>
       <Button onClick={handleCloseDialog2} color="primary">
           Save configuration
-        </Button>
-        <Button onClick={handleCloseDialog2} color="primary">
-          Close
         </Button>
       </DialogActions>
     </Dialog>
@@ -592,12 +598,6 @@ const SessionDetail = () => {
       sortable: false,
       filterable: false,
     }
-  ];
-
-  const sensorColumns: GridColDef[] = [
-    { headerName: 'Manufacturer', field: 'manufacturer', flex: 1 },
-    { headerName: 'Model', field: 'model', flex: 1 },
-    { headerName: 'Outputs', field: 'outputs', flex: 1 }
   ];
 
   const fetchAvailableDevices = async (sessionId) => {

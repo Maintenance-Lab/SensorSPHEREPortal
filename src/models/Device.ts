@@ -9,6 +9,7 @@ class Device extends Model {
     connectStatus: string;
     batteryLevel: number;
     maxHz: number;
+    lastHeartbeat: Date;
 }
 
 Device.init({
@@ -18,6 +19,7 @@ Device.init({
     connectStatus: { type: DataTypes.STRING, defaultValue: false,  validate: { isIn: [["connected", "disconnected"]] }},
     batteryLevel: { type: DataTypes.INTEGER, defaultValue: 0},
     maxHz: { type: DataTypes.INTEGER, defaultValue: 0},
+    lastHeartbeat: { type: DataTypes.DATE, defaultValue: null }
 },
 {
     sequelize,

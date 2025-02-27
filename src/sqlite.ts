@@ -99,6 +99,7 @@ const initDb = () => {
                 connectStatus TEXT,
                 batteryLevel INTEGER,
                 maxHz INTEGER,
+                lastHeartbeat DATE,
                 PRIMARY KEY (deviceId),
                 FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName)
             );

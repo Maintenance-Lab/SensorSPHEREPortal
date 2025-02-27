@@ -6,6 +6,7 @@ import DeviceSensorMapping from "../models/mappings/DeviceSensorMapping.js";
 import SensorProperty from "../models/SensorProperty.js";
 import Sensor from "../models/Sensor.js";
 import DeviceSensorConfiguration from "../models/DeviceSensorConfiguration.js";
+import { Op } from "sequelize";
 
 
 export const getAllDevices = async (): Promise<Device[]> => {
@@ -23,6 +24,16 @@ export const getAllDevices = async (): Promise<Device[]> => {
         //     if (!results) return resolve([]);
         //     console.log("ALL PROJECTS: ", results.map((r) => r.projectId));
         //     return resolve(results);
+    });
+}
+
+// Retrieve all devices with a lastHearbeat longer then 10 minutes ago
+export const getAllOldDevices = async (): Promise<Device[]> => {
+    return new Promise(async (resolve) => {
+        console.log("in getAllOldDevices");
+        const results = await Device.findAll({ where: { connectStatus: "connected", lastHeartbeat: { [Op.lt]: Date.now() - 300000 } } });
+        if (!results) return resolve([]);
+        return resolve(results);
     });
 }
 

@@ -161,6 +161,7 @@ const addDeviceToDatabase = async (message: any, deviceId: string) => {
         message.batteryLevel = 97;
         message.maxHz = 80;
         message.channel = 3;
+        message.lastHeartbeat = Date.now();
 
         // If device manufacturer does not exist, add it to database
         // await addNewEntryToTable(Manufacturer, { manufacturerName: message.manufacturerName })
@@ -170,7 +171,7 @@ const addDeviceToDatabase = async (message: any, deviceId: string) => {
 
         // Add device to database if device does not exist
         // await addOrUpdateDevice({ deviceId: deviceId, manufacturerName: message.manufacturerName, connectStatus: "connected", batteryLevel: message.batteryLevel, maxHz: message.maxHz })
-        await addOrUpdateDevice({ deviceId: deviceId, manufacturerName: message.manufacturerName, connectStatus: "connected", batteryLevel: message.batteryLevel, maxHz: message.maxHz })
+        await addOrUpdateDevice({ deviceId: deviceId, manufacturerName: message.manufacturerName, connectStatus: "connected", batteryLevel: message.batteryLevel, maxHz: message.maxHz, lastHeartbeat: message.lastHeartbeat })
 
 
 
@@ -211,11 +212,9 @@ const updateDeviceStatus = async (message: any, deviceId: string) => {
             return resolve({ message: "Device does not exist in database yet" });
         }
 
-        // Set right battery level for device
-        await Device.update({ batteryLevel: message.batteryLevel }, { where: { deviceId } });
-        // Set right connection status for device
-        await Device.update({ connectStatus: message.connectStatus }, { where: { deviceId } });
-
+        message.connectStatus = "connected";
+        // Set right battery level, connection status and lastHearbeat date for device
+        await Device.update({ batteryLevel: message.batteryLevel, connectStatus: message.connectStatus, lastHeartbeat: Date.now() }, { where: { deviceId } });
 
         return resolve({ message: "Device status updated" });
     });

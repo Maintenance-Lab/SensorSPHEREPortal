@@ -7,23 +7,74 @@ import SensorProperty from "../models/SensorProperty.js";
 import Sensor from "../models/Sensor.js";
 import DeviceSensorConfiguration from "../models/DeviceSensorConfiguration.js";
 import { Op } from "sequelize";
+import { get } from "http";
+
+// Hulp functies
+const splitProperty = (property: string): any => {
+    const manufacturerName = property.split(":")[0];
+    const model = property.split(":")[1];
+    const propertyName = property.split(":")[2];
+
+    return { manufacturerName, model, propertyName };
+}
+
+const createMessage = (deviceProperties: any): any => {
+    const deviceId = deviceProperties.deviceId;
+    const manufacturers = deviceProperties.manufacturers;
+    const message: any = {
+        "mac": deviceId,
+        "sensors": []
+    };
+
+    for (const manufacturerName in manufacturers) {
+        const models = manufacturers[manufacturerName];
+
+        // Iterate through each model of the manufacturer
+        for (const model in models) {
+            const properties = models[model];
+            const sensor = {
+                "manufacturer": manufacturerName,
+                "model": model,
+                "properties": properties,
+            };
+            message.sensors.push(sensor);
+        }
+    }
+    return message;
+};
+
+const createPropertyDict = (properties: any[], deviceId: string): any => {
+    let deviceProperties: any = { deviceId };
+    let manufacturers: any = {};
+
+    properties.forEach((property: any) => {
+        const { manufacturerName, model, propertyName } = property;
+
+        // If the manufacturer doesn't exist in the manufacturers object, create it
+        if (!manufacturers[manufacturerName]) {
+            manufacturers[manufacturerName] = {};
+        }
+        // If the model doesn't exist under the manufacturer, create it
+        if (!manufacturers[manufacturerName][model]) {
+            manufacturers[manufacturerName][model] = [];
+        }
+        manufacturers[manufacturerName][model].push(propertyName);
+    });
+
+    deviceProperties.manufacturers = manufacturers;
+    return deviceProperties;
+};
 
 
+
+
+// Geen hulp functies -----------------------------------------------------------
 export const getAllDevices = async (): Promise<Device[]> => {
     return new Promise(async (resolve) => {
         console.log("in getAllDevices");
         const results = await Device.findAll();
         if (!results) return resolve([]);
-        // console.log("all devices", results);
-        // return resolve(docs.map(doc => doc.toJSON()));
         return resolve(results);
-
-
-        // return new Promise(async (resolve) => {
-        //     const results = await Project.findAll();
-        //     if (!results) return resolve([]);
-        //     console.log("ALL PROJECTS: ", results.map((r) => r.projectId));
-        //     return resolve(results);
     });
 }
 
@@ -61,7 +112,6 @@ export const getDevicesMappedToSession = async (sessionId: number): Promise<Devi
     });
 }
 
-
 // Devices not mapped to session
 export const getAllDevicesSession = async (sessionId: number): Promise<Device[]> => {
     return new Promise(async (resolve) => {
@@ -81,8 +131,6 @@ export const getAllDevicesSession = async (sessionId: number): Promise<Device[]>
         return resolve(results);
     });
 }
-
-
 
 export const getDeviceById = async (id: string): Promise<Device> => {
     return new Promise(async (resolve, reject) => {
@@ -142,6 +190,33 @@ export const getSelectedProperties = async (sessionId: number, deviceId: string)
     });
 }
 
+export const sendConfigurationToDevice = async (sessionId: number, deviceIds: any): Promise<any> => {
+    return new Promise(async (resolve, reject) => {
+        console.log("Sending configuration to devices @@@@", sessionId, deviceIds);
+        let messages = [];
+
+        for (const deviceId of deviceIds) {
+            // let deviceProperties: any = {};
+            console.log("DeviceId -------------------------------------------------: ", deviceId);
+            const properties = await getSelectedProperties(sessionId, deviceId);
+            if (!properties) return reject(new Error("Failed to fetch properties"));
+
+            const deviceProperties = createPropertyDict(properties, deviceId);
+            messages.push(createMessage(deviceProperties));
+            console.log("Messages: ", messages);
+        }
+
+        for (const message of messages) {
+            console.log("Message: ", message);
+            // mqtt.publish("configuration", JSON.stringify(message));
+        }
+        // Send properties to device
+        return resolve("Properties sent to device");
+    });
+}
+
+
+
 export const updateSelectedProperties = async (sessionId: number, deviceId: string, selectedProperties: any): Promise<any> => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -154,9 +229,7 @@ export const updateSelectedProperties = async (sessionId: number, deviceId: stri
 
             for (const p of selectedProperties) {
                 if (p.split(":").length === 3) {
-                    const manufacturerName = p.split(":")[0];
-                    const model = p.split(":")[1];
-                    const propertyName = p.split(":")[2];
+                    const { manufacturerName, model, propertyName } = splitProperty(p);
 
                     // set all selected properties to active
                     const updatedPropertyTrue = await DeviceSensorConfiguration.update(

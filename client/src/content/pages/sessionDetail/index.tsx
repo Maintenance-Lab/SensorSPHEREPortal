@@ -1,28 +1,14 @@
 import { useState, useEffect } from 'react';
-import {
-  Button,
-  TextField,
-  Link,
-  Typography,
-  Container,
-  Box,
-  Paper,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-} from '@mui/material';
+import { Button, TextField, Link, Typography, Container, Box, Paper, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
 import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';
-import { ArchiveOutlined, DeleteOutline, Devices, Inventory, UnarchiveOutlined} from '@mui/icons-material';
+import { ArchiveOutlined, DeleteOutline, Devices, Inventory, UnarchiveOutlined, DesignServicesOutlined } from '@mui/icons-material';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
-import { DesignServicesOutlined } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import EditIcon from '@mui/icons-material/Edit';
-// import { Treeview } from '@mui/x-treeview';
 import { TreeView, TreeItem } from '@mui/lab'
 import { Checkbox, FormControlLabel } from '@mui/material'
 import React from 'react';
@@ -66,11 +52,32 @@ const removeDevicesFromSession = async (sessionId, selectedDeviceIds, fetchSessi
     return;
   }
 
-  const data = await res.json();
-
   fetchSessionDevices();
   fetchAvailableDevices(sessionId);
 };
+
+const sendConfiguration = async (sessionId, selectedDeviceIds) => {
+  console.log("in send config ----", sessionId, selectedDeviceIds);
+  const res = await fetch('/api/devices/sendConfiguration', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      credentials: 'include'
+    },
+    body: JSON.stringify({
+      sessionId: sessionId,
+      selectedDevices: selectedDeviceIds
+    })
+  });
+
+  if (!res.ok) {
+    console.error('Failed to update selected properties');
+    return;
+  }
+
+  const data = await res.json();
+  return data;
+}
 
 const updateSession = async (sessionId, name, description, archived) => {
   const res = await fetch('/api/sessions/update/' + sessionId, {
@@ -117,16 +124,13 @@ const deleteSession = async (sessionId: number) => {
 };
 
 
-function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, sessionId, sessionDevices, fetchSessionDevices, fetchAvailableDevices }) {
-  const [open, setOpen] = useState(false);
-  const [allDevices, setAllDevices] = useState([]);
-
+function CustomDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDevices, fetchAvailableDevices, devices }) {
   const activeSelection = selectedDeviceIds.length > 0;
 
   return (
     <GridToolbarContainer sx={{ padding: 1 }}>
       <Stack direction="row" spacing={1}>
-        <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
+        <GridToolbarQuickFilter variant="outlined" size='small' justify-content="space-between" sx={{ padding: 0 }} />
           <Button
             variant="outlined"
             size="medium"
@@ -137,13 +141,20 @@ function CustomDevicesToolbar({ selectedDeviceIds, setSelectedDeviceIds, session
           >
             Remove Devices from Session
           </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Devices />}
+            onClick={() => sendConfiguration(sessionId, devices.map((device) => device.deviceId))}
+          >
+            Test configuration
+          </Button>
       </Stack>
     </GridToolbarContainer>
   );
 
 }
 
-function CustomDevicesToolbar2({ selectedAddDeviceIds, setSelectedAddDeviceIds, sessionId, availableDevices, fetchSessionDevices,  fetchAvailableDevices}) {
+function CustomDevicesToolbar2({ selectedAddDeviceIds, sessionId, fetchSessionDevices,  fetchAvailableDevices}) {
   const addDevices = async () => {
     const res = await fetch("/api/devices/addToSession", {
       method: "POST",
@@ -204,9 +215,6 @@ const SessionDetail = () => {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isDialogOpen2, setDialogOpen2] = useState(false);
-  const handleOpenDialog = () => setDialogOpen(true);
-  const handleCloseDialog = () => setDialogOpen(false);
-
   const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
   const [selectedAddDeviceIds, setSelectedAddDeviceIds] = useState([]);
   const [devices, setDevices] = useState([]);
@@ -214,9 +222,10 @@ const SessionDetail = () => {
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [allProperties, setAllProperties] = useState<RenderTree>();
   const [selectedProperties, setSelectedProperties] = useState([]);
-
-  const [selectedNodes, setSelectedNodes] = useState([]);
   const [expandedNodes, setExpandedNodes] = useState<string[]>(['root']);
+
+  const handleOpenDialog = () => setDialogOpen(true);
+  const handleCloseDialog = () => setDialogOpen(false);
 
   const loadRows = async (properties) => {
     const root: RenderTree = {
@@ -256,11 +265,11 @@ const SessionDetail = () => {
     return root;
   };
 
-
   const getAllChild = (nodes: RenderTree | null): string[] => {
     if (!nodes) return [];
 
     let array = [nodes.id];
+    // Recursively get all children
     if (nodes.children && typeof nodes.children === "object") {
       Object.values(nodes.children).forEach((child) => {
         array = [...array, ...getAllChild(child)];
@@ -270,7 +279,6 @@ const SessionDetail = () => {
     // Remove duplicates
     return [...new Set(array)];
   };
-
 
   const findParent = (nodeId: string, nodes: RenderTree): RenderTree | null => {
     if (!nodes || !nodes.children) return null;
@@ -285,12 +293,10 @@ const SessionDetail = () => {
     return null;
   };
 
-
   const areAllChildrenSelected = (parent: RenderTree, selectedSet: Set<string>): boolean => {
     if (!parent.children) return false;
     return Object.values(parent.children).every(child => selectedSet.has(child.id));
   };
-
 
   const getOnChange = async (checked: boolean, nodes: RenderTree) => {
     console.log("in getOnChange: ", checked, nodes);
@@ -329,7 +335,6 @@ const SessionDetail = () => {
       return [...newSelection];
     });
   };
-
 
   const renderTree = React.useCallback((nodes: RenderTree) => {
       if (!nodes || !nodes.id) return null;
@@ -891,11 +896,10 @@ const SessionDetail = () => {
               slots={{
                 toolbar: () => <CustomDevicesToolbar
                   selectedDeviceIds={selectedDeviceIds}
-                  setSelectedDeviceIds={setSelectedDeviceIds}
                   sessionId={sessionId}
-                  sessionDevices={fetchSessionDevices}
                   fetchSessionDevices={fetchSessionDevices}
                   fetchAvailableDevices={fetchAvailableDevices}
+                  devices={devices}
                   // fetchDevices={allDevices}
                 />}}
               sx={{
@@ -924,9 +928,7 @@ const SessionDetail = () => {
               slots={{
                 toolbar: () => <CustomDevicesToolbar2
                   selectedAddDeviceIds={selectedAddDeviceIds}
-                  setSelectedAddDeviceIds={setSelectedAddDeviceIds}
                   sessionId={sessionId}
-                  availableDevices={fetchAvailableDevices}
                   fetchSessionDevices={fetchSessionDevices}
                   fetchAvailableDevices={fetchAvailableDevices}
 

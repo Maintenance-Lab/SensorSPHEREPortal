@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties } from '../../services/Device.js';
+import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties, sendConfigurationToDevice } from '../../services/Device.js';
 import SessionDeviceMapping from '../../models/mappings/SessionDeviceMapping.js';
 import { deviceProperties } from '../../services/Device.js';
 import Device from '../../models/Device.js';
@@ -135,6 +135,40 @@ router.put("/updateSelectedProperties", async (req, res) => {
     const doc = await updateSelectedProperties(sessionId, deviceId, selectedProperties);
     if (!doc) return res.status(500).json({ message: "Failed to update properties" });
     return res.json(doc);
+});
+
+router.put("/sendConfiguration", async (req, res) => {
+    // {
+    //     "mac": "XX:XX:XX:XX:XX:XX",
+    //     "sensors": [
+    //         {
+    //             "manufacturer": "M5stack",
+    //             "model": "ENV3",
+    //             "properties":{
+    //                   "humidity",
+    //                   "Air pressure",
+    //                   "Temperature"
+    //             }
+    //         }
+    //     ]
+    // }
+
+    // chain of responsibility / catalog of design patters
+    // step navigation bootstrap
+
+    console.log("in send config api");
+    const sessionId = Number(req.body.sessionId);
+    const deviceIds = req.body.selectedDevices;
+
+    sendConfigurationToDevice( sessionId, deviceIds )
+    .then((result) => {
+        return res.json(result);
+    })
+    .catch((error) => {
+        console.error("Error sending configuration to device: ", error);
+        return res.status(500).json({ message: "Failed to send configuration to device" });
+    });
+
 });
 
 

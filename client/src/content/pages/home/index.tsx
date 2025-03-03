@@ -124,7 +124,7 @@ const Home = () => {
           ))}
           {latestProjects.length === 0 && !loading && (
             <Grid item xs={6} lg={4} height="130px">
-              <Schedule fontSize="small" sx={{ color: 'gray' }} />ñ©
+              <Schedule fontSize="small" sx={{ color: 'gray' }} />
               <Typography variant="body2" color='gray'>Latest projects will show up here.</Typography>
             </Grid>
           )}

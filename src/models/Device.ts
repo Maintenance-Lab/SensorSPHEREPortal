@@ -14,12 +14,12 @@ class Device extends Model {
 
 Device.init({
     deviceId: { type: DataTypes.STRING, primaryKey: true, references: { model: 'Device', key: 'deviceId' },  allowNull: false, validate: { is: /^([0-9A-F][0-9A-F]:){5}([0-9A-F][0-9A-F])$/i } },
-    manufacturerName: { type: DataTypes.STRING(100), allowNull: false, references: { model: 'Manufacturer', key: 'manufacturerName' } },
-    // Model: { type: DataTypes.STRING(100), allowNull: false, references: { model: Sensor, key: 'Model' } },
-    connectStatus: { type: DataTypes.STRING, defaultValue: false,  validate: { isIn: [["connected", "disconnected"]] }},
+    manufacturerName: { type: DataTypes.STRING(100), references: { model: 'Manufacturer', key: 'manufacturerName' } },
+    // manufacturerName: { type: DataTypes.STRING(100), allowNull: false, references: { model: 'Manufacturer', key: 'manufacturerName' } },
+    connectStatus: { type: DataTypes.STRING, defaultValue: "connected", validate: { isIn: [["connected", "disconnected", "online"]] }},
     batteryLevel: { type: DataTypes.INTEGER, defaultValue: 0},
     maxHz: { type: DataTypes.INTEGER, defaultValue: 0},
-    lastHeartbeat: { type: DataTypes.DATE, defaultValue: null }
+    lastHeartbeat: { type: DataTypes.DATE, defaultValue: new Date() }
 },
 {
     sequelize,

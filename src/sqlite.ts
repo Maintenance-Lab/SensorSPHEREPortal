@@ -95,7 +95,7 @@ const initDb = () => {
         db.run(`
             CREATE TABLE IF NOT EXISTS Device (
                 deviceId TEXT NOT NULL,
-                manufacturerName TEXT NOT NULL,
+                manufacturerName TEXT,
                 connectStatus TEXT,
                 batteryLevel INTEGER,
                 maxHz INTEGER,
@@ -138,7 +138,7 @@ const initDb = () => {
             CREATE TABLE IF NOT EXISTS Sensor (
                 model TEXT NOT NULL,
                 manufacturerName TEXT NOT NULL,
-                categoryName TEXT NOT NULL,
+                categoryName TEXT,
                 PRIMARY KEY (model, manufacturerName),
                 FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName),
                 FOREIGN KEY (categoryName) REFERENCES SensorCategory(categoryName)

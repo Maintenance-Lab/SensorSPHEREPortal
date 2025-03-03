@@ -469,9 +469,6 @@ const SessionDetail = () => {
 
   const handleCloseDialog2 = async () => {
     // save selected properties to database
-    console.log("selected properties: ", selectedProperties);
-    console.log("selected device: ", selectedDevice);
-
     const selectedPropertiesIds = await selectedProperties.filter((id) => id !== 'root');
     const res = await fetch('/api/devices/updateSelectedProperties', {
       method: 'PUT',

@@ -16,23 +16,18 @@ import { Op } from 'sequelize';
 const router = Router()
 
 router.get("/all", async (_, res) => {
-    console.log("in get all devices");
     const docs = await getAllDevices();
     return res.json(docs);
 });
 
 router.get("/all/:session", async (req, res) => {
-    // console.log("----- hier moet ie in services get session devices");
     const sessionId = Number(req.params.session);
-    console.log("sessionId: ", sessionId);
     const docs = await getDevicesMappedToSession(sessionId);
-    // console.log("--------- devices zijn: ", docs);
     if (!docs) return res.status(404).json({ message: "Devices not found" });
     return res.json(docs);
 });
 
 router.get("/id/:id", async (req, res) => {
-    console.log("in get session by id");
     const id = req.params.id;
     const doc = await getDeviceById(id);
     if (!doc) return res.status(404).json({ message: "Device not found" });
@@ -61,7 +56,6 @@ router.post("/addToSession", async (req, res) => {
         try {
             const sensorsDeviceMappings = await DeviceSensorMapping.findAll({ where: { deviceId: deviceIds } });
             if (!sensorsDeviceMappings) return res.status(404).json({ message: "Sensors not found" });
-            console.log("sensorsDeviceMappings: ", sensorsDeviceMappings);
 
             const sensorProperties = await Promise.all(sensorsDeviceMappings.map(async (sensorMapping) => {
                 // Get sensor with device id
@@ -111,7 +105,6 @@ router.get("/properties/:deviceId", async (req, res) => {
 });
 
 router.get("/available/:session", async (req, res) => {
-    console.log("in fetch available devices");
     const sessionId = Number(req.params.session);
     const doc = await getAllDevicesSession(sessionId);
     if (!doc) return res.status(404).json({ message: "Devices not found" });
@@ -156,7 +149,6 @@ router.put("/sendConfiguration", async (req, res) => {
     // chain of responsibility / catalog of design patters
     // step navigation bootstrap
 
-    console.log("in send config api");
     const sessionId = Number(req.body.sessionId);
     const deviceIds = req.body.selectedDevices;
 

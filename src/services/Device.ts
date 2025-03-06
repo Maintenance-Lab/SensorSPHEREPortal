@@ -180,8 +180,6 @@ export const getSelectedProperties = async (sessionId: number, deviceId: string)
             });
             if (!properties) return reject(new Error("Failed to fetch properties"));
 
-            console.log("Fetched properties:", properties);
-
             return resolve(properties);
         }   catch (error) {
             console.error("Database query failed:", error);
@@ -219,6 +217,7 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceIds: an
 
 export const updateSelectedProperties = async (sessionId: number, deviceId: string, selectedProperties: any): Promise<any> => {
     return new Promise(async (resolve, reject) => {
+        // console.log("Updating properties: ", sessionId, deviceId, selectedProperties);
         try {
             // set all properties from device and session to inactive
             const updatedPropertiesFalse = await DeviceSensorConfiguration.update(

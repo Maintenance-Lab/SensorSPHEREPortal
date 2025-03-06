@@ -57,7 +57,6 @@ const removeDevicesFromSession = async (sessionId, selectedDeviceIds, fetchSessi
 };
 
 const sendConfiguration = async (sessionId, selectedDeviceIds) => {
-  console.log("in send config ----", sessionId, selectedDeviceIds);
   const res = await fetch('/api/devices/sendConfiguration', {
     method: 'PUT',
     headers: {
@@ -102,7 +101,6 @@ const updateSession = async (sessionId, name, description, archived) => {
 };
 
 const deleteSession = async (sessionId: number) => {
-  console.log("DELETE SESSION ID", sessionId);
   const res = await fetch('/api/sessions/delete', {
     method: 'DELETE',
     headers: {
@@ -136,7 +134,6 @@ function CustomDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDevice
             size="medium"
             color="error"
             startIcon={<DeleteOutlineOutlinedIcon />}
-            disabled={!activeSelection}
             onClick={() => removeDevicesFromSession(sessionId, selectedDeviceIds, fetchSessionDevices, fetchAvailableDevices)}
           >
             Remove Devices from Session
@@ -236,17 +233,17 @@ const SessionDetail = () => {
 
         // Add each manufacturer as a child to the root
         acc[manufacturer] = {
-          id: `${manufacturer.replace(/\s+/g, ':')}`,
+          id: `${manufacturer}`,
           name: manufacturer,
           children: model.reduce((modelAcc, modelName, modelIndex) => {
             // Add each model as a child to the manufacturer
             modelAcc[modelName] = {
-              id: `${manufacturer.replace(/\s+/g, ':')}:${modelName.replace(/\s+/g, ':')}`,
+              id: `${manufacturer}:${modelName}`,
               name: modelName,
               children: modelProperties[modelIndex].reduce((propertyAcc, property) => {
                 // Add each property as a child to the model
                 propertyAcc[property] = {
-                  id: `${manufacturer.replace(/\s+/g, ':')}:${modelName.replace(/\s+/g, ':')}:${property.replace(/\s+/g, ':')}`,
+                  id: `${manufacturer}:${modelName}:${property}`,
                   name: property
                 };
                 return propertyAcc;
@@ -260,7 +257,6 @@ const SessionDetail = () => {
       }, {})
     };
 
-    console.log("root: ", root);
     setAllProperties(root);
     return root;
   };
@@ -299,8 +295,6 @@ const SessionDetail = () => {
   };
 
   const getOnChange = async (checked: boolean, nodes: RenderTree) => {
-    console.log("in getOnChange: ", checked, nodes);
-
     const allNodeIds = getAllChild(nodes);
 
     setSelectedProperties((prevSelected) => {
@@ -366,7 +360,6 @@ const SessionDetail = () => {
   );
 
   const getDeviceProperties = async (deviceId: string) => {
-    console.log("in getDeviceDetails api call: ", deviceId);
     const res: any = await fetch('/api/devices/properties/' + deviceId, {
       method: 'GET',
       headers: {
@@ -389,7 +382,6 @@ const SessionDetail = () => {
   };
 
   const getSelectedProperties = async (deviceId:string) => {
-    console.log("in getselectedrows api call: ", deviceId);
     const res: any = await fetch('/api/devices/selectedProperties', {
       method: 'PUT',
       headers: {
@@ -454,13 +446,11 @@ const SessionDetail = () => {
     const allProperties = await loadRows( await getDeviceProperties(deviceId));
     const updatedSelection = updateSelection(selectedPropertiesIds, allProperties);
 
-    console.log("SELECTED PROPERTIES: ", updatedSelection);
     setSelectedProperties(updatedSelection);
   }
 
   const handleOpenDialog2 = async (deviceId) => {
     setSelectedDevice(deviceId);
-    console.log("IN OPEN DIALOG 2: ", deviceId);
     const properties = await deviceProperties(deviceId);
     try {
       handleSelectedProperties(deviceId);
@@ -507,7 +497,7 @@ const SessionDetail = () => {
           defaultExpandIcon={<ChevronRightIcon/>}
           defaultCollapseIcon={<ExpandMoreIcon />}
           defaultSelected={selectedProperties}
-          selected={selectedProperties}
+          // selected={selectedProperties}
           expanded={expandedNodes}
           onNodeToggle={(e, nodeIds) => {
             setExpandedNodes(nodeIds);
@@ -657,7 +647,6 @@ const SessionDetail = () => {
     setIsArchived(data.archived);
     setSessionDescription(data.description);
 
-    console.log('Fetching project step 3', data.projectId);
     const projectResponse = await fetch('/api/projects/id/' + data.projectId, {
       method: 'GET',
       headers: {
@@ -693,7 +682,6 @@ const SessionDetail = () => {
   };
 
   const handleDeleteSession = async (sessionId) => {
-    console.log("project id in delete session detail", projectId);
     await deleteSession(sessionId);
     if (!projectId) {
       // Ensure `projectId` is loaded before proceeding

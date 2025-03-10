@@ -8,6 +8,8 @@ import Sensor from "../models/Sensor.js";
 import DeviceSensorConfiguration from "../models/DeviceSensorConfiguration.js";
 import { Op } from "sequelize";
 import { get } from "http";
+// import mqtt from "mqtt/*";
+import mqtt from '../index.js';
 
 // Hulp functies
 const splitProperty = (property: string): any => {
@@ -190,7 +192,7 @@ export const getSelectedProperties = async (sessionId: number, deviceId: string)
 
 export const sendConfigurationToDevice = async (sessionId: number, deviceId: any): Promise<any> => {
     return new Promise(async (resolve, reject) => {
-        let messages = [];
+        console.log("Sending configuration to device: ", sessionId, deviceId);
 
         const properties = await getSelectedProperties(sessionId, deviceId);
         if (!properties) return reject(new Error("Failed to fetch properties"));
@@ -198,11 +200,11 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
         const deviceProperties = await createPropertyDict(properties, deviceId);
         if (!deviceProperties) return reject(new Error("Failed to create property dictionary"));
 
-        messages.push(await createConfigMessage(deviceProperties));
-        console.log("Messages: ", messages);
+        const message = await createConfigMessage(deviceProperties);
+        console.log("Message: ", message);
 
-        // mqtt.publish("configuration", JSON.stringify(message));
-        // Send properties to device
+        // Send configuration (selected properties) to gateway
+        mqtt.publish("interface/" + deviceId + "/validateConfiguration", JSON.stringify(message));
         return resolve("Properties sent to device");
     });
 }

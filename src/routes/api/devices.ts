@@ -149,10 +149,11 @@ router.put("/sendConfiguration", async (req, res) => {
     // chain of responsibility / catalog of design patters
     // step navigation bootstrap
 
-    const sessionId = Number(req.body.sessionId);
+    const sessionId = req.body.sessionId;
     const deviceId = req.body.selectedDevice;
+    console.log("sendConfiguration: ", sessionId, deviceId);
 
-    await sendConfigurationToDevice( sessionId, deviceId )
+    await sendConfigurationToDevice(sessionId, deviceId)
     .then((result) => {
         return res.json(result);
     })

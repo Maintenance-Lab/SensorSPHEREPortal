@@ -61,7 +61,7 @@ const removeDevicesFromSession = async (sessionId, selectedDeviceIds, fetchSessi
 };
 
 const sendConfiguration = async (sessionId, selectedDeviceId) => {
-  console.log("in send configuration ", sessionId, selectedDeviceId);
+  console.log("in send configuration ", selectedDeviceId);
   const res = await fetch('/api/devices/sendConfiguration', {
     method: 'PUT',
     headers: {
@@ -70,7 +70,7 @@ const sendConfiguration = async (sessionId, selectedDeviceId) => {
     },
     body: JSON.stringify({
       sessionId: sessionId,
-      selectedDevice: selectedDeviceId,
+      selectedDevice: selectedDeviceId
     })
   });
 
@@ -143,14 +143,6 @@ function CustomDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDevice
             onClick={() => removeDevicesFromSession(sessionId, selectedDeviceIds, fetchSessionDevices, fetchAvailableDevices)}
           >
             Remove Devices from Session
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<Devices />}
-            // onClick={() => sendConfiguration(sessionId, devices.map((device) => device.deviceId))}
-            onClick={() => sendConfiguration(sessionId, selectedDeviceIds)}
-          >
-            Test configuration
           </Button>
       </Stack>
     </GridToolbarContainer>
@@ -342,7 +334,7 @@ const SessionDetail = () => {
     });
   };
 
-  const renderTree = React.useCallback((nodes: RenderTree) => {
+  const renderTree = useCallback((nodes: RenderTree) => {
       if (!nodes || !nodes.id) return null;
         return (
           <TreeItem
@@ -474,9 +466,9 @@ const SessionDetail = () => {
     }
   };
 
-  const handleCloseDialog2 = async () => {
-    // save selected properties to database
-    const selectedPropertiesIds = await selectedProperties.filter((id) => id !== 'root');
+  const updateSelectedProperties = async (deviceId, selectedProperties) => {
+    console.log("updating selected properties ", selectedProperties);
+    const selectedPropertiesIds: any = await selectedProperties.filter((id) => id !== 'root');
     const res = await fetch('/api/devices/updateSelectedProperties', {
       method: 'PUT',
       headers: {
@@ -485,7 +477,7 @@ const SessionDetail = () => {
       },
       body: JSON.stringify({
         sessionId: sessionId,
-        deviceId: selectedDevice,
+        deviceId: deviceId,
         selectedProperties: selectedPropertiesIds
       })
     });
@@ -493,19 +485,13 @@ const SessionDetail = () => {
       console.error('Failed to update selected properties');
       return;
     }
+  }
 
+  const handleCloseDialog2 = async () => {
     setDialogOpen2(false);
     setActiveStep(0);
     setMaxHz(null);
   };
-
-  // const handleSendConfiguration = async (sessionId, selectedDevice) => {
-  //     const maxHz = await sendConfiguration(sessionId, selectedDevice);
-  //     if (maxHz !== null) {
-  //       setMaxHz(maxHz);
-  //     }
-
-  // }
 
   // ---------------------------------------------------------
 
@@ -514,11 +500,15 @@ const SessionDetail = () => {
     setActiveStep(newStep);
 
     if (newStep === 1) {
+      console.log("update selected properties ", selectedDevice, sessionId);
+      await updateSelectedProperties(selectedDevice, selectedProperties);
+      console.log("selected properties updated, now finding frequency");
       const frequency = await sendConfiguration(sessionId, selectedDevice);
       console.log("gevonden frequencyyyy letsgo ", frequency);
 
       if (frequency !== null) {
-        setMaxHz(frequency);
+        // setMaxHz(frequency);
+        setMaxHz(100);
         setActiveStep((prev) => prev + 1);
       }
     }
@@ -533,30 +523,7 @@ const SessionDetail = () => {
     else {
       setActiveStep((prevActiveStep) => prevActiveStep - 1);
     }
-
   };
-
-  const getMaxFrequency = async (selectedProperties) => {
-    // const res = await fetch('/api/devices/maxHz', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     credentials: 'include'
-    //   },
-    //   body: JSON.stringify({
-    //     sessionId: sessionId,
-    //     selectedProperties: selectedProperties
-    //   })
-    // });
-    // if (!res.ok) {
-    //   console.error('Failed to fetch max frequency');
-    //   return null;
-    // }
-
-    if (activeStep === 1) {
-      setMaxHz(100);
-    }
-  }
 
   const stepTitle = (index: number) => {
     switch (index) {
@@ -594,7 +561,11 @@ const SessionDetail = () => {
           <CircularProgress />
         )
       case 2:
-        return 'Maximum frequency of this device with selected properties';
+        if (maxHz !== null) {
+          return (
+            <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>{maxHz} Hz</Typography>)
+          }
+        return 'No frequency found';
     }
   }
 
@@ -641,6 +612,7 @@ const SessionDetail = () => {
                   //   // handleSendConfiguration(sessionId, device);
                   // }
                   else {
+                    console.log("selectedProperties ~~~~~~~~~~~~ ", selectedProperties);
                     handleNext(sessionId, device);
                   }
                   }}>

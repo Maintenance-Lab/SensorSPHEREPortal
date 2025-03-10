@@ -5,27 +5,48 @@ import SensorProperty from "../models/SensorProperty.js";
 import DeviceSensorMapping from "../models/mappings/DeviceSensorMapping.js";
 import Device from "../models/Device.js";
 import Sensor from "../models/Sensor.js";
+import { EventEmitter } from "events";
+
+export const eventEmitter = new EventEmitter();
 
 export const MQTTMessage = async (topic: string, message: Buffer) => {
     return new Promise(async (resolve, _) => {
         const topicParts = topic.split("/");
+        console.log("TPOIC PARTS: ", topicParts);
         message = JSON.parse(message.toString());
 
         if (topicParts.length  === 2) {
             // Devices that are online
             if (topicParts[1] === 'listUnitsResult') {
                 console.log("Got message on listUnitsResult topic");
-                addDeviceToDatabase(message)
+                addDeviceToDatabase(message);
             }
         }
         else if (topicParts.length === 3) {
             // Configuration result
             if (topicParts[2] === 'validateConfigurationResult') {
                 console.log("Got message on validateConfigurationResult topic");
+                updateFrequency(message);
             }
         }
 
         return resolve({ message: "Message received" });
+    });
+}
+
+export const updateFrequency = async (message: any) => {
+    return new Promise(async (resolve, reject) => {
+        const deviceId = message.mac;
+        const frequency = message.frequency;
+        console.log("In return configurations: ", deviceId, frequency);
+
+        // Update device with maxHz
+        const doc = await Device.update({ maxHz: frequency }, { where: { deviceId } });
+        if (!doc) return reject(new Error("Error updating entry"));
+
+        eventEmitter.emit("frequencyUpdated", { deviceId, frequency });
+        console.log("event emitted");
+        return resolve({ message: "Frequency updated" });
     });
 }
 

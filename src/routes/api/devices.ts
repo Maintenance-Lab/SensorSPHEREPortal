@@ -13,6 +13,7 @@ import { Op } from 'sequelize';
 
 
 
+
 const router = Router()
 
 router.get("/all", async (_, res) => {
@@ -155,13 +156,13 @@ router.put("/sendConfiguration", async (req, res) => {
 
     await sendConfigurationToDevice(sessionId, deviceId)
     .then((result) => {
+        console.log("RESULT: ", result);
         return res.json(result);
     })
     .catch((error) => {
         console.error("Error sending configuration to device: ", error);
         return res.status(500).json({ message: "Failed to send configuration to device" });
     });
-
 });
 
 

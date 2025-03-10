@@ -500,15 +500,15 @@ const SessionDetail = () => {
     setActiveStep(newStep);
 
     if (newStep === 1) {
-      console.log("update selected properties ", selectedDevice, sessionId);
       await updateSelectedProperties(selectedDevice, selectedProperties);
       console.log("selected properties updated, now finding frequency");
       const frequency = await sendConfiguration(sessionId, selectedDevice);
+
       console.log("gevonden frequencyyyy letsgo ", frequency);
 
       if (frequency !== null) {
-        // setMaxHz(frequency);
-        setMaxHz(100);
+        setMaxHz(frequency);
+        // setMaxHz(100);
         setActiveStep((prev) => prev + 1);
       }
     }

@@ -10,6 +10,7 @@ import { Op } from "sequelize";
 import { get } from "http";
 // import mqtt from "mqtt/*";
 import mqtt from '../index.js';
+import { eventEmitter } from '../services/Mqtt.js';
 
 // Hulp functies
 const splitProperty = (property: string): any => {
@@ -205,7 +206,14 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
 
         // Send configuration (selected properties) to gateway
         mqtt.publish("interface/" + deviceId + "/validateConfiguration", JSON.stringify(message));
-        return resolve("Properties sent to device");
+
+        eventEmitter.once("frequencyUpdated", async ({ deviceId: updatedDeviceId, frequency }) => {
+            if (updatedDeviceId === deviceId) {
+                console.log("Frequency updated for device: ", frequency, updatedDeviceId);
+                return resolve(frequency)
+            }
+            return resolve("Failed to update frequency");
+        });
     });
 }
 

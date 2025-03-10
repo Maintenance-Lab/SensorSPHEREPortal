@@ -18,7 +18,7 @@ const splitProperty = (property: string): any => {
     return { manufacturerName, model, propertyName };
 }
 
-const createMessage = (deviceProperties: any): any => {
+const createConfigMessage = async (deviceProperties: any) => {
     const deviceId = deviceProperties.deviceId;
     const manufacturers = deviceProperties.manufacturers;
     const message: any = {
@@ -43,7 +43,7 @@ const createMessage = (deviceProperties: any): any => {
     return message;
 };
 
-const createPropertyDict = (properties: any[], deviceId: string): any => {
+const createPropertyDict = async (properties: any[], deviceId: string) => {
     let deviceProperties: any = { deviceId };
     let manufacturers: any = {};
 
@@ -62,6 +62,7 @@ const createPropertyDict = (properties: any[], deviceId: string): any => {
     });
 
     deviceProperties.manufacturers = manufacturers;
+    console.log("deviceProperties: ", deviceProperties);
     return deviceProperties;
 };
 
@@ -141,7 +142,7 @@ export const getDeviceById = async (id: string): Promise<Device> => {
     });
 }
 
-export const deviceProperties = async (deviceId: string): Promise<SensorProperty[]> => {
+export const getDeviceProperties = async (deviceId: string): Promise<SensorProperty[]> => {
     return new Promise(async (resolve, reject) => {
 
         const sensors = await DeviceSensorMapping.findAll({ where: { deviceId: deviceId } });
@@ -166,7 +167,7 @@ export const deviceProperties = async (deviceId: string): Promise<SensorProperty
             properties[manufacturerName]["properties"].push(propertyNames);
         }
 
-        console.log("properties: ", properties);
+        // console.log("properties: ", properties);
         return resolve(properties);
     });;
 };
@@ -176,7 +177,6 @@ export const getSelectedProperties = async (sessionId: number, deviceId: string)
         try {
             const properties = await DeviceSensorConfiguration.findAll({
                 where: { sessionId: sessionId, deviceId: deviceId, active: true },
-                attributes: ["sessionId", "deviceId", "propertyName", "model", "manufacturerName", "active"],
             });
             if (!properties) return reject(new Error("Failed to fetch properties"));
 
@@ -188,26 +188,20 @@ export const getSelectedProperties = async (sessionId: number, deviceId: string)
     });
 }
 
-export const sendConfigurationToDevice = async (sessionId: number, deviceIds: any): Promise<any> => {
+export const sendConfigurationToDevice = async (sessionId: number, deviceId: any): Promise<any> => {
     return new Promise(async (resolve, reject) => {
-        console.log("Sending configuration to devices @@@@", sessionId, deviceIds);
         let messages = [];
 
-        for (const deviceId of deviceIds) {
-            // let deviceProperties: any = {};
-            console.log("DeviceId -------------------------------------------------: ", deviceId);
-            const properties = await getSelectedProperties(sessionId, deviceId);
-            if (!properties) return reject(new Error("Failed to fetch properties"));
+        const properties = await getSelectedProperties(sessionId, deviceId);
+        if (!properties) return reject(new Error("Failed to fetch properties"));
 
-            const deviceProperties = createPropertyDict(properties, deviceId);
-            messages.push(createMessage(deviceProperties));
-            console.log("Messages: ", messages);
-        }
+        const deviceProperties = await createPropertyDict(properties, deviceId);
+        if (!deviceProperties) return reject(new Error("Failed to create property dictionary"));
 
-        for (const message of messages) {
-            console.log("Message: ", message);
-            // mqtt.publish("configuration", JSON.stringify(message));
-        }
+        messages.push(await createConfigMessage(deviceProperties));
+        console.log("Messages: ", messages);
+
+        // mqtt.publish("configuration", JSON.stringify(message));
         // Send properties to device
         return resolve("Properties sent to device");
     });

@@ -6,37 +6,23 @@ import DeviceSensorMapping from "../models/mappings/DeviceSensorMapping.js";
 import Device from "../models/Device.js";
 import Sensor from "../models/Sensor.js";
 
-// TODO:
-// device sensor config komt later als user daadwerkelijk wil gaan meten
-//  ------------------------------------
-
-
 export const MQTTMessage = async (topic: string, message: Buffer) => {
     return new Promise(async (resolve, _) => {
-
-        console.log("Message: ", message.toString());
-        const postfix = topic.split("/")[2];
+        const topicParts = topic.split("/");
         message = JSON.parse(message.toString());
 
-        switch (postfix) {
-            case "msg":
-                console.log("Got message on msg topic");
-                await addDeviceToDatabase(message);
-                break;
-            case "heartbeat":
-                await updateDeviceStatus(message);
-                break;
-            case "announce":
-                console.log(message)
-                await addDeviceToDatabase(message);
-                break;
-            case "speedtest":
-                console.log("Got message on speedtest topic");
-                break;
-            case "initial":
-                console.log("Got message on initial topic");
-                // await addDeviceToDatabase(message, deviceId);
-                break;
+        if (topicParts.length  === 2) {
+            // Devices that are online
+            if (topicParts[1] === 'listUnitsResult') {
+                console.log("Got message on listUnitsResult topic");
+                addDeviceToDatabase(message)
+            }
+        }
+        else if (topicParts.length === 3) {
+            // Configuration result
+            if (topicParts[2] === 'validateConfigurationResult') {
+                console.log("Got message on validateConfigurationResult topic");
+            }
         }
 
         return resolve({ message: "Message received" });

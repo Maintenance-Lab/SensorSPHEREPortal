@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties, sendConfigurationToDevice } from '../../services/Device.js';
 import SessionDeviceMapping from '../../models/mappings/SessionDeviceMapping.js';
-import { deviceProperties } from '../../services/Device.js';
+import { getDeviceProperties } from '../../services/Device.js';
 import Device from '../../models/Device.js';
 import Sensor from '../../models/Sensor.js';
 import SensorProperty from '../../models/SensorProperty.js';
@@ -99,7 +99,7 @@ router.post("/addToSession", async (req, res) => {
 
 router.get("/properties/:deviceId", async (req, res) => {
     const deviceId = req.params.deviceId;
-    const doc = await deviceProperties(deviceId);
+    const doc = await getDeviceProperties(deviceId);
     if (!doc) return res.status(404).json({ message: "Device not found" });
     return res.json(doc);
 });
@@ -150,9 +150,9 @@ router.put("/sendConfiguration", async (req, res) => {
     // step navigation bootstrap
 
     const sessionId = Number(req.body.sessionId);
-    const deviceIds = req.body.selectedDevices;
+    const deviceId = req.body.selectedDevice;
 
-    sendConfigurationToDevice( sessionId, deviceIds )
+    await sendConfigurationToDevice( sessionId, deviceId )
     .then((result) => {
         return res.json(result);
     })
@@ -162,6 +162,8 @@ router.put("/sendConfiguration", async (req, res) => {
     });
 
 });
+
+
 
 
 

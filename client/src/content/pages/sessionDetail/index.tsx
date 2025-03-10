@@ -5,7 +5,7 @@ import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
 import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';
-import { ArchiveOutlined, DeleteOutline, Devices, Inventory, UnarchiveOutlined, DesignServicesOutlined } from '@mui/icons-material';
+import { ArchiveOutlined, DeleteOutline, Devices, Inventory, UnarchiveOutlined, DesignServicesOutlined, DoNotStepOutlined } from '@mui/icons-material';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { useParams } from 'react-router-dom';
 import EditIcon from '@mui/icons-material/Edit';
@@ -15,6 +15,10 @@ import React from 'react';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useCallback } from 'react';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const fetchDevices = async (sessionId) => {
   const devices = await fetch('/api/devices/all/' + sessionId, {
@@ -56,7 +60,8 @@ const removeDevicesFromSession = async (sessionId, selectedDeviceIds, fetchSessi
   fetchAvailableDevices(sessionId);
 };
 
-const sendConfiguration = async (sessionId, selectedDeviceIds) => {
+const sendConfiguration = async (sessionId, selectedDeviceId) => {
+  console.log("in send configuration ", sessionId, selectedDeviceId);
   const res = await fetch('/api/devices/sendConfiguration', {
     method: 'PUT',
     headers: {
@@ -65,7 +70,7 @@ const sendConfiguration = async (sessionId, selectedDeviceIds) => {
     },
     body: JSON.stringify({
       sessionId: sessionId,
-      selectedDevices: selectedDeviceIds
+      selectedDevice: selectedDeviceId,
     })
   });
 
@@ -75,6 +80,7 @@ const sendConfiguration = async (sessionId, selectedDeviceIds) => {
   }
 
   const data = await res.json();
+  console.log("sent configuration ", data);
   return data;
 }
 
@@ -121,7 +127,6 @@ const deleteSession = async (sessionId: number) => {
   return data;
 };
 
-
 function CustomDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDevices, fetchAvailableDevices, devices }) {
   const activeSelection = selectedDeviceIds.length > 0;
 
@@ -134,6 +139,7 @@ function CustomDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDevice
             size="medium"
             color="error"
             startIcon={<DeleteOutlineOutlinedIcon />}
+            disabled={!activeSelection}
             onClick={() => removeDevicesFromSession(sessionId, selectedDeviceIds, fetchSessionDevices, fetchAvailableDevices)}
           >
             Remove Devices from Session
@@ -141,7 +147,8 @@ function CustomDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDevice
           <Button
             variant="outlined"
             startIcon={<Devices />}
-            onClick={() => sendConfiguration(sessionId, devices.map((device) => device.deviceId))}
+            // onClick={() => sendConfiguration(sessionId, devices.map((device) => device.deviceId))}
+            onClick={() => sendConfiguration(sessionId, selectedDeviceIds)}
           >
             Test configuration
           </Button>
@@ -221,8 +228,13 @@ const SessionDetail = () => {
   const [selectedProperties, setSelectedProperties] = useState([]);
   const [expandedNodes, setExpandedNodes] = useState<string[]>(['root']);
 
+  const [activeStep, setActiveStep] = React.useState(0);
+  const [maxHz, setMaxHz] = React.useState(null);
+  const steps = ['Select Properties', 'Find frequency', 'Save configuration'];
+
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
+
 
   const loadRows = async (properties) => {
     const root: RenderTree = {
@@ -483,35 +495,162 @@ const SessionDetail = () => {
     }
 
     setDialogOpen2(false);
+    setActiveStep(0);
+    setMaxHz(null);
   };
 
-  const DeviceConfigDialog = ({ device, open, onClose }) => (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogContent>
-        <Typography variant="h4">Select properties to include in data collection</Typography>
-      </DialogContent>
-      <DialogContent>
-        {open && allProperties && selectedProperties !== null && (
+  // const handleSendConfiguration = async (sessionId, selectedDevice) => {
+  //     const maxHz = await sendConfiguration(sessionId, selectedDevice);
+  //     if (maxHz !== null) {
+  //       setMaxHz(maxHz);
+  //     }
+
+  // }
+
+  // ---------------------------------------------------------
+
+  const handleNext = async (sessionId, selectedDevice) => {
+    const newStep = activeStep + 1;
+    setActiveStep(newStep);
+
+    if (newStep === 1) {
+      const frequency = await sendConfiguration(sessionId, selectedDevice);
+      console.log("gevonden frequencyyyy letsgo ", frequency);
+
+      if (frequency !== null) {
+        setMaxHz(frequency);
+        setActiveStep((prev) => prev + 1);
+      }
+    }
+  };
+
+  const handleBack = () => {
+    if (activeStep === 2) {
+      console.log("active step 2");
+      setMaxHz(null);
+      setActiveStep(0);
+    }
+    else {
+      setActiveStep((prevActiveStep) => prevActiveStep - 1);
+    }
+
+  };
+
+  const getMaxFrequency = async (selectedProperties) => {
+    // const res = await fetch('/api/devices/maxHz', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     credentials: 'include'
+    //   },
+    //   body: JSON.stringify({
+    //     sessionId: sessionId,
+    //     selectedProperties: selectedProperties
+    //   })
+    // });
+    // if (!res.ok) {
+    //   console.error('Failed to fetch max frequency');
+    //   return null;
+    // }
+
+    if (activeStep === 1) {
+      setMaxHz(100);
+    }
+  }
+
+  const stepTitle = (index: number) => {
+    switch (index) {
+      case 0:
+        return 'Select properties to include in data collection';
+      case 1:
+        return 'Finding maximum frequency';
+      case 2:
+        return 'Maximum frequency of this device with selected properties';
+    }
+  };
+
+  const stepContent = (index: number) => {
+    switch (index) {
+      case 0:
+        // { open && allProperties && selectedProperties !== null && (
+        return (
           <TreeView
-          multiSelect={true}
-          defaultExpandIcon={<ChevronRightIcon/>}
-          defaultCollapseIcon={<ExpandMoreIcon />}
-          defaultSelected={selectedProperties}
-          // selected={selectedProperties}
-          expanded={expandedNodes}
-          onNodeToggle={(e, nodeIds) => {
-            setExpandedNodes(nodeIds);
-          }}
-          >
-            {open && allProperties && renderTree(allProperties)}
+            multiSelect={true}
+            defaultExpandIcon={<ChevronRightIcon/>}
+            defaultCollapseIcon={<ExpandMoreIcon />}
+            defaultSelected={selectedProperties}
+            expanded={expandedNodes}
+            onNodeToggle={(e, nodeIds) => {
+              setExpandedNodes(nodeIds);
+            }}>
+            {allProperties && renderTree(allProperties)}
           </TreeView>
-      )}
+        // )};
+      );
+      case 1:
+        // return 'Finding maximum frequency';
+        return (
+          // loading component
+          <CircularProgress />
+        )
+      case 2:
+        return 'Maximum frequency of this device with selected properties';
+    }
+  }
+
+// ---------------------------------------------------------
+
+  const DeviceConfigDialog = ({ device, open }) => (
+    // <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} maxWidth="sm" fullWidth>
+      <DialogContent>
+      <Stepper activeStep={activeStep}>
+        {steps.map((label, index) => {
+          const stepProps: { completed?: boolean } = {};
+          const labelProps: {
+            optional?: React.ReactNode;
+          } = {};
+          return (
+            <Step key={label} {...stepProps}>
+              <StepLabel {...labelProps}>{label}</StepLabel>
+            </Step>
+          );
+        })}
+      </Stepper>
+          <React.Fragment>
+            <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>{stepTitle(activeStep)}</Typography>
+            <Box sx={{ display: 'flex', justifyContent: activeStep === 0 ? 'flex-start' : 'center' }} >
+              {stepContent(activeStep)}
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
+              <Button
+                color="inherit"
+                disabled={activeStep === 0}
+                onClick={handleBack}
+                sx={{ mr: 1 }}>
+                Back
+              </Button>
+              <Box sx={{ flex: '1 1 auto' }} />
+              {activeStep !== 1 && (
+                <Button
+                onClick={() => {
+                  if (activeStep === steps.length - 1) {
+                    handleCloseDialog2();
+                  }
+                  // else if (activeStep === 1) {
+                  //   // handleSendConfiguration(sessionId, device);
+                  // }
+                  else {
+                    handleNext(sessionId, device);
+                  }
+                  }}>
+                  {/* {activeStep === steps.length - 1 ? 'Finish' : 'Next'} */}
+                  {activeStep === steps.length - 1 ? 'Finish' : activeStep === 1 ? '' : 'Next'}
+                </Button>
+              )}
+            </Box>
+          </React.Fragment>
       </DialogContent>
-      <DialogActions>
-      <Button onClick={handleCloseDialog2} color="primary">
-          Save configuration
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 
@@ -581,7 +720,7 @@ const SessionDetail = () => {
           </Button>
           <DeviceConfigDialog
             open={isDialogOpen2}
-            onClose={handleCloseDialog2}
+            // onClose={handleCloseDialog2}
             device={selectedDevice}
           />
           </div>

@@ -10,11 +10,13 @@ const mqtt = new MQTTServer();
 initDb();
 startDb();
 
-mqtt.subscribe('data/+/msg');
-mqtt.subscribe('data/+/cfg');
-mqtt.subscribe('data/+/announce');
-mqtt.subscribe('data/+/heartbeat');
-console.log("Subscribed to data/+/msg and data/+/cfg");
+// mqtt.subscribe('data/+/msg');
+// mqtt.subscribe('data/+/cfg');
+// mqtt.subscribe('data/+/announce');
+// mqtt.subscribe('data/+/heartbeat');
+// console.log("Subscribed to data/+/msg and data/+/cfg");
+
+mqtt.subscribe('interface/#');
 
 export default mqtt;
 

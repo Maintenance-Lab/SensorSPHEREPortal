@@ -76,10 +76,11 @@ const areAllChildrenSelected = (parent: RenderTree, selectedSet: Set<string>): b
 
 
 export const getOnChange = async (checked: boolean, nodes: RenderTree, allProperties: RenderTree, setSelectedProperties: any) => {
+    console.log("woop woop changing selection")
     const allNodeIds = getAllChild(nodes);
 
     setSelectedProperties((prevSelected) => {
-    let newSelection: Set<string> = new Set();
+    let newSelection: Set<string> = new Set(prevSelected);
 
     if (checked) {
         // Selecting node: Add itself and all its children

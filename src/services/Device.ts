@@ -10,7 +10,10 @@ import { Op } from "sequelize";
 import { get } from "http";
 // import mqtt from "mqtt/*";
 import mqtt from '../index.js';
-import { eventEmitter } from '../services/Mqtt.js';
+// import { eventEmitter } from '../services/Mqtt.js';
+import WebSocket from 'ws';
+
+const socket = new WebSocket('ws://localhost:8080');
 
 // Hulp functies
 const splitProperty = (property: string): any => {
@@ -207,13 +210,21 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
         // Send configuration (selected properties) to gateway
         mqtt.publish("interface/" + deviceId + "/validateConfiguration", JSON.stringify(message));
 
-        eventEmitter.once("frequencyUpdated", async ({ deviceId: updatedDeviceId, frequency }) => {
-            if (updatedDeviceId === deviceId) {
-                console.log("Frequency updated for device: ", frequency, updatedDeviceId);
-                return resolve(frequency)
-            }
-            return resolve("Failed to update frequency");
-        });
+        // eventEmitter.once("frequencyUpdated", async ({ deviceId: updatedDeviceId, frequency }) => {
+        //     if (updatedDeviceId === deviceId) {
+        //         console.log("Frequency updated for device: ", frequency, updatedDeviceId);
+        //         return resolve(frequency)
+        //     }
+        //     return resolve("Failed to update frequency");
+        // });
+
+        socket.onmessage = (event) => {
+            console.log("Received message from server: ", event.data);
+            // let data;
+            const data = JSON.parse(event.data.toString());
+            console.log("Received data from server: ", data.frequency);
+            return resolve(data.frequency);
+        };
     });
 }
 
@@ -221,7 +232,6 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
 
 export const updateSelectedProperties = async (sessionId: number, deviceId: string, selectedProperties: any): Promise<any> => {
     return new Promise(async (resolve, reject) => {
-        // console.log("Updating properties: ", sessionId, deviceId, selectedProperties);
         try {
             // set all properties from device and session to inactive
             const updatedPropertiesFalse = await DeviceSensorConfiguration.update(

@@ -1,8 +1,4 @@
 import { RenderTree } from "./types";
-import React, { useCallback } from "react";
-import { TreeItem } from '@mui/lab'
-import { Checkbox, FormControlLabel } from '@mui/material'
-
 
 export const loadRows = async (properties: any, setAllProperties: any) => {
     const root: RenderTree = {
@@ -10,6 +6,7 @@ export const loadRows = async (properties: any, setAllProperties: any) => {
       name: "All Properties",
       children: Object.keys(properties).reduce((acc, manufacturer) => {
         const { model, properties: modelProperties } = properties[manufacturer];
+        console.log("model: ", model);
 
         // Add each manufacturer as a child to the root
         acc[manufacturer] = {
@@ -112,6 +109,42 @@ export const getOnChange = async (checked: boolean, nodes: RenderTree, allProper
 
     return [...newSelection];
     });
+};
+
+
+export const updateSelection = (selectedIds: string[], allProperties: RenderTree) => {
+    const newSelection = [...selectedIds];
+
+    const checkAndSelectParent = (node: RenderTree) => {
+      if (!node || !node.children) return;
+
+      Object.values(node.children).forEach((child) => {
+        checkAndSelectParent(child);
+
+        if (!child?.children) return;
+
+        // Check if all children of this node are selected
+        const allChildrenSelected = Object.values(child.children).every((c) =>
+          newSelection.includes(c.id)
+        );
+
+        if (allChildrenSelected && !newSelection.includes(child.id)) {
+          newSelection.push(child.id);
+        }
+      });
+    };
+
+    checkAndSelectParent(allProperties);
+
+    const allRootChildrenSelected = Object.values(allProperties.children || {}).every((child) =>
+      newSelection.includes(child.id)
+    );
+
+    if (allRootChildrenSelected && !newSelection.includes(allProperties.id)) {
+      newSelection.push(allProperties.id);
+    }
+
+    return newSelection;
 };
 
 

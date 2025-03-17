@@ -22,11 +22,10 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 // Imports from functions moved to different files
 import { RenderTree } from "./types";
-import { loadRows, getOnChange } from "./treeView";
+import { loadRows, getOnChange, updateSelection } from "./treeView";
 import { fetchDevices, removeDevicesFromSession, sendConfiguration, updateSession, deleteSession, addDevices,
   getDeviceProperties, getSelectedProperties, updateSelectedProperties, fetchAvailableDevices, fetchSession, projectData
  } from "./api";
-
 
 //  Api calls in api.tsx
  const handleAvailableDevices = async (sessionId, setAvailableDevices) => {
@@ -175,50 +174,12 @@ const SessionDetail = () => {
     }, [selectedProperties, getOnChange]
   );
 
-  useEffect(() => {
-    // Simulate a fetch or data processing to set selected properties
-    handleSelectedProperties(selectedDevice);
-  }, [selectedDevice]);
-
-  const deviceProperties = async (deviceId: string) => {
-    const properties = await getDeviceProperties(deviceId);
-    return properties;
-  };
-
-  const updateSelection = (selectedIds: string[], allProperties: RenderTree) => {
-    const newSelection = [...selectedIds];
-
-    const checkAndSelectParent = (node: RenderTree) => {
-      if (!node || !node.children) return;
-
-      Object.values(node.children).forEach((child) => {
-        checkAndSelectParent(child);
-
-        if (!child?.children) return;
-
-        // Check if all children of this node are selected
-        const allChildrenSelected = Object.values(child.children).every((c) =>
-          newSelection.includes(c.id)
-        );
-
-        if (allChildrenSelected && !newSelection.includes(child.id)) {
-          newSelection.push(child.id);
-        }
-      });
-    };
-
-    checkAndSelectParent(allProperties);
-
-    const allRootChildrenSelected = Object.values(allProperties.children || {}).every((child) =>
-      newSelection.includes(child.id)
-    );
-
-    if (allRootChildrenSelected && !newSelection.includes(allProperties.id)) {
-      newSelection.push(allProperties.id);
-    }
-
-    return newSelection;
-  };
+  // useEffect(() => {
+  //   console.log("SELECTED DEVICE", selectedDevice);
+  //   // Simulate a fetch or data processing to set selected properties
+  //   console.log("naar handleSelectedProperties after selectedDevice", selectedDevice);
+  //   handleSelectedProperties(selectedDevice);
+  // }, [selectedDevice]);
 
   const handleSelectedProperties = async (deviceId:string) => {
     const properties = await getSelectedProperties(deviceId, sessionId);
@@ -228,26 +189,19 @@ const SessionDetail = () => {
 
     const allProperties = await loadRows( await getDeviceProperties(deviceId), setAllProperties);
     const updatedSelection = updateSelection(selectedPropertiesIds, allProperties);
-    // console.log("updated selection ------ ", updatedSelection);
 
+    console.log('first in handleSelectedProperties', updatedSelection);
     setSelectedProperties(updatedSelection);
     setLoading(false);
+
+    return updatedSelection;
   }
 
   const handleOpenDialog2 = async (deviceId) => {
     setLoading(true);
     setSelectedDevice(deviceId);
-    const properties = await deviceProperties(deviceId);
-    try {
-      // handleSelectedProperties(deviceId);
-      loadRows(properties, setAllProperties);
-    } catch (error) {
-      console.error('Error fetching device details:', error);
-    } finally {
-      // setLoading(false);
-      setDialogOpen2(true);
-      // console.log("het moet nu open zijn ")
-    }
+    await handleSelectedProperties(deviceId);
+    setDialogOpen2(true);
   };
 
   const handleCloseDialog2 = async () => {
@@ -255,8 +209,6 @@ const SessionDetail = () => {
     setActiveStep(0);
     setMaxHz(null);
   };
-
-  // ---------------------------------------------------------
 
   const handleNext = async (sessionId, selectedDevice) => {
     const newStep = activeStep + 1;
@@ -303,8 +255,6 @@ const SessionDetail = () => {
   };
 
   const stepContent = (index: number) => {
-    // console.log("selected properties ", selectedProperties);
-    // console.log("alle settings: ", open, allProperties, selectedProperties.length, !loading);
     switch (index) {
       case 0:
         return (
@@ -336,28 +286,20 @@ const SessionDetail = () => {
   }
 
   const handleRowClick = async (deviceId: string, event) => {
-    // Prevent row selection
     event.stopPropagation();
-    // Prevent row selection behavior
     setLoading(true);
-
-    // check if selected properties are already set
-    if (selectedProperties.length !== 0) {
-
-      try {
-        await handleOpenDialog2(deviceId);
-      } catch (error) {
-        console.error('Error handling row click:', error);
-      } finally {
-        setLoading(false);
-      }
+    try {
+      await handleOpenDialog2(deviceId);
+    } catch (error) {
+      console.error('Error handling row click:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
 // ---------------------------------------------------------
 
   const DeviceConfigDialog = ({ device, open }) => (
-    // <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
     <Dialog open={open} maxWidth="sm" fullWidth>
       <DialogContent>
       <Stepper activeStep={activeStep}>
@@ -465,7 +407,6 @@ const SessionDetail = () => {
           </Button>
           <DeviceConfigDialog
             open={isDialogOpen2}
-            // onClose={handleCloseDialog2}
             device={selectedDevice}
           />
           </div>

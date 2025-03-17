@@ -63,8 +63,6 @@ export class MQTTServer {
     this.client.on("message", (topic, message) => {
       console.log(`MQTT message received: ${topic} ${message}`);
       MQTTMessage(topic, message);
-      // addDeviceData(topic, message);
-      // mqttEvents.emit("message", topic, message);
     });
   }
 

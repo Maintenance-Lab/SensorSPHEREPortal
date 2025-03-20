@@ -138,6 +138,7 @@ const SessionDetail = () => {
   const [selectedProperties, setSelectedProperties] = useState(['root']);
   const [expandedNodes, setExpandedNodes] = useState<string[]>(['root']);
   const [loading, setLoading] = useState(false);
+  const [isSaveDisabled, setIsSaveDisabled] = useState(false);
 
   const [activeStep, setActiveStep] = React.useState(0);
   const [maxHz, setMaxHz] = React.useState(null);
@@ -146,40 +147,66 @@ const SessionDetail = () => {
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
 
+  const MemoizedTreeItem = React.memo(TreeItem);
   const renderTree = useCallback((nodes: RenderTree) => {
-      if (!nodes || !nodes.id) return null;
-        return (
-          <TreeItem
-          key={nodes.id}
-          nodeId={String(nodes.id)}
-          label={
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={selectedProperties.includes(nodes.id)}
-                  onChange={(event) =>
-                    getOnChange(event.currentTarget.checked, nodes, allProperties, setSelectedProperties)
-                  }
-                />
-              }
-              label={nodes.name}
-            />
-          }
-        >
-          {nodes.children &&
-            Object.values(nodes.children).map((child) => renderTree(child)
-            )}
-        </TreeItem>
-      );
-    }, [selectedProperties, getOnChange]
-  );
+    if (!nodes || !nodes.id) return null;
+    return (
+      <MemoizedTreeItem
+        key={nodes.id}
+        nodeId={String(nodes.id)}
+        label={
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={selectedProperties.includes(nodes.id)}
+                onChange={(event) =>
+                  getOnChange(
+                    event.currentTarget.checked,
+                    nodes,
+                    allProperties,
+                    setSelectedProperties
+                  )
+                }
+              />
+            }
+            label={nodes.name}
+          />
+        }
+      >
+        {nodes.children &&
+          Object.values(nodes.children).map((child) => renderTree(child))}
+      </MemoizedTreeItem>
+    );
+  }, [selectedProperties, getOnChange]);
 
-  // useEffect(() => {
-  //   console.log("SELECTED DEVICE", selectedDevice);
-  //   // Simulate a fetch or data processing to set selected properties
-  //   console.log("naar handleSelectedProperties after selectedDevice", selectedDevice);
-  //   handleSelectedProperties(selectedDevice);
-  // }, [selectedDevice]);
+  // // TODO: misschien alleen row rerenderen ipv hele tree
+  // const renderTree = useCallback((nodes: RenderTree) => {
+  //     if (!nodes || !nodes.id) return null;
+  //       return (
+  //         <TreeItem
+  //         key={nodes.id}
+  //         nodeId={String(nodes.id)}
+  //         label={
+  //           <FormControlLabel
+  //             control={
+  //               <Checkbox
+  //                 checked={selectedProperties.includes(nodes.id)}
+  //                 onChange={(event) =>
+  //                   getOnChange(event.currentTarget.checked, nodes, allProperties, setSelectedProperties)
+  //                 }
+  //               />
+  //             }
+  //             label={nodes.name}
+  //           />
+  //         }
+  //       >
+  //         {nodes.children &&
+  //           Object.values(nodes.children).map((child) => renderTree(child)
+  //           )}
+  //       </TreeItem>
+  //     );
+  //   }, [selectedProperties, getOnChange]
+  // );
 
   const handleSelectedProperties = async (deviceId:string) => {
     const properties = await getSelectedProperties(deviceId, sessionId);
@@ -215,18 +242,18 @@ const SessionDetail = () => {
     setActiveStep(newStep);
 
     if (newStep === 1) {
-      // console.log("step 1 updating selected properties");
       await updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
-      // console.log("selected properties updated, now finding frequency");
       const frequency = await sendConfiguration(sessionId, selectedDevice);
-
-      // console.log("gevonden frequencyyyy letsgo ", frequency);
-
+      console.log("frequency: ", frequency);
       if (frequency !== null) {
+        setIsSaveDisabled(false);
         setMaxHz(frequency);
         // setMaxHz(100);
-        setActiveStep((prev) => prev + 1);
       }
+      else {
+        setIsSaveDisabled(true);
+      }
+      setActiveStep((prev) => prev + 1);
     }
   };
 
@@ -258,7 +285,6 @@ const SessionDetail = () => {
     switch (index) {
       case 0:
         return (
-          open && allProperties && !loading ? (
           <TreeView
             multiSelect={true}
             defaultExpandIcon={<ChevronRightIcon/>}
@@ -270,18 +296,22 @@ const SessionDetail = () => {
             }}>
             {allProperties && renderTree(allProperties)}
           </TreeView>
-        ) : null
       );
       case 1:
         return (
           <CircularProgress />
         )
       case 2:
+        console.log("maxHz: ", maxHz)
         if (maxHz !== null) {
+          console.log("wel wat gevonden")
           return (
             <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>{maxHz} Hz</Typography>)
           }
-        return 'No frequency found';
+        console.log("niks gevonden")
+        return (
+          <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>No frequency found</Typography>
+        )
     }
   }
 
@@ -300,50 +330,72 @@ const SessionDetail = () => {
 // ---------------------------------------------------------
 
   const DeviceConfigDialog = ({ device, open }) => (
-    <Dialog open={open} maxWidth="sm" fullWidth>
-      <DialogContent>
-      <Stepper activeStep={activeStep}>
-        {steps.map((label, index) => {
-          const stepProps: { completed?: boolean } = {};
-          const labelProps: {
-            optional?: React.ReactNode;
-          } = {};
-          return (
-            <Step key={label} {...stepProps}>
-              <StepLabel {...labelProps}>{label}</StepLabel>
-            </Step>
-          );
-        })}
-      </Stepper>
-          <React.Fragment>
-            <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>{stepTitle(activeStep)}</Typography>
-            <Box sx={{ display: 'flex', justifyContent: activeStep === 0 ? 'flex-start' : 'center' }} >
-              {stepContent(activeStep)}
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-              <Button
-                color="inherit"
-                onClick={handleBack}
-                sx={{ mr: 1 }}>
-                Back
-              </Button>
-              <Box sx={{ flex: '1 1 auto' }} />
-              {activeStep !== 1 && (
-                <Button
-                onClick={() => {
-                  if (activeStep === steps.length - 1) {
-                    console.log("closing dialog ook al moet het niet");
-                    handleCloseDialog2();
-                  }
-                  else {
-                    handleNext(sessionId, device);
-                  }
-                  }}>
-                  {activeStep === steps.length - 1 ? 'Finish' : activeStep === 1 ? '' : 'Next'}
-                </Button>
-              )}
-            </Box>
-          </React.Fragment>
+    <Dialog
+      open={open}
+      maxWidth={false} // Prevents default width restrictions
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <DialogContent
+        sx={{width: "50vw", height: "70vh", display: "flex", flexDirection: "column",
+          "& .MuiDialog-paper": { width: "50vw", height: "70vh" }}}
+      >
+        <Box sx={{ position: "sticky", top: 0, backgroundColor: "white", zIndex: 10 }}>
+          <Stepper activeStep={activeStep}>
+            {steps.map((label, index) => {
+              const stepProps: { completed?: boolean } = {};
+              const labelProps: { optional?: React.ReactNode } = {};
+              return (
+                <Step key={label} {...stepProps}>
+                  <StepLabel {...labelProps}>{label}</StepLabel>
+                </Step>
+              );
+            })}
+          </Stepper>
+          <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>
+            {stepTitle(activeStep)}
+          </Typography>
+        </Box>
+
+        {/* Scrollable Content Area */}
+        <Box sx={{ flexGrow: 1, overflowY: "auto", padding: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: activeStep === 0 ? "flex-start" : "center" }}>
+            {stepContent(activeStep)}
+          </Box>
+        </Box>
+
+        {/* Fixed Bottom Box with buttons */}
+        <Box
+          sx={{position: "sticky", bottom: 0, backgroundColor: "white", borderTop: "1px solid #ddd",
+            padding: "8px", display: "flex", justifyContent: "space-between", alignItems: "center",
+            zIndex: 5 }}
+        >
+        <Button
+          color="inherit"
+          onClick={handleBack}
+          sx={{ ml: 1 }}
+        >
+          {activeStep === 0 ? "Cancel" : activeStep === 1 ? "Back" : "Reconfigure"}
+        </Button>
+        {activeStep !== 1 && (
+          <Button
+            disabled={isSaveDisabled && activeStep === steps.length - 1}
+            onClick={() => {
+              if (activeStep === steps.length - 1) {
+                handleCloseDialog2();
+              } else {
+                handleNext(sessionId, device);
+              }
+            }}
+            sx={{ mr: 1 }}
+          >
+            {activeStep === steps.length - 1 ? "Save configuration" : "Next"}
+          </Button>
+        )}
+        </Box>
       </DialogContent>
     </Dialog>
   );

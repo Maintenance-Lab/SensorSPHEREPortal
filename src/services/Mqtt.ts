@@ -43,7 +43,7 @@ export const updateFrequency = async (message: any) => {
         const frequency = message.frequency;
         console.log("In return configurations: ", deviceId, frequency);
 
-        sendFrequency(frequency);
+        sendFrequency(frequency, deviceId);
 
         // Update device with maxHz
         const doc = await Device.update({ maxHz: frequency }, { where: { deviceId } });
@@ -55,16 +55,14 @@ export const updateFrequency = async (message: any) => {
     });
 }
 
-const sendFrequency = (frequency: number) => {
+const sendFrequency = (frequency: number, deviceId: string) => {
     console.log("sending frequency to sockt: ", frequency);
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ frequency }));
+          client.send(JSON.stringify({ frequency: frequency, deviceId: deviceId }));
         }
     });
 }
-
-
 
 
 const addNewEntryToTable = async (table: any, entry: any) => {

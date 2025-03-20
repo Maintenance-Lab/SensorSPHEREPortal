@@ -113,6 +113,8 @@ export const getOnChange = async (checked: boolean, nodes: RenderTree, allProper
 };
 
 
+
+
 export const updateSelection = (selectedIds: string[], allProperties: RenderTree) => {
     const newSelection = [...selectedIds];
 

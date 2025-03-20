@@ -218,12 +218,19 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
         //     return resolve("Failed to update frequency");
         // });
 
+        const timeout = setTimeout(() => {
+            resolve(null);
+        }, 5000);
+
         socket.onmessage = (event) => {
             console.log("Received message from server: ", event.data);
-            // let data;
             const data = JSON.parse(event.data.toString());
-            console.log("Received data from server: ", data.frequency);
-            return resolve(data.frequency);
+
+            if (data.deviceId === deviceId) {
+                console.log("Frequency updated for device: ", data.frequency, data.deviceId);
+                clearTimeout(timeout);
+                return resolve(data.frequency);
+            }
         };
     });
 }

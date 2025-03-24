@@ -208,7 +208,8 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
         console.log("Message: ", message);
 
         // Send configuration (selected properties) to gateway
-        mqtt.publish("interface/" + deviceId + "/validateConfiguration", JSON.stringify(message));
+        const options = { qos: 1 };
+        mqtt.publish("interface/" + deviceId + "/validateConfiguration", JSON.stringify(message), options);
 
         // eventEmitter.once("frequencyUpdated", async ({ deviceId: updatedDeviceId, frequency }) => {
         //     if (updatedDeviceId === deviceId) {

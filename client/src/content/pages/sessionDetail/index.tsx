@@ -19,18 +19,22 @@ import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useMemo } from 'react';
 
 // Imports from functions moved to different files
 import { RenderTree } from "./types";
 import { loadRows, getOnChange, updateSelection } from "./treeView";
 import { fetchDevices, removeDevicesFromSession, sendConfiguration, updateSession, deleteSession, addDevices,
-  getDeviceProperties, getSelectedProperties, updateSelectedProperties, fetchAvailableDevices, fetchSession, projectData
+  getDeviceProperties, getSelectedProperties, updateSelectedProperties, fetchAvailableDevices, fetchSession, projectData,
+  listUnits
  } from "./api";
 
 //  Api calls in api.tsx
  const handleAvailableDevices = async (sessionId, setAvailableDevices) => {
      const availableDevicesData = await fetchAvailableDevices(sessionId);
+     console.log("available devices in handleAvailableDevices", availableDevicesData);
      setAvailableDevices(availableDevicesData);
+    return availableDevicesData;
  };
 
 const handleRemoveDevices = async (sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices) => {
@@ -69,6 +73,8 @@ const handleProjectData = async (projectId, setProjectName) => {
 const fetchSessionDevices = async (sessionId, setDevices) => {
   const devices = await fetchDevices(sessionId);
   setDevices(devices);
+
+  return devices;
 };
 
 
@@ -94,7 +100,6 @@ function ConnectedDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDev
       </Stack>
     </GridToolbarContainer>
   );
-
 }
 
 function AvailableDevicesToolbar({ selectedAddDeviceIds, sessionId, fetchSessionDevices,  setAvailableDevices}) {
@@ -115,7 +120,6 @@ function AvailableDevicesToolbar({ selectedAddDeviceIds, sessionId, fetchSession
       </Stack>
     </GridToolbarContainer>
   );
-
 }
 
 const SessionDetail = () => {
@@ -143,6 +147,9 @@ const SessionDetail = () => {
   const [activeStep, setActiveStep] = React.useState(0);
   const [maxHz, setMaxHz] = React.useState(null);
   const steps = ['Select Properties', 'Find frequency', 'Save configuration'];
+
+  // New rows when new devices added from mqtt
+  const [newDevices, setNewDevices] = useState([]);
 
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
@@ -477,13 +484,13 @@ const SessionDetail = () => {
     maxHz:    device.maxHz,
   }));
 
-  const availableDevicesRows: GridRowsProp = availableDevices.map((device) => ({
+  const availableDevicesRows: GridRowsProp = useMemo(() => availableDevices.map((device) => ({
     name:     device.manufacturerName,
     id:       device.deviceId,
     status:   device.connectStatus,
     battery:  device.batteryLevel,
     maxHz:    device.maxHz,
-  }));
+  })), [newDevices, availableDevices]);
 
   const handleNameChange = async (event) => {
     await updateSession(sessionId, event.target.value, sessionDescription, isArchived);
@@ -515,6 +522,20 @@ const SessionDetail = () => {
     handleAvailableDevices(sessionId, setAvailableDevices);
     handleFetchSession(sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived);
   }, [sessionId]);
+
+  const renewAvailableDevices = async () => {
+    // Opvragen units
+    const devices = await listUnits();
+    console.log("devices", devices);
+
+    await handleAvailableDevices(sessionId, setAvailableDevices);
+    // setAvailableDevices(devices);
+    setNewDevices(devices);
+  }
+
+  useEffect(() => {
+    renewAvailableDevices();
+  }, []);
 
   const ConfirmationDialog = ({ open, onClose, onConfirm, sessionId }) => (
     <Dialog open={open} onClose={onClose}>
@@ -738,7 +759,6 @@ const SessionDetail = () => {
                   sessionId={sessionId}
                   fetchSessionDevices={fetchSessionDevices}
                   setAvailableDevices={setAvailableDevices}
-
                 />}}
                 sx={{
                 "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {

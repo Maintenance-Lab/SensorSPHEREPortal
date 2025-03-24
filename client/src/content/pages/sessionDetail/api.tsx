@@ -88,3 +88,9 @@ export const projectData = async (projectId: number) => {
     if (!res) return [];
     return res;
 }
+
+export const listUnits = async () => {
+    const res = await apiRequest("/api/devices/units", "GET");
+    if (!res) return [];
+    return res;
+}

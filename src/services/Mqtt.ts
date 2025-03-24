@@ -1,6 +1,4 @@
-import Project from "../models/Project.js";
 import Manufacturer from "../models/Manufacturer.js";
-import SensorCategory from "../models/SensorCategory.js";
 import SensorProperty from "../models/SensorProperty.js";
 import DeviceSensorMapping from "../models/mappings/DeviceSensorMapping.js";
 import Device from "../models/Device.js";
@@ -59,7 +57,7 @@ const sendFrequency = (frequency: number, deviceId: string) => {
     console.log("sending frequency to sockt: ", frequency);
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ frequency: frequency, deviceId: deviceId }));
+          client.send(JSON.stringify({ event: "frequency", frequency: frequency, deviceId: deviceId }));
         }
     });
 }
@@ -145,6 +143,13 @@ const addDeviceToDatabase = async (message: any) => {
                 }
             }
         }
+
+        // Send message to all connected clients, so page can reload devices
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({ event: "list_units", units: message.units }));
+            }
+        });
 
         return resolve({ message: "Device created" });
     });

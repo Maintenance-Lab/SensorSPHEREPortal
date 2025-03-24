@@ -2,11 +2,10 @@ import { Router } from 'express';
 import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties, sendConfigurationToDevice } from '../../services/Device.js';
 import SessionDeviceMapping from '../../models/mappings/SessionDeviceMapping.js';
 import { getDeviceProperties } from '../../services/Device.js';
-import Device from '../../models/Device.js';
-import Sensor from '../../models/Sensor.js';
 import SensorProperty from '../../models/SensorProperty.js';
 import DeviceSensorConfiguration from '../../models/DeviceSensorConfiguration.js';
 import DeviceSensorMapping from '../../models/mappings/DeviceSensorMapping.js';
+import { listUnits } from '../../services/Device.js';
 
 import { Op } from 'sequelize';
 
@@ -143,9 +142,6 @@ router.put("/sendConfiguration", async (req, res) => {
     //     ]
     // }
 
-    // chain of responsibility / catalog of design patters
-    // step navigation bootstrap
-
     const sessionId = req.body.sessionId;
     const deviceId = req.body.selectedDevice;
     console.log("sendConfiguration: ", sessionId, deviceId);
@@ -161,6 +157,13 @@ router.put("/sendConfiguration", async (req, res) => {
     });
 });
 
+router.get("/units", async (_, res) => {
+    console.log("in units");
+    const docs = await listUnits();
+    if (!docs) return res.status(404).json({ message: "Units not found" });
+    console.log("units: ", docs);
+    return res.json(docs);
+});
 
 
 

@@ -1,14 +1,9 @@
 import Device from "../models/Device.js";
-import Project from "../models/Project.js";
-import Manufacturer from "../models/Manufacturer.js";
 import SessionDeviceMapping from "../models/mappings/SessionDeviceMapping.js";
 import DeviceSensorMapping from "../models/mappings/DeviceSensorMapping.js";
 import SensorProperty from "../models/SensorProperty.js";
-import Sensor from "../models/Sensor.js";
 import DeviceSensorConfiguration from "../models/DeviceSensorConfiguration.js";
 import { Op } from "sequelize";
-import { get } from "http";
-// import mqtt from "mqtt/*";
 import mqtt from '../index.js';
 // import { eventEmitter } from '../services/Mqtt.js';
 import WebSocket from 'ws';
@@ -194,6 +189,26 @@ export const getSelectedProperties = async (sessionId: number, deviceId: string)
     });
 }
 
+export const listUnits = async (): Promise<any> => {
+    return new Promise(async (resolve, _) => {
+        const message = {
+            "command": "list_units",
+            "timestamp": Date.now()
+        };
+        const options = { qos: 1 };
+        mqtt.publish("interface/listUnits", JSON.stringify(message), options);
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data.toString());
+
+            if (data.event === "list_units") {
+                return resolve(data.units);
+            }
+        }
+    });
+}
+
+
 export const sendConfigurationToDevice = async (sessionId: number, deviceId: any): Promise<any> => {
     return new Promise(async (resolve, reject) => {
         console.log("Sending configuration to device: ", sessionId, deviceId);
@@ -227,7 +242,7 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
             console.log("Received message from server: ", event.data);
             const data = JSON.parse(event.data.toString());
 
-            if (data.deviceId === deviceId) {
+            if (data.event === "frequency" && data.deviceId === deviceId) {
                 console.log("Frequency updated for device: ", data.frequency, data.deviceId);
                 clearTimeout(timeout);
                 return resolve(data.frequency);

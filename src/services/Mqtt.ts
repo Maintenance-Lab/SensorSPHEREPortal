@@ -1,13 +1,14 @@
-import Project from "../models/Project.js";
 import Manufacturer from "../models/Manufacturer.js";
-import SensorCategory from "../models/SensorCategory.js";
 import SensorProperty from "../models/SensorProperty.js";
 import DeviceSensorMapping from "../models/mappings/DeviceSensorMapping.js";
 import Device from "../models/Device.js";
 import Sensor from "../models/Sensor.js";
 import { EventEmitter } from "events";
+import WebSocket from 'ws';
 
-export const eventEmitter = new EventEmitter();
+// Set up WebSocket server
+const wss = new WebSocket.Server({ port: 8080 });
+// export const eventEmitter = new EventEmitter();
 
 export const MQTTMessage = async (topic: string, message: Buffer) => {
     return new Promise(async (resolve, _) => {
@@ -44,15 +45,27 @@ export const updateFrequency = async (message: any) => {
         const frequency = message.frequency;
         console.log("In return configurations: ", deviceId, frequency);
 
+        sendFrequency(frequency, deviceId);
+
         // Update device with maxHz
         const doc = await Device.update({ maxHz: frequency }, { where: { deviceId } });
         if (!doc) return reject(new Error("Error updating entry"));
 
-        eventEmitter.emit("frequencyUpdated", { deviceId, frequency });
-        console.log("event emitted");
+        // eventEmitter.emit("frequencyUpdated", { deviceId, frequency });
+        // console.log("event emitted");
         return resolve({ message: "Frequency updated" });
     });
 }
+
+const sendFrequency = (frequency: number, deviceId: string) => {
+    console.log("sending frequency to sockt: ", frequency);
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({ event: "frequency", frequency: frequency, deviceId: deviceId }));
+        }
+    });
+}
+
 
 const addNewEntryToTable = async (table: any, entry: any) => {
     return new Promise(async (resolve, reject) => {
@@ -134,6 +147,13 @@ const addDeviceToDatabase = async (message: any) => {
                 }
             }
         }
+
+        // Send message to all connected clients, so page can reload devices
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({ event: "list_units", units: message.units }));
+            }
+        });
 
         return resolve({ message: "Device created" });
     });

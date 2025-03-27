@@ -1,16 +1,14 @@
 import Device from "../models/Device.js";
-import Project from "../models/Project.js";
-import Manufacturer from "../models/Manufacturer.js";
 import SessionDeviceMapping from "../models/mappings/SessionDeviceMapping.js";
 import DeviceSensorMapping from "../models/mappings/DeviceSensorMapping.js";
 import SensorProperty from "../models/SensorProperty.js";
-import Sensor from "../models/Sensor.js";
 import DeviceSensorConfiguration from "../models/DeviceSensorConfiguration.js";
 import { Op } from "sequelize";
-import { get } from "http";
-// import mqtt from "mqtt/*";
 import mqtt from '../index.js';
-import { eventEmitter } from '../services/Mqtt.js';
+// import { eventEmitter } from '../services/Mqtt.js';
+import WebSocket from 'ws';
+
+const socket = new WebSocket('ws://localhost:8080');
 
 // Hulp functies
 const splitProperty = (property: string): any => {
@@ -95,45 +93,39 @@ export const getAllOldDevices = async (): Promise<Device[]> => {
 // Devices mapped to session
 export const getDevicesMappedToSession = async (sessionId: number): Promise<Device[]> => {
     return new Promise(async (resolve) => {
-        console.log("in getAllDevicesMappedToSession");
-
-        // Fetch all devices
-        const devices = await Device.findAll();
-        if (!devices) return resolve([]);
-
-        // Get the session-device mappings for the given sessionId
-        const mapping = await SessionDeviceMapping.findAll({ where: { sessionId } });
-        if (!mapping) return resolve([]);
-
-        // Extract the deviceIds from the mappings
-        const deviceIds = mapping.map((m) => m.deviceId);
-
-        // Filter the devices to get only those that are mapped to the given session
-        const results = devices.filter((device) => deviceIds.includes(device.deviceId));
-        if (!results) return resolve([]);
-
-        return resolve(results);
-    });
+        // Inner join
+        const result = await Device.findAll({
+            include: {
+                model: SessionDeviceMapping,
+                where: { sessionId: sessionId },
+                required: true 
+            }});
+        if (!result) return resolve([]);
+    
+        return resolve(result);
+      });
 }
 
 // Devices not mapped to session
+// ***TODO?: BETTER DESCRIPTIVE FUNCTION NAME***
 export const getAllDevicesSession = async (sessionId: number): Promise<Device[]> => {
     return new Promise(async (resolve) => {
-        console.log("in getAllDevices");;
-
-        const devices = await Device.findAll();
-        if (!devices) return resolve([]);
-
-        const mapping = await SessionDeviceMapping.findAll({ where: { sessionId } });
-        if (!mapping) return resolve([]);
-
-        const deviceIds = mapping.map((m) => m.deviceId);
-        const results = devices.filter((device) => !deviceIds.includes(device.deviceId));
-        if (!results) return resolve([]);
-
-        // return all devices that are not mapped with session
-        return resolve(results);
-    });
+        // Left join with null check(to minus the inner join)
+        const result = await Device.findAll({
+            include: [{
+                model: SessionDeviceMapping,
+                where: { sessionId: sessionId },
+                required: false
+            }],
+            where: {
+                '$sessionDeviceMappings.sessionId$': null
+            }
+        });
+        if (!result) return resolve([]);
+        console.log("in getAllDevicesSession");
+        console.log("SessionId: ", sessionId);    
+        return resolve(result);
+      });
 }
 
 export const getDeviceById = async (id: string): Promise<Device> => {
@@ -191,6 +183,26 @@ export const getSelectedProperties = async (sessionId: number, deviceId: string)
     });
 }
 
+export const listUnits = async (): Promise<any> => {
+    return new Promise(async (resolve, _) => {
+        const message = {
+            "command": "list_units",
+            "timestamp": Date.now()
+        };
+        const options = { qos: 1 };
+        mqtt.publish("interface/listUnits", JSON.stringify(message), options);
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data.toString());
+
+            if (data.event === "list_units") {
+                return resolve(data.units);
+            }
+        }
+    });
+}
+
+
 export const sendConfigurationToDevice = async (sessionId: number, deviceId: any): Promise<any> => {
     return new Promise(async (resolve, reject) => {
         console.log("Sending configuration to device: ", sessionId, deviceId);
@@ -205,15 +217,31 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
         console.log("Message: ", message);
 
         // Send configuration (selected properties) to gateway
-        mqtt.publish("interface/" + deviceId + "/validateConfiguration", JSON.stringify(message));
+        const options = { qos: 1 };
+        mqtt.publish("interface/" + deviceId + "/validateConfiguration", JSON.stringify(message), options);
 
-        eventEmitter.once("frequencyUpdated", async ({ deviceId: updatedDeviceId, frequency }) => {
-            if (updatedDeviceId === deviceId) {
-                console.log("Frequency updated for device: ", frequency, updatedDeviceId);
-                return resolve(frequency)
+        // eventEmitter.once("frequencyUpdated", async ({ deviceId: updatedDeviceId, frequency }) => {
+        //     if (updatedDeviceId === deviceId) {
+        //         console.log("Frequency updated for device: ", frequency, updatedDeviceId);
+        //         return resolve(frequency)
+        //     }
+        //     return resolve("Failed to update frequency");
+        // });
+
+        const timeout = setTimeout(() => {
+            resolve(null);
+        }, 5000);
+
+        socket.onmessage = (event) => {
+            console.log("Received message from server: ", event.data);
+            const data = JSON.parse(event.data.toString());
+
+            if (data.event === "frequency" && data.deviceId === deviceId) {
+                console.log("Frequency updated for device: ", data.frequency, data.deviceId);
+                clearTimeout(timeout);
+                return resolve(data.frequency);
             }
-            return resolve("Failed to update frequency");
-        });
+        };
     });
 }
 
@@ -221,7 +249,6 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
 
 export const updateSelectedProperties = async (sessionId: number, deviceId: string, selectedProperties: any): Promise<any> => {
     return new Promise(async (resolve, reject) => {
-        // console.log("Updating properties: ", sessionId, deviceId, selectedProperties);
         try {
             // set all properties from device and session to inactive
             const updatedPropertiesFalse = await DeviceSensorConfiguration.update(

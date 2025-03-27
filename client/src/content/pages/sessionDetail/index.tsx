@@ -37,20 +37,20 @@ import { fetchDevices, removeDevicesFromSession, sendConfiguration, updateSessio
     return availableDevicesData;
  };
 
-const handleRemoveDevices = async (sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices) => {
+const handleRemoveDevices = async (sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices) => {
   const success = await removeDevicesFromSession(sessionId, selectedDeviceIds);
 
   if (success) {
-    fetchSessionDevices();
+    fetchSessionDevices(sessionId, setDevices);
     handleAvailableDevices(sessionId, setAvailableDevices);
   }
 };
 
-const handleAddDevices = async (sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices) => {
+const handleAddDevices = async (sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices) => {
   const success = await addDevices(sessionId, selectedAddDeviceIds);
 
   if (success) {
-    fetchSessionDevices();
+    fetchSessionDevices(sessionId, setDevices);
     handleAvailableDevices(sessionId, setAvailableDevices);
   }
 }
@@ -78,7 +78,7 @@ const fetchSessionDevices = async (sessionId, setDevices) => {
 };
 
 
-function ConnectedDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDevices, setAvailableDevices, devices }) {
+function ConnectedDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDevices, setAvailableDevices, setDevices }) {
   const activeSelection = selectedDeviceIds.length > 0;
 
   return (
@@ -92,7 +92,7 @@ function ConnectedDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDev
             startIcon={<DeleteOutlineOutlinedIcon />}
             disabled={!activeSelection}
             // onClick={() => removeDevicesFromSession(sessionId, selectedDeviceIds, fetchSessionDevices, fetchAvailableDevices)}
-            onClick={() => handleRemoveDevices(sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices)}
+            onClick={() => handleRemoveDevices(sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices)}
 
           >
             Remove Devices from Session
@@ -102,7 +102,7 @@ function ConnectedDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDev
   );
 }
 
-function AvailableDevicesToolbar({ selectedAddDeviceIds, sessionId, fetchSessionDevices,  setAvailableDevices}) {
+function AvailableDevicesToolbar({ selectedAddDeviceIds, sessionId, fetchSessionDevices,  setAvailableDevices, setDevices}) {
   const activeSelection = selectedAddDeviceIds.length > 0;
 
   return (
@@ -112,7 +112,7 @@ function AvailableDevicesToolbar({ selectedAddDeviceIds, sessionId, fetchSession
         <Button
           variant="outlined"
           startIcon={<Devices />}
-          onClick={() =>  handleAddDevices(sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices)}
+          onClick={() =>  handleAddDevices(sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices)}
           disabled={!activeSelection}
         >
           Add Devices to Session
@@ -537,6 +537,9 @@ const SessionDetail = () => {
     renewAvailableDevices();
   }, []);
 
+  console.log("availableDevices", availableDevices);
+  console.log("devices", devices);
+
   const ConfirmationDialog = ({ open, onClose, onConfirm, sessionId }) => (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Confirm Deletion</DialogTitle>
@@ -728,7 +731,7 @@ const SessionDetail = () => {
                   sessionId={sessionId}
                   fetchSessionDevices={fetchSessionDevices}
                   setAvailableDevices={setAvailableDevices}
-                  devices={devices}
+                  setDevices={setDevices}
                 />}}
               sx={{
                 "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {
@@ -759,6 +762,7 @@ const SessionDetail = () => {
                   sessionId={sessionId}
                   fetchSessionDevices={fetchSessionDevices}
                   setAvailableDevices={setAvailableDevices}
+                  setDevices={setDevices}
                 />}}
                 sx={{
                 "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {

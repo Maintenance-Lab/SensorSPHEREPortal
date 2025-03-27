@@ -93,45 +93,39 @@ export const getAllOldDevices = async (): Promise<Device[]> => {
 // Devices mapped to session
 export const getDevicesMappedToSession = async (sessionId: number): Promise<Device[]> => {
     return new Promise(async (resolve) => {
-        console.log("in getAllDevicesMappedToSession");
-
-        // Fetch all devices
-        const devices = await Device.findAll();
-        if (!devices) return resolve([]);
-
-        // Get the session-device mappings for the given sessionId
-        const mapping = await SessionDeviceMapping.findAll({ where: { sessionId } });
-        if (!mapping) return resolve([]);
-
-        // Extract the deviceIds from the mappings
-        const deviceIds = mapping.map((m) => m.deviceId);
-
-        // Filter the devices to get only those that are mapped to the given session
-        const results = devices.filter((device) => deviceIds.includes(device.deviceId));
-        if (!results) return resolve([]);
-
-        return resolve(results);
-    });
+        // Inner join
+        const result = await Device.findAll({
+            include: {
+                model: SessionDeviceMapping,
+                where: { sessionId: sessionId },
+                required: true 
+            }});
+        if (!result) return resolve([]);
+    
+        return resolve(result);
+      });
 }
 
 // Devices not mapped to session
+// ***TODO?: BETTER DESCRIPTIVE FUNCTION NAME***
 export const getAllDevicesSession = async (sessionId: number): Promise<Device[]> => {
     return new Promise(async (resolve) => {
-        console.log("in getAllDevices");;
-
-        const devices = await Device.findAll();
-        if (!devices) return resolve([]);
-
-        const mapping = await SessionDeviceMapping.findAll({ where: { sessionId } });
-        if (!mapping) return resolve([]);
-
-        const deviceIds = mapping.map((m) => m.deviceId);
-        const results = devices.filter((device) => !deviceIds.includes(device.deviceId));
-        if (!results) return resolve([]);
-
-        // return all devices that are not mapped with session
-        return resolve(results);
-    });
+        // Left join with null check(to minus the inner join)
+        const result = await Device.findAll({
+            include: [{
+                model: SessionDeviceMapping,
+                where: { sessionId: sessionId },
+                required: false
+            }],
+            where: {
+                '$sessionDeviceMappings.sessionId$': null
+            }
+        });
+        if (!result) return resolve([]);
+        console.log("in getAllDevicesSession");
+        console.log("SessionId: ", sessionId);    
+        return resolve(result);
+      });
 }
 
 export const getDeviceById = async (id: string): Promise<Device> => {

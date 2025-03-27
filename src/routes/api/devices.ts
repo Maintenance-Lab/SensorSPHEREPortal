@@ -10,10 +10,6 @@ import DeviceSensorMapping from '../../models/mappings/DeviceSensorMapping.js';
 
 import { Op } from 'sequelize';
 
-
-
-
-
 const router = Router()
 
 router.get("/all", async (_, res) => {

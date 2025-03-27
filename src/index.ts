@@ -11,6 +11,7 @@ initDb();
 startDb();
 
 mqtt.subscribe('interface/listUnitsResult');
+mqtt.subscribe('interface/+/validateConfigurationResult');
 console.log("Subscribed to interface/listUnitsResult and interface/<mac_addr>/validateConfigurationResult");
 
 export default mqtt;

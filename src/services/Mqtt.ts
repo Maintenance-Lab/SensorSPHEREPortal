@@ -15,19 +15,23 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
         console.log("TPOIC PARTS: ", topicParts);
         message = JSON.parse(message.toString());
 
-        if (topicParts.length  === 2) {
+        if (topic == "interface/listUnitsResult") {
+        // if (topicParts.length  === 2) {
             // Devices that are online
             if (topicParts[1] === 'listUnitsResult') {
                 console.log("Got message on listUnitsResult topic");
                 addDeviceToDatabase(message);
             }
         }
-        else if (topicParts.length === 3) {
-            // Configuration result
-            if (topicParts[2] === 'validateConfigurationResult') {
-                console.log("Got message on validateConfigurationResult topic");
-                updateFrequency(message);
-            }
+        else if (topicParts[0] == "interface" && topicParts[2] == "validateConfigurationResult") {
+            // const unitMAC = topicParts[1];
+            updateFrequency(message);
+        // else if (topicParts.length === 3) {
+        //     // Configuration result
+        //     if (topicParts[2] === 'validateConfigurationResult') {
+        //         console.log("Got message on validateConfigurationResult topic");
+        //         updateFrequency(message);
+        //     }
         }
 
         return resolve({ message: "Message received" });

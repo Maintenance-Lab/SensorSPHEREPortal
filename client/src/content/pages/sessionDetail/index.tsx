@@ -31,9 +31,8 @@ import { fetchDevices, removeDevicesFromSession, sendConfiguration, updateSessio
 
 //  Api calls in api.tsx
  const handleAvailableDevices = async (sessionId, setAvailableDevices) => {
-     const availableDevicesData = await fetchAvailableDevices(sessionId);
-     console.log("available devices in handleAvailableDevices", availableDevicesData);
-     setAvailableDevices(availableDevicesData);
+    const availableDevicesData = await fetchAvailableDevices(sessionId);
+    setAvailableDevices(availableDevicesData);
     return availableDevicesData;
  };
 
@@ -149,7 +148,7 @@ const SessionDetail = () => {
   const steps = ['Select Properties', 'Find frequency', 'Save configuration'];
 
   // New rows when new devices added from mqtt
-  const [newDevices, setNewDevices] = useState([]);
+  // const [newDevices, setNewDevices] = useState([]);
 
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
@@ -186,35 +185,6 @@ const SessionDetail = () => {
     );
   }, [selectedProperties, getOnChange]);
 
-  // // TODO: misschien alleen row rerenderen ipv hele tree
-  // const renderTree = useCallback((nodes: RenderTree) => {
-  //     if (!nodes || !nodes.id) return null;
-  //       return (
-  //         <TreeItem
-  //         key={nodes.id}
-  //         nodeId={String(nodes.id)}
-  //         label={
-  //           <FormControlLabel
-  //             control={
-  //               <Checkbox
-  //                 checked={selectedProperties.includes(nodes.id)}
-  //                 onChange={(event) =>
-  //                   getOnChange(event.currentTarget.checked, nodes, allProperties, setSelectedProperties)
-  //                 }
-  //               />
-  //             }
-  //             label={nodes.name}
-  //           />
-  //         }
-  //       >
-  //         {nodes.children &&
-  //           Object.values(nodes.children).map((child) => renderTree(child)
-  //           )}
-  //       </TreeItem>
-  //     );
-  //   }, [selectedProperties, getOnChange]
-  // );
-
   const handleSelectedProperties = async (deviceId:string) => {
     const properties = await getSelectedProperties(deviceId, sessionId);
     const selectedPropertiesIds = properties.map((property) => {
@@ -224,7 +194,6 @@ const SessionDetail = () => {
     const allProperties = await loadRows( await getDeviceProperties(deviceId), setAllProperties);
     const updatedSelection = updateSelection(selectedPropertiesIds, allProperties);
 
-    console.log('first in handleSelectedProperties', updatedSelection);
     setSelectedProperties(updatedSelection);
     setLoading(false);
 
@@ -251,11 +220,9 @@ const SessionDetail = () => {
     if (newStep === 1) {
       await updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
       const frequency = await sendConfiguration(sessionId, selectedDevice);
-      console.log("frequency: ", frequency);
       if (frequency !== null) {
         setIsSaveDisabled(false);
         setMaxHz(frequency);
-        // setMaxHz(100);
       }
       else {
         setIsSaveDisabled(true);
@@ -309,13 +276,10 @@ const SessionDetail = () => {
           <CircularProgress />
         )
       case 2:
-        console.log("maxHz: ", maxHz)
         if (maxHz !== null) {
-          console.log("wel wat gevonden")
           return (
             <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>{maxHz} Hz</Typography>)
           }
-        console.log("niks gevonden")
         return (
           <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>No frequency found</Typography>
         )
@@ -328,18 +292,17 @@ const SessionDetail = () => {
     try {
       await handleOpenDialog2(deviceId);
     } catch (error) {
-      console.error('Error handling row click:', error);
+      console.error("Error opening dialog:", error);
     } finally {
       setLoading(false);
     }
   };
 
-// ---------------------------------------------------------
-
-  const DeviceConfigDialog = ({ device, open }) => (
+  const DeviceConfigDialog = ({ device, open }) => {
+    return (
     <Dialog
       open={open}
-      maxWidth={false} // Prevents default width restrictions
+      maxWidth={false}
       sx={{
         display: "flex",
         alignItems: "center",
@@ -366,15 +329,11 @@ const SessionDetail = () => {
             {stepTitle(activeStep)}
           </Typography>
         </Box>
-
-        {/* Scrollable Content Area */}
         <Box sx={{ flexGrow: 1, overflowY: "auto", padding: 2 }}>
           <Box sx={{ display: "flex", justifyContent: activeStep === 0 ? "flex-start" : "center" }}>
             {stepContent(activeStep)}
           </Box>
         </Box>
-
-        {/* Fixed Bottom Box with buttons */}
         <Box
           sx={{position: "sticky", bottom: 0, backgroundColor: "white", borderTop: "1px solid #ddd",
             padding: "8px", display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -405,7 +364,8 @@ const SessionDetail = () => {
         </Box>
       </DialogContent>
     </Dialog>
-  );
+  )
+};
 
   const devicesColumns: GridColDef[] = [
     {
@@ -452,10 +412,11 @@ const SessionDetail = () => {
             color="primary"
             size="small"
             onClick={(event) => {
-              // event.stopPropagation();
-              // handleOpenDialog2(params.row.id);
+              event.stopPropagation();
 
+              // handleOpenDialog2(params.row.id);
               handleRowClick(params.row.id, event);
+              // DeviceConfigDialog({ device: params.row.id, open: isDialogOpen2 });
             }}
             sx={{
               textTransform: "none", fontWeight: "bold", display: "flex",
@@ -464,10 +425,18 @@ const SessionDetail = () => {
           >
             Configure
           </Button>
-          <DeviceConfigDialog
+          {/* <DeviceConfigDialog
             open={isDialogOpen2}
             device={selectedDevice}
-          />
+          /> */}
+
+          {/* only open dialog on selection row */}
+          { selectedDevice === params.row.id && open && loading === false && (
+            <DeviceConfigDialog
+              open={isDialogOpen2}
+              device={selectedDevice}
+            />
+          )}
           </div>
         </Box>
       ),
@@ -476,21 +445,58 @@ const SessionDetail = () => {
     }
   ];
 
-  const devicesRows: GridRowsProp = devices.map((device) => ({
-    name:     device.manufacturerName,
-    id:       device.deviceId,
-    status:   device.connectStatus,
-    battery:  device.batteryLevel,
-    maxHz:    device.maxHz,
-  }));
+  const availableDevicesColumns: GridColDef[] = [
+    {
+      field: 'id', headerName: 'MAC Address', renderCell: (params) => (
+      <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}
+        onClick={(event) => {
+        event.stopPropagation();
+      }}>
+        {params.value}
+      </Link>
+      ),
+      flex: 1
+    },
+    {
+      field: 'battery', headerName: 'Battery', renderCell: (params) => (
+        <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
+          <BatteryFullIcon fontSize="small" />
+          {params.value ? (
+            <Typography variant="inherit">{params.value}%</Typography>
+          ) : (
+            <Typography variant="inherit">?</Typography>
+          )}
+        </Stack>
+      ),
+      flex: 1
+    },
+    { field: 'status', headerName: 'Status', flex: 1 },
+    { field: 'maxHz', headerName: 'Max Hz', flex: 1 },
+  ];
 
-  const availableDevicesRows: GridRowsProp = useMemo(() => availableDevices.map((device) => ({
-    name:     device.manufacturerName,
-    id:       device.deviceId,
-    status:   device.connectStatus,
-    battery:  device.batteryLevel,
-    maxHz:    device.maxHz,
-  })), [newDevices, availableDevices]);
+  const devicesRows: GridRowsProp = useMemo(() => {
+    const rows = devices.map((device) => ({
+      name:     device.manufacturerName,
+      id:       device.deviceId,
+      status:   device.connectStatus,
+      battery:  device.batteryLevel,
+      maxHz:    device.maxHz,
+    }));
+
+    return rows;
+  }, [devices]);
+
+  const availableDevicesRows: GridRowsProp = useMemo(() => {
+    const rows = availableDevices.map((device) => ({
+      name:     device.manufacturerName,
+      id:       device.deviceId,
+      status:   device.connectStatus,
+      battery:  device.batteryLevel,
+      maxHz:    device.maxHz,
+    }));
+
+    return rows;
+}, [availableDevices]);
 
   const handleNameChange = async (event) => {
     await updateSession(sessionId, event.target.value, sessionDescription, isArchived);
@@ -524,21 +530,15 @@ const SessionDetail = () => {
   }, [sessionId]);
 
   const renewAvailableDevices = async () => {
-    // Opvragen units
-    const devices = await listUnits();
-    console.log("devices", devices);
-
+    // // Opvragen units
+    // console.log("wrm vragen we deze nu op")
+    // const devices = await listUnits();
     await handleAvailableDevices(sessionId, setAvailableDevices);
-    // setAvailableDevices(devices);
-    setNewDevices(devices);
   }
 
   useEffect(() => {
     renewAvailableDevices();
   }, []);
-
-  console.log("availableDevices", availableDevices);
-  console.log("devices", devices);
 
   const ConfirmationDialog = ({ open, onClose, onConfirm, sessionId }) => (
     <Dialog open={open} onClose={onClose}>
@@ -717,6 +717,7 @@ const SessionDetail = () => {
               columns={devicesColumns}
               density='compact'
               autoHeight
+              pageSizeOptions={[10]}
               initialState={{
                 pagination: { paginationModel: { pageSize: 10 } },
                 sorting: {
@@ -751,7 +752,7 @@ const SessionDetail = () => {
           <Paper>
             <DataGrid
               rows={availableDevicesRows}
-              columns={devicesColumns}
+              columns={availableDevicesColumns}
               density='compact'
               autoHeight
               checkboxSelection

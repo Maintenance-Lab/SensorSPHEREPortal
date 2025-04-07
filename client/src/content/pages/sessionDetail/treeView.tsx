@@ -6,7 +6,6 @@ export const loadRows = async (properties: any, setAllProperties: any) => {
       name: "All Properties",
       children: Object.keys(properties).reduce((acc, manufacturer) => {
         const { model, properties: modelProperties } = properties[manufacturer];
-        console.log("model: ", model);
 
         // Add each manufacturer as a child to the root
         acc[manufacturer] = {
@@ -76,7 +75,6 @@ const areAllChildrenSelected = (parent: RenderTree, selectedSet: Set<string>): b
 
 
 export const getOnChange = async (checked: boolean, nodes: RenderTree, allProperties: RenderTree, setSelectedProperties: any) => {
-    console.log("woop woop changing selection")
     const allNodeIds = getAllChild(nodes);
 
     setSelectedProperties((prevSelected) => {

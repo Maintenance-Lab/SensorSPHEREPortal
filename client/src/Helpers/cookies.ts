@@ -3,15 +3,15 @@ import { jwtDecode } from 'jwt-decode';
 
 const getUser = () => {
   const cookies = new Cookies();
-  console.log("Cookies", cookies);
+  // console.log("Cookies", cookies);
   const token = cookies.get('token');
-  console.log("Token", token);
+  // console.log("Token", token);
 
   if (!token) return null;
   try {
-    console.log("Decoding token");
+    // console.log("Decoding token");
     const decoded: any = jwtDecode(token);
-    console.log('decoded:', decoded, decoded.name)
+    // console.log('decoded:', decoded, decoded.name)
     if (!decoded || !decoded.name) {
       cookies.remove('token');
       console.log('removed');

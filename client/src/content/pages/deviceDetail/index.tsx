@@ -141,6 +141,7 @@ const DeviceDetail = () => {
             <DataGrid
               rows={sensorRows}
               columns={sensorColumns}
+              pageSizeOptions={[25]}
               initialState={{
                 pagination: { paginationModel: { pageSize: 25 } },
               }}

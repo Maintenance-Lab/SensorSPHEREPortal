@@ -119,51 +119,51 @@ c.executemany('''
     VALUES (?, ?, ?)
 ''', sensors)
 
-c.execute('DELETE FROM SensorProperty;')
-# Create dummy sensor properties
-sensor_properties = [
-    ("MaxTemperature", "TempSensor", "SensorCo"),
-    ("MinTemperature", "TempSensor", "SensorCo"),
-    ("PressureLevel", "PressureSensor", "DeviceInc"),
-    ("HumidityLevel", "HumiditySensor", "GadgetWorks")
-]
+# c.execute('DELETE FROM SensorProperty;')
+# # Create dummy sensor properties
+# sensor_properties = [
+#     ("MaxTemperature", "TempSensor", "SensorCo"),
+#     ("MinTemperature", "TempSensor", "SensorCo"),
+#     ("PressureLevel", "PressureSensor", "DeviceInc"),
+#     ("HumidityLevel", "HumiditySensor", "GadgetWorks")
+# ]
 
-c.executemany('''
-    INSERT INTO SensorProperty (propertyName, model, manufacturerName)
-    VALUES (?, ?, ?)
-''', sensor_properties)
+# c.executemany('''
+#     INSERT INTO SensorProperty (propertyName, model, manufacturerName)
+#     VALUES (?, ?, ?)
+# ''', sensor_properties)
 
-c.execute('DELETE FROM DeviceSensorMapping;')
-# Create mappings between sessions and devices
-session_device_mappings = [
-    (1, 1, 1300),  # Session 1 is using Device 1
-    (1, 2, 1300),  # Session 1 is using Device 2
-    (2, 3, 2324),  # Session 2 is using Device 3
-    (3, 4, 2423),  # Session 3 is using Device 4
-    (4, 1, 6969),  # Session 4 is using Device 1
-    (4, 5, 21),  # Session 4 is using Device 5
-    (5, 2, 1111)   # Session 5 is using Device 2
-]
+# c.execute('DELETE FROM DeviceSensorMapping;')
+# # Create mappings between sessions and devices
+# session_device_mappings = [
+#     (1, 1, 1300),  # Session 1 is using Device 1
+#     (1, 2, 1300),  # Session 1 is using Device 2
+#     (2, 3, 2324),  # Session 2 is using Device 3
+#     (3, 4, 2423),  # Session 3 is using Device 4
+#     (4, 1, 6969),  # Session 4 is using Device 1
+#     (4, 5, 21),  # Session 4 is using Device 5
+#     (5, 2, 1111)   # Session 5 is using Device 2
+# ]
 
-c.executemany('''
-    INSERT INTO SessionDeviceMapping (sessionId, deviceId, configuredHz)
-    VALUES (?, ?, ?)
-''', session_device_mappings)
+# c.executemany('''
+#     INSERT INTO SessionDeviceMapping (sessionId, deviceId, configuredHz)
+#     VALUES (?, ?, ?)
+# ''', session_device_mappings)
 
-c.execute('DELETE FROM DeviceSensorMapping;')
-# Create mappings between devices and sensors
-device_sensor_mappings = [
-    (1, "TempSensor", "SensorCo", 1),  # Device 1 is mapped to TempSensor
-    (2, "PressureSensor", "DeviceInc", 1),  # Device 2 is mapped to PressureSensor
-    (3, "HumiditySensor", "GadgetWorks", 1),  # Device 3 is mapped to HumiditySensor
-    (4, "TempSensor", "SensorCol", 1),  # Device 4 is mapped to TempSensor
-    (5, "PressureSensor", "DeviceIncs", 1)   # Device 5 is mapped to PressureSensor
-]
+# c.execute('DELETE FROM DeviceSensorMapping;')
+# # Create mappings between devices and sensors
+# device_sensor_mappings = [
+#     (1, "TempSensor", "SensorCo", 1),  # Device 1 is mapped to TempSensor
+#     (2, "PressureSensor", "DeviceInc", 1),  # Device 2 is mapped to PressureSensor
+#     (3, "HumiditySensor", "GadgetWorks", 1),  # Device 3 is mapped to HumiditySensor
+#     (4, "TempSensor", "SensorCol", 1),  # Device 4 is mapped to TempSensor
+#     (5, "PressureSensor", "DeviceIncs", 1)   # Device 5 is mapped to PressureSensor
+# ]
 
-c.executemany('''
-    INSERT INTO DeviceSensorMapping (deviceId, model, manufacturerName, channel)
-    VALUES (?, ?, ?, ?)
-''', device_sensor_mappings)
+# c.executemany('''
+#     INSERT INTO DeviceSensorMapping (deviceId, model, manufacturerName, channel)
+#     VALUES (?, ?, ?, ?)
+# ''', device_sensor_mappings)
 
 c.execute('DELETE FROM AccountProjectMapping;')
 # Create mappings between accounts and projects

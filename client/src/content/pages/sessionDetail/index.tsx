@@ -144,7 +144,7 @@ const SessionDetail = () => {
   const [isSaveDisabled, setIsSaveDisabled] = useState(false);
 
   const [activeStep, setActiveStep] = React.useState(0);
-  const [maxHz, setMaxHz] = React.useState(null);
+  const [sampleRate, setSampleRate] = React.useState(null);
   const steps = ['Select Properties', 'Find frequency', 'Save configuration'];
 
   // New rows when new devices added from mqtt
@@ -188,7 +188,7 @@ const SessionDetail = () => {
   const handleSelectedProperties = async (deviceId:string) => {
     const properties = await getSelectedProperties(deviceId, sessionId);
     const selectedPropertiesIds = properties.map((property) => {
-      return `${property.manufacturerName}:${property.model}:${property.propertyName}`;
+      return `${property.manufacturer}:${property.model}:${property.propertyName}`;
     });
 
     const allProperties = await loadRows( await getDeviceProperties(deviceId), setAllProperties);
@@ -210,7 +210,7 @@ const SessionDetail = () => {
   const handleCloseDialog2 = async () => {
     setDialogOpen2(false);
     setActiveStep(0);
-    setMaxHz(null);
+    sampleRate(null);
   };
 
   const handleNext = async (sessionId, selectedDevice) => {
@@ -222,7 +222,7 @@ const SessionDetail = () => {
       const frequency = await sendConfiguration(sessionId, selectedDevice);
       if (frequency !== null) {
         setIsSaveDisabled(false);
-        setMaxHz(frequency);
+        sampleRate(frequency);
       }
       else {
         setIsSaveDisabled(true);
@@ -236,7 +236,7 @@ const SessionDetail = () => {
       await handleCloseDialog2();
     }
     else if (activeStep === 2) {
-      setMaxHz(null);
+      sampleRate(null);
       setActiveStep(0);
     }
     else {
@@ -276,9 +276,9 @@ const SessionDetail = () => {
           <CircularProgress />
         )
       case 2:
-        if (maxHz !== null) {
+        if (sampleRate !== null) {
           return (
-            <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>{maxHz} Hz</Typography>)
+            <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>{sampleRate} Hz</Typography>)
           }
         return (
           <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>No frequency found</Typography>
@@ -393,7 +393,7 @@ const SessionDetail = () => {
       flex: 1
     },
     { field: 'status', headerName: 'Status', flex: 1 },
-    { field: 'maxHz', headerName: 'Max Hz', flex: 1 },
+    { field: 'sampleRate', headerName: 'Max Hz', flex: 1 },
     {
       field: "configureButton", headerName: "", width: 150, renderCell: (params) => (
         <Box
@@ -471,16 +471,16 @@ const SessionDetail = () => {
       flex: 1
     },
     { field: 'status', headerName: 'Status', flex: 1 },
-    { field: 'maxHz', headerName: 'Max Hz', flex: 1 },
+    { field: 'sampleRate', headerName: 'Max Hz', flex: 1 },
   ];
 
   const devicesRows: GridRowsProp = useMemo(() => {
     const rows = devices.map((device) => ({
-      name:     device.manufacturerName,
+      name:     device.manufacturer,
       id:       device.deviceId,
       status:   device.connectStatus,
       battery:  device.batteryLevel,
-      maxHz:    device.maxHz,
+      sampleRate:    device.sampleRate,
     }));
 
     return rows;
@@ -488,11 +488,11 @@ const SessionDetail = () => {
 
   const availableDevicesRows: GridRowsProp = useMemo(() => {
     const rows = availableDevices.map((device) => ({
-      name:     device.manufacturerName,
+      name:     device.manufacturer,
       id:       device.deviceId,
       status:   device.connectStatus,
       battery:  device.batteryLevel,
-      maxHz:    device.maxHz,
+      sampleRate:    device.sampleRate,
     }));
 
     return rows;

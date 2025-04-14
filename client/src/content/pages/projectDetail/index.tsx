@@ -773,26 +773,33 @@ const ProjectDetail = () => {
 
   const fetchProject = async () => {
     console.log('Fetching project 2', projectId);
-    const res = await fetch('/api/projects/id/' + projectId, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
+    try {
+      const res = await fetch('/api/projects/id/' + projectId, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         credentials: 'include'
+      });
+
+      if (!res.ok) {
+        console.error('Failed to fetch data');
+        return [];
       }
-    });
 
-    if (!res.ok) {
-      console.error('Failed to fetch data');
-      return [];
+      const data = await res.json();
+      console.log("RES: ", res);
+      console.log("DAT ~~~~: ", data);
+      setProjectName(data.name);
+      setProjectDescription(data.description);
+      setIsArchived(data.archived);
+
+      console.log("data: ", data.name, data.description, data.archived);
+      console.log("PROJECT ID: ", projectId);
     }
-
-    const data = await res.json();
-    console.log("DATA: ", data);
-    setProjectName(data.name);
-    setProjectDescription(data.description);
-    setIsArchived(data.archived);
-
-    console.log("PROJECT ID: ", projectId);
+    catch (error) {
+      console.error('Failed to fetch data', error);
+    }
 
 
     // if (data.sensorUnits.length === 0) {

@@ -1,6 +1,5 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../sequelize.js';
-// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class Project extends Model {
     projectId: number;
@@ -9,7 +8,7 @@ class Project extends Model {
     meta: object;
     createdAt: Date;
     lastActive: Date;
-    // archived: boolean;
+    archived: boolean;
 }
 
 Project.init({
@@ -19,7 +18,7 @@ Project.init({
     meta: { type: DataTypes.JSON, defaultValue: {} },
     createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     lastActive: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-    // archived: { type: DataTypes.BOOLEAN, defaultValue: false },
+    archived: { type: DataTypes.BOOLEAN, defaultValue: false },
 },
 {
     sequelize,

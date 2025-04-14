@@ -33,10 +33,10 @@
 // //         const messageJSON = JSON.parse(messageString);
 
 // //         // if manufacturer not in database, add it
-// //         const manufacturer = await Manufacturer.findOne({ where: { manufacturerName: messageJSON.manufacturerName } });
+// //         const manufacturer = await Manufacturer.findOne({ where: { manufacturer: messageJSON.manufacturer } });
 // //         if (!manufacturer) {
 // //             try {
-// //                 const doc = await Manufacturer.create({ manufacturerName: messageJSON.manufacturerName });
+// //                 const doc = await Manufacturer.create({ manufacturer: messageJSON.manufacturer });
 
 // //                 if (!doc) return res.status(500).json({ error: "Error creating manufacturer" });
 // //                 console.log("Manufacturer created: ", doc);
@@ -54,7 +54,7 @@
 // //             console.log("messageJSON: ", messageJSON);
 // //             try {
 // //                 const doc = await Device.create(messageJSON);
-// //                 // const doc = await Device.create({deviceId: 50, manufacturerName: messageJSON.manufacturerName, connectStatus: connectStatus, batteryLevel: batteryLevel, maxHz: maxHz});
+// //                 // const doc = await Device.create({deviceId: 50, manufacturer: messageJSON.manufacturer, connectStatus: connectStatus, batteryLevel: batteryLevel, sampleRate: sampleRate});
 
 // //                 if (!doc) return res.status(500).json({ error: "Error creating device" });
 // //                 console.log("Device created: ", doc);

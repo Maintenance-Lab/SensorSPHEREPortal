@@ -120,6 +120,7 @@ router.get("/id/:projectId", async (req, res) => {
 
     const mapping = await AccountProjectMapping.findOne({ where: { accountId: account.accountId, projectId: id } });
     if (!mapping) return res.status(401).json({ message: "Unauthorized" });
+    console.log("we gaan returnen")
 
     return res.json(doc);
   }

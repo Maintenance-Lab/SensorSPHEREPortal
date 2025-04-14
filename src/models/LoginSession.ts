@@ -1,7 +1,6 @@
 import Account from './Account.js';
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../sequelize.js';
-// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class LoginSession extends Model {
   loginSessionId: number;

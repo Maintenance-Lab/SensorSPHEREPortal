@@ -58,7 +58,7 @@ const DeviceDetail = () => {
 
   const handleDeviceDetails = async (deviceId: string) => {
     const data = await getDeviceDetails(deviceId);
-    setDeviceManufacturer(data.manufacturerName);
+    setDeviceManufacturer(data.manufacturer);
     setDeviceBatteryLevel(data.batteryLevel);
   };
 

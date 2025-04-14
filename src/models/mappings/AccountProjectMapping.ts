@@ -1,6 +1,8 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../../sequelize.js';
-// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
+
+import Account from '../Account.js';
+import Project from '../Project.js';
 
 class AccountProjectMapping extends Model {
     accountId: number;
@@ -9,8 +11,8 @@ class AccountProjectMapping extends Model {
 }
 
 AccountProjectMapping.init({
-    accountId: { type: DataTypes.INTEGER, references: { model: 'Account', key: 'accountId' }, primaryKey: true, allowNull: false },
-    projectId: { type: DataTypes.INTEGER, references: { model: 'Project', key: 'projectId' }, primaryKey: true, allowNull: false },
+    accountId: { type: DataTypes.INTEGER, references: { model: Account, key: 'accountId' }, primaryKey: true, allowNull: false },
+    projectId: { type: DataTypes.INTEGER, references: { model: Project, key: 'projectId' }, primaryKey: true, allowNull: false },
     status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'active', validate: { isIn: [['active', 'archived', 'pending']] } },
 }, {
     sequelize,

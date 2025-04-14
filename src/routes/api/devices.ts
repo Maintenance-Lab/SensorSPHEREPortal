@@ -2,12 +2,10 @@ import { Router } from 'express';
 import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties, sendConfigurationToDevice } from '../../services/Device.js';
 import SessionDeviceMapping from '../../models/mappings/SessionDeviceMapping.js';
 import { getDeviceProperties } from '../../services/Device.js';
-import SensorProperty from '../../models/SensorProperty.js';
+import SensorProperty from '../../models/Property.js';
 import DeviceSensorConfiguration from '../../models/DeviceSensorConfiguration.js';
-import DeviceSensorMapping from '../../models/mappings/DeviceSensorMapping.js';
+import DeviceModuleMapping from '../../models/mappings/DeviceModuleMapping.js';
 import { listUnits } from '../../services/Device.js';
-
-import { Op } from 'sequelize';
 
 const router = Router()
 
@@ -50,7 +48,7 @@ router.post("/addToSession", async (req, res) => {
 
         // add to DeviceSensorConfiguration
         try {
-            const sensorsDeviceMappings = await DeviceSensorMapping.findAll({ where: { deviceId: deviceIds } });
+            const sensorsDeviceMappings = await DeviceModuleMapping.findAll({ where: { deviceId: deviceIds } });
             if (!sensorsDeviceMappings) return res.status(404).json({ message: "Sensors not found" });
 
             const sensorProperties = await Promise.all(sensorsDeviceMappings.map(async (sensorMapping) => {
@@ -58,18 +56,21 @@ router.post("/addToSession", async (req, res) => {
                 const sensorPropertiesForDevice = await SensorProperty.findAll({
                     where: {
                         model: sensorMapping.dataValues.model,
-                        manufacturerName: sensorMapping.dataValues.manufacturerName
+                        manufacturer: sensorMapping.dataValues.manufacturer
                     },
                     attributes: ['propertyName'],
                 });
+
+                // TODO: AANPASSEN MET NIEUWE MODELLEN
 
                 // Get properties for sensor
                 const properties = sensorPropertiesForDevice.map((property) => ({
                     sessionId: sessionId,
                     deviceId: sensorMapping.dataValues.deviceId,
                     model: sensorMapping.dataValues.model,
-                    manufacturerName: sensorMapping.dataValues.manufacturerName,
-                    propertyName: property.propertyName,
+                    manufacturer: sensorMapping.dataValues.manufacturer,
+                    // propertyName: property.propertyName,
+                    propertyName: property.name,
                 }));
 
                 return properties;

@@ -98,7 +98,7 @@ const devicesColumns: GridColDef[] = [
     )
   },
   { field: 'status', headerName: 'Status', flex: 1 },
-  { field: 'maxHz', headerName: 'Max Hz', flex: 1 },
+  { field: 'sampleRate', headerName: 'Max Hz', flex: 1 },
 ];
 
 function CustomDevicesToolbar({ selectedDeviceIds, handleOpenAddToProjects }) {
@@ -218,11 +218,11 @@ const Devices = () => {
 
 
   const devicesRows: GridRowsProp = devices.map((device) => ({
-    name: device.manufacturerName,
+    name: device.manufacturer,
     id: device.deviceId,
     status: device.connectStatus,
     battery: device.batteryLevel,
-    maxHz: device.maxHz,
+    sampleRate: device.sampleRate,
   }));
 
   return (

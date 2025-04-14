@@ -1,13 +1,12 @@
-import { Sequelize, DataTypes, Model } from 'sequelize'
+import { DataTypes, Model } from 'sequelize'
 import sequelize from '../sequelize.js';
-// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class Manufacturer extends Model {
-    manufacturerName: string;
+    manufacturer: string;
 }
 
 Manufacturer.init({
-    manufacturerName: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
+    manufacturer: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
 },
 {
     sequelize,

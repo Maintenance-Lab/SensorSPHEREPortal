@@ -1,17 +1,11 @@
 import mqtt from 'mqtt';
 import { MQTT_URI } from '../config.js';
-import { EventEmitter } from 'events';
 import Device from '../models/Device.js';
 import Manufacturer from '../models/Manufacturer.js';
 import { MQTTMessage } from '../services/Mqtt.js';
-import { backgroundHeartBeatStart } from '../services/Heartbeat.js';
-
-// export const mqttEvents = new EventEmitter();
 
 export class MQTTServer {
   private client: mqtt.MqttClient;
-
-  heartBeatId = backgroundHeartBeatStart()
 
   constructor() {
     console.log("MQTT_URI", MQTT_URI);

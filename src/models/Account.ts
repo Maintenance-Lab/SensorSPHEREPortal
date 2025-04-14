@@ -1,6 +1,5 @@
-import { Sequelize, DataTypes, Model } from 'sequelize'
+import { DataTypes, Model } from 'sequelize'
 import sequelize from '../sequelize.js';
-// const sequelize = require('../database/sequelize.js');
 
 class Account extends Model {
     accountId: number;

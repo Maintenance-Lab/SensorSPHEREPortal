@@ -1,6 +1,8 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../../sequelize.js';
-// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
+
+import Device from '../Device.js';
+import Session from '../Session.js';
 
 class SessionDeviceMapping extends Model {
     sessionId: number;
@@ -9,8 +11,8 @@ class SessionDeviceMapping extends Model {
 }
 
 SessionDeviceMapping.init({
-    sessionId: { type: DataTypes.INTEGER, primaryKey: true,  references: { model: 'Session', key: 'sessionId' }, allowNull: false },
-    deviceId: { type: DataTypes.STRING, primaryKey: true, references: { model: 'Device', key: 'deviceId' },  allowNull: false, validate: { is: /^([0-9A-F][0-9A-F]:){5}([0-9A-F][0-9A-F])$/i } },
+    sessionId: { type: DataTypes.INTEGER, primaryKey: true,  references: { model: Session, key: 'sessionId' }, allowNull: false },
+    deviceId: { type: DataTypes.STRING, primaryKey: true, references: { model: Device, key: 'deviceId' },  allowNull: false, validate: { is: /^([0-9A-F][0-9A-F]:){5}([0-9A-F][0-9A-F])$/i } },
     configuredHz: { type: DataTypes.INTEGER, allowNull: false },
 }, {
     sequelize,

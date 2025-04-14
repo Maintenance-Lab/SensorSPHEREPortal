@@ -1,7 +1,6 @@
-import { Sequelize, DataTypes, Model } from 'sequelize'
+import { DataTypes, Model } from 'sequelize'
 import sequelize from '../sequelize.js';
 import Project from './Project.js';
-// const sequelize = new Sequelize({dialect: 'sqlite', storage: ':memory:'});
 
 class Session extends Model {
     sessionId: number;
@@ -20,7 +19,6 @@ class Session extends Model {
 
 Session.init({
     sessionId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-    // DeviceId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Device, key: 'DeviceId' } },
     name: { type: DataTypes.STRING, allowNull: false },
     description: { type: DataTypes.STRING},
     status: { type: DataTypes.STRING, allowNull: false, validate: { isIn: [['inactive', 'active', 'activeScheduled', 'paused', 'completed', 'error', 'scheduled', 'stopped']] }, defaultValue: 'inactive' },

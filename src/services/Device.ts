@@ -1,68 +1,122 @@
 import Device from "../models/Device.js";
 import SessionDeviceMapping from "../models/mappings/SessionDeviceMapping.js";
-import DeviceSensorMapping from "../models/mappings/DeviceSensorMapping.js";
-import SensorProperty from "../models/SensorProperty.js";
+import DeviceModuleMapping from "../models/mappings/DeviceModuleMapping.js";
+import Property from "../models/Property.js";
 import DeviceSensorConfiguration from "../models/DeviceSensorConfiguration.js";
 import { Op } from "sequelize";
 import mqtt from '../index.js';
-// import { eventEmitter } from '../services/Mqtt.js';
 import WebSocket from 'ws';
+
+import { FIRMWARE } from '../config.js';
 
 const socket = new WebSocket('ws://localhost:8080');
 
 // Hulp functies
 const splitProperty = (property: string): any => {
-    const manufacturerName = property.split(":")[0];
+    const manufacturer = property.split(":")[0];
     const model = property.split(":")[1];
     const propertyName = property.split(":")[2];
 
-    return { manufacturerName, model, propertyName };
+    return { manufacturer, model, propertyName };
 }
-
 const createConfigMessage = async (deviceProperties: any) => {
+    console.log("DEVICE PROPERTIES: ", deviceProperties);
     const deviceId = deviceProperties.deviceId;
-    const manufacturers = deviceProperties.manufacturers;
+    // const manufacturers = deviceProperties.manufacturers;
+    const models = deviceProperties.models;
     const message: any = {
         "mac": deviceId,
-        "sensors": []
+        "firmware": FIRMWARE,
+        "sensorModules": []
     };
 
-    for (const manufacturerName in manufacturers) {
-        const models = manufacturers[manufacturerName];
+    // for (const manufacturer in manufacturers) {
+    //     const models = manufacturers[manufacturer];
 
-        // Iterate through each model of the manufacturer
-        for (const model in models) {
-            const properties = models[model];
+    //     // Iterate through each model of the manufacturer
+    //     for (const model in models) {
+    //         const properties = models[model];
+    //         const sensor = {
+    //             "manufacturer": manufacturer,
+    //             "model": model,
+    //             "properties": properties,
+    //         };
+    //         message.sensors.push(sensor);
+    //     }
+    // }
+
+    // Iterate through each manufacturer in models
+    for (const model in models) {
+        // { "moduleName": "IMU",
+		// 	"manufacturer": "M5Stack",
+		// 	"sensors": [
+		// 		{ "sensorType": "MPU6886",
+		// 			"measurements": [
+		// 				{ "type": "acceleration_x", "active": true },
+		// 				{ "type": "acceleration_y", "active": true },
+		// 				{ "type": "acceleration_z", "active": true },
+		// 				{ "type": "gyroscope_x", "active": true },
+		// 				{ "type": "gyroscope_y", "active": true },
+		// 				{ "type": "gyroscope_z", "active": true },
+		// 				{ "type": "temperature", "active": false }
+		// 			]
+		// 		}
+		// 	]
+		//  }
+
+
+
+
+        // Iterate through each manufacturer of the model
+        const manufacturers = models[model];
+        for (const manufacturer in manufacturers) {
+            const properties = manufacturers[manufacturer];
             const sensor = {
-                "manufacturer": manufacturerName,
+                "manufacturer": manufacturer,
                 "model": model,
                 "properties": properties,
             };
-            message.sensors.push(sensor);
+            message.sensorModules.push(sensor);
         }
     }
+    console.log("message: ", message);
+
     return message;
 };
 
 const createPropertyDict = async (properties: any[], deviceId: string) => {
+    // manufacturers: { M5stack: { ENV3: [Array] }, M5stack5: { ENV35: [Array] } }
+
     let deviceProperties: any = { deviceId };
-    let manufacturers: any = {};
+    // let manufacturers: any = {};
+    let models: any = {};
 
     properties.forEach((property: any) => {
-        const { manufacturerName, model, propertyName } = property;
+        const { manufacturer, model, propertyName } = property;
 
-        // If the manufacturer doesn't exist in the manufacturers object, create it
-        if (!manufacturers[manufacturerName]) {
-            manufacturers[manufacturerName] = {};
+        // If model doesn't exist in the models object, create it
+        if (!models[model]) {
+            models[model] = {};
         }
-        // If the model doesn't exist under the manufacturer, create it
-        if (!manufacturers[manufacturerName][model]) {
-            manufacturers[manufacturerName][model] = [];
+        // If the manufacturer doesn't exist under the model, create it
+        if (!models[model][manufacturer]) {
+            models[model][manufacturer] = [];
         }
-        manufacturers[manufacturerName][model].push(propertyName);
+        models[model][manufacturer].push(propertyName);
+
+        // // If the manufacturer doesn't exist in the manufacturers object, create it
+        // if (!manufacturers[manufacturer]) {
+        //     manufacturers[manufacturer] = {};
+        // }
+        // // If the model doesn't exist under the manufacturer, create it
+        // if (!manufacturers[manufacturer][model]) {
+        //     manufacturers[manufacturer][model] = [];
+        // }
+        // manufacturers[manufacturer][model].push(propertyName);
     });
 
-    deviceProperties.manufacturers = manufacturers;
+    deviceProperties.models = models;
+    // deviceProperties.manufacturers = manufacturers;
     console.log("deviceProperties: ", deviceProperties);
     return deviceProperties;
 };
@@ -98,10 +152,10 @@ export const getDevicesMappedToSession = async (sessionId: number): Promise<Devi
             include: {
                 model: SessionDeviceMapping,
                 where: { sessionId: sessionId },
-                required: true 
+                required: true
             }});
         if (!result) return resolve([]);
-    
+
         return resolve(result);
       });
 }
@@ -123,7 +177,7 @@ export const getAllDevicesSession = async (sessionId: number): Promise<Device[]>
         });
         if (!result) return resolve([]);
         console.log("in getAllDevicesSession");
-        console.log("SessionId: ", sessionId);    
+        console.log("SessionId: ", sessionId);
         return resolve(result);
       });
 }
@@ -137,32 +191,51 @@ export const getDeviceById = async (id: string): Promise<Device> => {
     });
 }
 
-export const getDeviceProperties = async (deviceId: string): Promise<SensorProperty[]> => {
+// TODO: check if this is still works. Only used for input of loadRows/TreeView as far as i know
+export const getDeviceProperties = async (deviceId: string) => {
     return new Promise(async (resolve, reject) => {
 
-        const sensors = await DeviceSensorMapping.findAll({ where: { deviceId: deviceId } });
-        if (!sensors) return reject(new Error("Sensors not found"));
+        // const sensors = await DeviceModuleMapping.findAll({ where: { deviceId: deviceId } });
+        // if (!sensors) return reject(new Error("Sensors not found"));
 
-        const properties:any = {};
-        for (const sensor of sensors) {
-            const model = sensor.dataValues.model;
-            const manufacturerName = sensor.dataValues.manufacturerName;
-            const sensorProperties = await SensorProperty.findAll({ where: { model: model, manufacturerName: manufacturerName } });
-            if (!sensorProperties) return reject(new Error("Sensor properties not found"));
+        // const properties:any = {};
+        // for (const sensor of sensors) {
+        //     const model = sensor.dataValues.model;
+        //     const manufacturer = sensor.dataValues.manufacturer;
+        //     const sensorProperties = await SensorProperty.findAll({ where: { model: model, manufacturer: manufacturer } });
+        //     if (!sensorProperties) return reject(new Error("Sensor properties not found"));
 
-            if (!properties[manufacturerName]) {
-                properties[manufacturerName] = {model: [], properties: []};
-            }
+        //     if (!properties[manufacturer]) {
+        //         properties[manufacturer] = {model: [], properties: []};
+        //     }
 
-            // add the model to the dict
-            properties[manufacturerName]["model"].push(model);
+        //     // add the model to the dict
+        //     properties[manufacturer]["model"].push(model);
 
-            // add the properties to the dict
-            const propertyNames = sensorProperties.map((sp) => sp.propertyName);
-            properties[manufacturerName]["properties"].push(propertyNames);
-        }
+        //     // add the properties to the dict
+        //     const propertyNames = sensorProperties.map((sp) => sp.propertyName);
+        //     properties[manufacturer]["properties"].push(propertyNames);
+        // }
 
-        // console.log("properties: ", properties);
+        // // console.log("properties: ", properties);
+        // return resolve(properties);
+
+        // Find properties via DeviceSensorconfiguration
+
+        const properties = await DeviceSensorConfiguration.findAll({
+            where: { deviceid: deviceId },
+            include: [
+              {
+                model: Property,
+                as: 'SensorProperty',
+              },
+              {
+                model: Property,
+                as: 'SensorType',
+              }
+            ]
+          });
+        if (!properties) return reject(new Error("Properties not found"));
         return resolve(properties);
     });;
 };
@@ -185,16 +258,19 @@ export const getSelectedProperties = async (sessionId: number, deviceId: string)
 
 export const listUnits = async (): Promise<any> => {
     return new Promise(async (resolve, _) => {
+        // const message = {
+        //     "command": "list_units",
+        //     "timestamp": Date.now()
+        // };
+
         const message = {
-            "command": "list_units",
-            "timestamp": Date.now()
-        };
-        const options = { qos: 1 };
+            "filterActiveOnly": true,
+        }
+        const options = { qos: 2 };
         mqtt.publish("interface/listUnits", JSON.stringify(message), options);
 
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data.toString());
-
             if (data.event === "list_units") {
                 return resolve(data.units);
             }
@@ -214,19 +290,11 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
         if (!deviceProperties) return reject(new Error("Failed to create property dictionary"));
 
         const message = await createConfigMessage(deviceProperties);
-        console.log("Message: ", message);
+        console.log("Message ----------------- : \n", message);
 
         // Send configuration (selected properties) to gateway
-        const options = { qos: 1 };
+        const options = { qos: 2 };
         mqtt.publish("interface/" + deviceId + "/validateConfiguration", JSON.stringify(message), options);
-
-        // eventEmitter.once("frequencyUpdated", async ({ deviceId: updatedDeviceId, frequency }) => {
-        //     if (updatedDeviceId === deviceId) {
-        //         console.log("Frequency updated for device: ", frequency, updatedDeviceId);
-        //         return resolve(frequency)
-        //     }
-        //     return resolve("Failed to update frequency");
-        // });
 
         const timeout = setTimeout(() => {
             resolve(null);
@@ -259,12 +327,12 @@ export const updateSelectedProperties = async (sessionId: number, deviceId: stri
 
             for (const p of selectedProperties) {
                 if (p.split(":").length === 3) {
-                    const { manufacturerName, model, propertyName } = splitProperty(p);
+                    const { manufacturer, model, propertyName } = splitProperty(p);
 
                     // set all selected properties to active
                     const updatedPropertyTrue = await DeviceSensorConfiguration.update(
                         { active: true },
-                        { where: { sessionId: sessionId, deviceId: deviceId, manufacturerName: manufacturerName, model: model, propertyName: propertyName } }
+                        { where: { sessionId: sessionId, deviceId: deviceId, manufacturer: manufacturer, model: model, propertyName: propertyName } }
                     );
                     if (!updatedPropertyTrue) return reject(new Error("Failed to update properties"));
                 }

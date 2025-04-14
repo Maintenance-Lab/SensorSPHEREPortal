@@ -44,7 +44,8 @@ const initDb = () => {
                 description TEXT,
                 meta TEXT,
                 createdAt DATE,
-                lastActive DATE
+                lastActive DATE,
+                archived BOOLEAN
             );
         `);
 
@@ -95,13 +96,15 @@ const initDb = () => {
         db.run(`
             CREATE TABLE IF NOT EXISTS Device (
                 deviceId TEXT NOT NULL,
-                manufacturerName TEXT,
+                manufacturer TEXT,
+                model TEXT,
                 connectStatus TEXT,
                 batteryLevel INTEGER,
-                maxHz INTEGER,
+                sampleRate INTEGER,
                 lastHeartbeat DATE,
                 PRIMARY KEY (deviceId),
-                FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName)
+                FOREIGN KEY (manufacturer) REFERENCES Manufacturer(manufacturer)
+                FOREIGN KEY (model) REFERENCES DeviceModel(model)
             );
         `);
 
@@ -110,63 +113,53 @@ const initDb = () => {
             CREATE TABLE IF NOT EXISTS DeviceSensorConfiguration (
                 sessionId INTEGER NOT NULL,
                 deviceId INTEGER NOT NULL,
-                propertyName TEXT NOT NULL,
-                model TEXT NOT NULL,
-                manufacturerName TEXT NOT NULL,
+                sensorProperty TEXT NOT NULL,
+                sensorType TEXT NOT NULL,
                 active BOOLEAN NOT NULL,
-                PRIMARY KEY (sessionId, deviceId, propertyName, model, manufacturerName),
+                PRIMARY KEY (sessionId, deviceId, sensorProperty, sensorType),
                 FOREIGN KEY (sessionId, deviceId) REFERENCES SessionDeviceMapping(sessionId, deviceId),
-                FOREIGN KEY (propertyName, model, manufacturerName) REFERENCES SensorProperty(propertyName, model, manufacturerName)
+                FOREIGN KEY (sensorProperty, sensorType) REFERENCES Property(name, sensorType)
             );
         `);
 
-        // DeviceSensorMapping
+        // DeviceModuleMapping
         db.run(`
-            CREATE TABLE IF NOT EXISTS DeviceSensorMapping (
+            CREATE TABLE IF NOT EXISTS DeviceModuleMapping (
                 deviceId INTEGER,
-                model TEXT,
-                manufacturerName TEXT,
-                channel INTEGER,
-                PRIMARY KEY (deviceId, model, manufacturerName, channel),
+                moduleName TEXT,
+                moduleManufacturer TEXT,
+                sensorType TEXT,
+                PRIMARY KEY (deviceId, moduleName, moduleManufacturer, sensorType),
                 FOREIGN KEY (deviceId) REFERENCES Device(deviceId),
-                FOREIGN KEY (model, manufacturerName) REFERENCES Sensor(model, manufacturerName)
+                FOREIGN KEY (moduleName, moduleManufacturer, sensorType) REFERENCES Module(name, manufacturer, sensorType)
             );
         `);
 
         // Sensor table
         db.run(`
             CREATE TABLE IF NOT EXISTS Sensor (
-                model TEXT NOT NULL,
-                manufacturerName TEXT NOT NULL,
-                categoryName TEXT,
-                PRIMARY KEY (model, manufacturerName),
-                FOREIGN KEY (manufacturerName) REFERENCES Manufacturer(manufacturerName),
-                FOREIGN KEY (categoryName) REFERENCES SensorCategory(categoryName)
+                type TEXT NOT NULL PRIMARY KEY
                 );
-        `);
-
-        // SensorCategory table
-        db.run(`
-            CREATE TABLE IF NOT EXISTS SensorCategory (
-                categoryName TEXT PRIMARY KEY
-            );
         `);
 
         // SensorProperty table
         db.run(`
-            CREATE TABLE IF NOT EXISTS SensorProperty (
-                propertyName TEXT,
-                model TEXT,
-                manufacturerName TEXT,
-                PRIMARY KEY (propertyName, model, manufacturerName),
-                FOREIGN KEY (manufacturerName, model) REFERENCES Sensor(manufacturerName, model)
+            CREATE TABLE IF NOT EXISTS Property (
+                name TEXT,
+                sensortype TEXT,
+                unit TEXT,
+                accuracy FLOAT,
+                rangeMin FLOAT,
+                rangeMax FLOAT,
+                PRIMARY KEY (name, sensortype),
+                FOREIGN KEY (sensortype) REFERENCES Sensor(type)
             );
         `);
 
         // Manufacturer table
         db.run(`
             CREATE TABLE IF NOT EXISTS Manufacturer (
-                manufacturerName TEXT PRIMARY KEY
+                manufacturer TEXT PRIMARY KEY
             );
         `);
 
@@ -180,6 +173,25 @@ const initDb = () => {
                 ip TEXT,
                 token TEXT,
                 FOREIGN KEY (Account) REFERENCES Account(accountId)
+            );
+        `);
+
+        // DeviceModel table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS DeviceModel (
+                model TEXT PRIMARY KEY NOT NULL
+            );
+        `);
+
+        // Module table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS Module (
+                name TEXT NOT NULL,
+                manufacturer TEXT NOT NULL,
+                sensorType TEXT NOT NULL,
+                PRIMARY KEY (name, manufacturer, sensorType),
+                FOREIGN KEY (manufacturer) REFERENCES Manufacturer(manufacturer),
+                FOREIGN KEY (sensorType) REFERENCES Sensor(type)
             );
         `);
     })

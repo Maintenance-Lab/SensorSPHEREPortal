@@ -11,3 +11,4 @@ exports.JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "";
 exports.JWT_EXPIRESIN = parseInt(process.env.JWT_EXPIRESIN || "7200");
 exports.MQTT_URI = process.env.MQTT_URI || "";
 exports.SQLITE_PATH = process.env.SQLITE_PATH || "";
+exports.FIRMWARE=process.env.FIRMWARE || "";

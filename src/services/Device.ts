@@ -192,37 +192,8 @@ export const getDeviceById = async (id: string): Promise<Device> => {
     });
 }
 
-// TODO: check if this is still works. Only used for input of loadRows/TreeView as far as i know
 export const getDeviceProperties = async (deviceId: string) => {
     return new Promise(async (resolve, reject) => {
-
-        // const sensors = await DeviceModuleMapping.findAll({ where: { deviceId: deviceId } });
-        // if (!sensors) return reject(new Error("Sensors not found"));
-
-        // const properties:any = {};
-        // for (const sensor of sensors) {
-        //     const model = sensor.dataValues.model;
-        //     const manufacturer = sensor.dataValues.manufacturer;
-        //     const sensorProperties = await SensorProperty.findAll({ where: { model: model, manufacturer: manufacturer } });
-        //     if (!sensorProperties) return reject(new Error("Sensor properties not found"));
-
-        //     if (!properties[manufacturer]) {
-        //         properties[manufacturer] = {model: [], properties: []};
-        //     }
-
-        //     // add the model to the dict
-        //     properties[manufacturer]["model"].push(model);
-
-        //     // add the properties to the dict
-        //     const propertyNames = sensorProperties.map((sp) => sp.propertyName);
-        //     properties[manufacturer]["properties"].push(propertyNames);
-        // }
-
-        // // console.log("properties: ", properties);
-        // return resolve(properties);
-
-        // Find properties via DeviceSensorconfiguration
-
         console.log("in getDeviceProperties");
 
         const configEntries = await DeviceSensorConfiguration.findAll({
@@ -230,41 +201,38 @@ export const getDeviceProperties = async (deviceId: string) => {
             attributes: ['sensorProperty', 'sensorType'],
             raw: true
         });
-        console.log("configEntries: ", configEntries);
 
-          // extract unique pairs
-        const propertyPairs = configEntries.map(entry => ({
-        name: entry.sensorProperty,
-        sensorType: entry.sensorType
-        }));
-        console.log("propertyPairs: ", propertyPairs);
+        if (!configEntries.length) return reject(new Error("No config entries"));
 
-
-        // now get matching Property rows
-        const properties = await Property.findAll({
-        where: {
-            [Op.or]: propertyPairs
-        }
+        // Get module mappings
+        const moduleMappings = await DeviceModuleMapping.findAll({
+            where: { deviceId },
+            attributes: ['moduleName', 'moduleManufacturer', 'sensorType'],
+            raw: true
         });
 
+        if (!moduleMappings.length) return reject(new Error("No module mappings"));
 
+        // Now match properties with module mappings based on sensorType
+        const result = [];
 
-        // const properties = await DeviceSensorConfiguration.findAll({
-        //     where: { deviceid: deviceId },
-        //     include: [
-        //       {
-        //         model: Property,
-        //         as: 'property',
-        //       },
-        //       {
-        //         model: Sensor,
-        //         as: 'type',
-        //       }
-        //     ]
-        //   });
-        if (!properties) return reject(new Error("Properties not found"));
-        console.log("properties: ", properties);
-        return resolve(properties);
+        for (const config of configEntries) {
+            const mapping = moduleMappings.find(
+              map => map.sensorType === config.sensorType
+            );
+
+            if (mapping) {
+              result.push({
+                moduleManufacturer: mapping.moduleManufacturer,
+                moduleName: mapping.moduleName,
+                sensorType: config.sensorType,
+                propertyName: config.sensorProperty
+              });
+            }
+          }
+
+        if (!result) return reject(new Error("No properties found"));
+        return resolve(result)
     });;
 };
 

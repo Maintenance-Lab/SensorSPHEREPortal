@@ -44,7 +44,6 @@ router.post("/addToSession", async (req, res) => {
         }));
 
         const doc = await SessionDeviceMapping.bulkCreate(mappings, { ignoreDuplicates: false });
-        // const doc = await SessionDeviceMapping.create({ sessionId: sessionId, deviceId: deviceIds });
         if (!doc) return res.status(500).json({ message: "Bulk mapping failed;Some devices might already be added" });
 
         const deviceSensorConfigs = [];
@@ -93,6 +92,7 @@ router.post("/addToSession", async (req, res) => {
 });
 
 router.get("/properties/:deviceId", async (req, res) => {
+    console.log("in get properties for device");
     const deviceId = req.params.deviceId;
     const doc = await getDeviceProperties(deviceId);
     if (!doc) return res.status(404).json({ message: "Device not found" });

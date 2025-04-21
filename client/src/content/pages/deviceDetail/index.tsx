@@ -1,24 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Paper, Typography, Container, Divider } from '@mui/material';
+import { Paper, Typography, Container, Divider, Box } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
-import { DataGrid, GridColDef} from '@mui/x-data-grid';
 import { useParams } from 'react-router-dom';
 
-const DeviceDetail = () => {
-  interface GridRow {
-    id: string;
-    manufacturer: string;
-    model: string;
-    outputs: string[];
-  }
+import { TreeView, TreeItem } from '@mui/lab';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
+const DeviceDetail = () => {
   const { deviceId } = useParams();
   const [deviceManufacturer, setDeviceManufacturer] = useState('');
   const [deviceBatteryLevel, setDeviceBatteryLevel] = useState('');
-  const [sensorRows, setSensorRows] = useState([]);
+  const [sensorTree, setSensorTree] = useState<React.ReactNode[]>([]);
 
   const getDeviceProperties = async (deviceId: string) => {
     console.log("in getDeviceDetails api call");
@@ -56,6 +52,45 @@ const DeviceDetail = () => {
     return data;
   };
 
+  const buildTree = (data) => {
+    const tree = [];
+
+    const grouped = {};
+
+    data.forEach(item => {
+      const moduleKey = `${item.moduleManufacturer} - ${item.moduleName}`;
+      if (!grouped[moduleKey]) grouped[moduleKey] = {};
+      if (!grouped[moduleKey][item.sensorType]) grouped[moduleKey][item.sensorType] = new Set();
+      grouped[moduleKey][item.sensorType].add(item.propertyName);
+    });
+
+    for (const mod in grouped) {
+      const sensorTypes = grouped[mod];
+      const children = [];
+
+      for (const type in sensorTypes) {
+        const propertyNodes = Array.from(sensorTypes[type]).map((prop, i) => (
+          <TreeItem key={`${mod}-${type}-prop-${i}`} nodeId={`${mod}-${type}-${prop}`} label={prop} />
+        ));
+
+        children.push(
+          <TreeItem key={`${mod}-${type}`} nodeId={`${mod}-${type}`} label={type}>
+            {propertyNodes}
+          </TreeItem>
+        );
+      }
+
+      tree.push(
+        <TreeItem key={mod} nodeId={mod} label={mod}>
+          {children}
+        </TreeItem>
+      );
+    }
+
+    return tree;
+  };
+
+
   const handleDeviceDetails = async (deviceId: string) => {
     const data = await getDeviceDetails(deviceId);
     setDeviceManufacturer(data.manufacturer);
@@ -74,18 +109,8 @@ const DeviceDetail = () => {
   };
 
   const loadRows = async (properties) => {
-    const sensorRows:GridRow[] = Object.keys(properties).flatMap((manufacturer) => {
-      const { model, properties: modelProperties } = properties[manufacturer];
-
-      return model.map((modelName, index) => ({
-        id: `${manufacturer}_${modelName}`,
-        manufacturer: manufacturer,
-        model: modelName,
-        outputs: modelProperties[index]
-      }));
-    });
-
-    setSensorRows(sensorRows);
+    const treeNodes = buildTree(properties);
+    setSensorTree(treeNodes);
   }
 
   const onLoad = async () => {
@@ -102,12 +127,6 @@ const DeviceDetail = () => {
       console.error(e);
     }
   }, [deviceId]);
-
-  const sensorColumns: GridColDef[] = [
-    { headerName: 'Manufacturer', field: 'manufacturer', flex: 1 },
-    { headerName: 'Model', field: 'model', flex: 1 },
-    { headerName: 'Outputs', field: 'outputs', flex: 1 }
-  ];
 
   return (
     <div>
@@ -138,23 +157,14 @@ const DeviceDetail = () => {
         <Stack spacing={2}>
           <Typography variant="h2">Sensors</Typography>
           <Paper>
-            <DataGrid
-              rows={sensorRows}
-              columns={sensorColumns}
-              pageSizeOptions={[25]}
-              initialState={{
-                pagination: { paginationModel: { pageSize: 25 } },
-              }}
-              density="compact"
-              autosizeOnMount
-              autosizeOptions={{
-                includeOutliers: true
-              }}
-              getRowHeight={() => 'auto'}
-              sx={{
-                '&.MuiDataGrid-root .MuiDataGrid-cell': { py: 1 }
-              }}
-            />
+            <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
+              <TreeView
+                defaultCollapseIcon={<ExpandMoreIcon />}
+                defaultExpandIcon={<ChevronRightIcon />}
+              >
+                {sensorTree}
+              </TreeView>
+            </Box>
           </Paper>
         </Stack>
       </Container>

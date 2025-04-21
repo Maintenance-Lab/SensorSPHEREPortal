@@ -64,6 +64,7 @@ export const getSelectedProperties = async (deviceId: string, sessionId: number)
 }
 
 export const updateSelectedProperties = async (deviceId: string, sessionId: number, selectedProperties: string[]) => {
+  console.log("updateSelectedProperties: ", deviceId, sessionId, selectedProperties);
     return apiRequest("/api/devices/updateSelectedProperties", "PUT", {
       deviceId,
       sessionId,

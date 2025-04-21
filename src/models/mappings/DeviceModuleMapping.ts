@@ -8,6 +8,7 @@ class DeviceModuleMapping extends Model {
     deviceId: number;
     moduleName: string;
     moduleManufacturer: string;
+    sensorType: string;
 }
 
 DeviceModuleMapping.init({

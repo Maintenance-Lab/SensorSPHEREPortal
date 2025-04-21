@@ -1,41 +1,41 @@
 import { RenderTree } from "./types";
 
 export const loadRows = async (properties: any, setAllProperties: any) => {
-    const root: RenderTree = {
-      id: "root",
-      name: "All Properties",
-      children: Object.keys(properties).reduce((acc, manufacturer) => {
-        const { model, properties: modelProperties } = properties[manufacturer];
-
-        // Add each manufacturer as a child to the root
-        acc[manufacturer] = {
-          id: `${manufacturer}`,
-          name: manufacturer,
-          children: model.reduce((modelAcc, modelName, modelIndex) => {
-            // Add each model as a child to the manufacturer
-            modelAcc[modelName] = {
-              id: `${manufacturer}:${modelName}`,
-              name: modelName,
-              children: modelProperties[modelIndex].reduce((propertyAcc, property) => {
-                // Add each property as a child to the model
-                propertyAcc[property] = {
-                  id: `${manufacturer}:${modelName}:${property}`,
-                  name: property
-                };
-                return propertyAcc;
-              }, {})
-            };
-            return modelAcc;
-          }, {})
-        };
-
-        return acc;
-      }, {})
-    };
-
-    setAllProperties(root);
-    return root;
+  const root: RenderTree = {
+    id: "root",
+    name: "All Properties",
+    children: {}
   };
+
+  for (const entry of properties) {
+    const { moduleManufacturer, moduleName, sensorType, propertyName } = entry;
+    const moduleKey = `${moduleManufacturer} - ${moduleName}`;
+
+    if (!root.children![moduleKey]) {
+      root.children![moduleKey] = {
+        id: moduleKey,
+        name: moduleKey,
+        children: {}
+      };
+    }
+
+    if (!root.children![moduleKey].children![sensorType]) {
+      root.children![moduleKey].children![sensorType] = {
+        id: `${moduleKey}:${sensorType}`,
+        name: sensorType,
+        children: {}
+      };
+    }
+
+    root.children![moduleKey].children![sensorType].children![propertyName] = {
+      id: `${moduleKey}:${sensorType}:${propertyName}`,
+      name: propertyName
+    };
+  }
+
+  setAllProperties(root);
+  return root;
+};
 
 
 const getAllChild = (nodes: RenderTree | null): string[] => {
@@ -148,6 +148,14 @@ export const updateSelection = (selectedIds: string[], allProperties: RenderTree
     return newSelection;
 };
 
+
+// TODO:
+// 1. Fix selected properties,
+//    API stuurt goede properties
+//    updateSelection doet het niet goed
+//    handleSelectedProperties heeft drm niet goede waarden
+// 2. Fix selected properties in treeview
+// 3. Bij back vanaf stap 2 bij configure gaat hij nog een x naar 2
 
 
 

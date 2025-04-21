@@ -788,29 +788,13 @@ const ProjectDetail = () => {
       }
 
       const data = await res.json();
-      console.log("RES: ", res);
-      console.log("DAT ~~~~: ", data);
       setProjectName(data.name);
       setProjectDescription(data.description);
       setIsArchived(data.archived);
-
-      console.log("data: ", data.name, data.description, data.archived);
-      console.log("PROJECT ID: ", projectId);
     }
     catch (error) {
       console.error('Failed to fetch data', error);
     }
-
-
-    // if (data.sensorUnits.length === 0) {
-    //   setActiveStep(0);
-    // } else if (dataSessions.length === 0) {
-    //   setActiveStep(1);
-    // } else if (dataSessions.filter((session) => session.status != "inactive").length === 0) {
-    //   setActiveStep(2);
-    // } else {
-    //   setActiveStep(3);
-    // }
   };
 
   const handleNameChange = async (event) => {

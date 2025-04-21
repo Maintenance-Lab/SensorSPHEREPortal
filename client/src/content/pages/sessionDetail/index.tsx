@@ -187,13 +187,19 @@ const SessionDetail = () => {
 
   const handleSelectedProperties = async (deviceId:string) => {
     const properties = await getSelectedProperties(deviceId, sessionId);
+
     const selectedPropertiesIds = properties.map((property) => {
-      return `${property.manufacturer}:${property.model}:${property.propertyName}`;
+      return `${property.moduleManufacturer} - ${property.moduleName}:${property.sensorType}:${property.propertyName}`;
     });
 
     const allProperties = await loadRows( await getDeviceProperties(deviceId), setAllProperties);
+    console.log("all properties: ", allProperties);
+
+
+
     const updatedSelection = updateSelection(selectedPropertiesIds, allProperties);
 
+    console.log("updated selection before setting properties: ", updatedSelection);
     setSelectedProperties(updatedSelection);
     setLoading(false);
 

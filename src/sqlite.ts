@@ -146,7 +146,7 @@ const initDb = () => {
         db.run(`
             CREATE TABLE IF NOT EXISTS Property (
                 name TEXT,
-                sensortype TEXT,
+                sensorType TEXT,
                 unit TEXT,
                 accuracy FLOAT,
                 rangeMin FLOAT,

@@ -2,9 +2,11 @@ import { Router } from 'express';
 import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties, sendConfigurationToDevice } from '../../services/Device.js';
 import SessionDeviceMapping from '../../models/mappings/SessionDeviceMapping.js';
 import { getDeviceProperties } from '../../services/Device.js';
-import SensorProperty from '../../models/Property.js';
+import Property from '../../models/Property.js';
 import DeviceSensorConfiguration from '../../models/DeviceSensorConfiguration.js';
 import DeviceModuleMapping from '../../models/mappings/DeviceModuleMapping.js';
+import Sensor from '../../models/Sensor.js';
+import Module from '../../models/Module.js';
 import { listUnits } from '../../services/Device.js';
 
 const router = Router()
@@ -41,51 +43,47 @@ router.post("/addToSession", async (req, res) => {
             deviceId,
         }));
 
-        // TODO: waarom ignoreDuplicates: true?
         const doc = await SessionDeviceMapping.bulkCreate(mappings, { ignoreDuplicates: false });
         // const doc = await SessionDeviceMapping.create({ sessionId: sessionId, deviceId: deviceIds });
         if (!doc) return res.status(500).json({ message: "Bulk mapping failed;Some devices might already be added" });
+
+        const deviceSensorConfigs = [];
 
         // add to DeviceSensorConfiguration
         try {
             const sensorsDeviceMappings = await DeviceModuleMapping.findAll({ where: { deviceId: deviceIds } });
             if (!sensorsDeviceMappings) return res.status(404).json({ message: "Sensors not found" });
+            try {
+                for (const sensorMapping of sensorsDeviceMappings) {
+                    const { deviceId, sensorType } = sensorMapping.dataValues;
 
-            const sensorProperties = await Promise.all(sensorsDeviceMappings.map(async (sensorMapping) => {
-                // Get sensor with device id
-                const sensorPropertiesForDevice = await SensorProperty.findAll({
-                    where: {
-                        model: sensorMapping.dataValues.model,
-                        manufacturer: sensorMapping.dataValues.manufacturer
-                    },
-                    attributes: ['propertyName'],
-                });
+                    // Get matching Property entries
+                    const properties = await Property.findAll({
+                      where: { sensorType }, // assuming 'sensorType' column in Property
+                      attributes: ['name', 'sensorType']
+                    });
 
-                // TODO: AANPASSEN MET NIEUWE MODELLEN
+                    // Map each property to a config row
+                    const configs = properties.map((prop) => ({
+                      sessionId: sessionId,
+                      deviceId: deviceId,
+                      sensorProperty: prop.name,
+                      sensorType: prop.sensorType
+                    }));
 
-                // Get properties for sensor
-                const properties = sensorPropertiesForDevice.map((property) => ({
-                    sessionId: sessionId,
-                    deviceId: sensorMapping.dataValues.deviceId,
-                    model: sensorMapping.dataValues.model,
-                    manufacturer: sensorMapping.dataValues.manufacturer,
-                    // propertyName: property.propertyName,
-                    propertyName: property.name,
-                }));
-
-                return properties;
-            }));
-
-            const propertyMappings = sensorProperties.flat();
-            const doc = await DeviceSensorConfiguration.bulkCreate(propertyMappings, { ignoreDuplicates: true });
-            if (!doc) return res.status(500).json({ message: "Failed to add sensors to session" });
+                    deviceSensorConfigs.push(...configs);
+                  }
+            }
+            catch (error) {
+                console.error("Error fetching properties: ", error);
+                return res.status(500).json({ message: "Error fetching properties" });
+            }
         }
         catch (error) {
             console.error("Error fetching sensor: ", error);
         }
-
-        // TODO: DeviceSensorConfiguration model aanpassen naar model/manufacturernaam ipv property
-        // await DeviceSensorConfiguration.bulkCreate(propertyMappings, { ignoreDuplicates: false });
+        // Bulk create the DeviceSensorConfiguration entries
+        await DeviceSensorConfiguration.bulkCreate(deviceSensorConfigs, { ignoreDuplicates: true });
 
         return res.status(200).json({ message: "Devices added successfully" });
     } catch (error) {

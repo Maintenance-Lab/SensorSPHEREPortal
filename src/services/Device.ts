@@ -6,6 +6,7 @@ import DeviceSensorConfiguration from "../models/DeviceSensorConfiguration.js";
 import { Op } from "sequelize";
 import mqtt from '../index.js';
 import WebSocket from 'ws';
+import Sensor from "../models/Sensor.js";
 
 import { FIRMWARE } from '../config.js';
 
@@ -222,20 +223,47 @@ export const getDeviceProperties = async (deviceId: string) => {
 
         // Find properties via DeviceSensorconfiguration
 
-        const properties = await DeviceSensorConfiguration.findAll({
-            where: { deviceid: deviceId },
-            include: [
-              {
-                model: Property,
-                as: 'SensorProperty',
-              },
-              {
-                model: Property,
-                as: 'SensorType',
-              }
-            ]
-          });
+        console.log("in getDeviceProperties");
+
+        const configEntries = await DeviceSensorConfiguration.findAll({
+            where: { deviceId },
+            attributes: ['sensorProperty', 'sensorType'],
+            raw: true
+        });
+        console.log("configEntries: ", configEntries);
+
+          // extract unique pairs
+        const propertyPairs = configEntries.map(entry => ({
+        name: entry.sensorProperty,
+        sensorType: entry.sensorType
+        }));
+        console.log("propertyPairs: ", propertyPairs);
+
+
+        // now get matching Property rows
+        const properties = await Property.findAll({
+        where: {
+            [Op.or]: propertyPairs
+        }
+        });
+
+
+
+        // const properties = await DeviceSensorConfiguration.findAll({
+        //     where: { deviceid: deviceId },
+        //     include: [
+        //       {
+        //         model: Property,
+        //         as: 'property',
+        //       },
+        //       {
+        //         model: Sensor,
+        //         as: 'type',
+        //       }
+        //     ]
+        //   });
         if (!properties) return reject(new Error("Properties not found"));
+        console.log("properties: ", properties);
         return resolve(properties);
     });;
 };

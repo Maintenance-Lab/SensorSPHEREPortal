@@ -529,7 +529,7 @@ const SessionDetail = () => {
   const renewAvailableDevices = async () => {
     // // Opvragen units
     // console.log("wrm vragen we deze nu op")
-    // const devices = await listUnits();
+    const devices = await listUnits();
     await handleAvailableDevices(sessionId, setAvailableDevices);
   }
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties, sendConfigurationToDevice, getSampleRate } from '../../services/Device.js';
+import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties, sendConfigurationToDevice, getSampleRate, saveSampleRate } from '../../services/Device.js';
 import SessionDeviceMapping from '../../models/mappings/SessionDeviceMapping.js';
 import { getDeviceProperties } from '../../services/Device.js';
 import Property from '../../models/Property.js';
@@ -8,6 +8,7 @@ import DeviceModuleMapping from '../../models/mappings/DeviceModuleMapping.js';
 import Sensor from '../../models/Sensor.js';
 import Module from '../../models/Module.js';
 import { listUnits } from '../../services/Device.js';
+import Session from 'src/models/Session.js';
 
 const router = Router()
 
@@ -133,6 +134,17 @@ router.get("/getSampleRate/:sessionId/:deviceId", async (req, res) => {
     if (doc === null || doc === undefined) {
         return res.status(404).json({ message: "Failed to fetch sample rate" });
     }
+    return res.json(doc);
+});
+
+router.put("/saveSampleRate", async (req, res) => {
+    const sessionId = Number(req.body.sessionId);
+    const deviceId = req.body.deviceId;
+    const sampleRate = req.body.sampleRate;
+
+    console.log("In save sample rate: ", sampleRate, deviceId);
+    const doc = await saveSampleRate(sessionId, deviceId, sampleRate);
+    if (!doc) return res.status(500).json({ message: "Failed to update sample rate" });
     return res.json(doc);
 });
 

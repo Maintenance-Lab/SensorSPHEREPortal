@@ -26,7 +26,7 @@ import { RenderTree } from "./types";
 import { loadRows, getOnChange, updateSelection } from "./treeView";
 import { fetchDevices, removeDevicesFromSession, sendConfiguration, updateSession, deleteSession, addDevices,
   getDeviceProperties, getSelectedProperties, updateSelectedProperties, fetchAvailableDevices, fetchSession, projectData,
-  listUnits, getSampleRate
+  listUnits, getSampleRate, saveSampleRate,
  } from "./api";
 
 //  Api calls in api.tsx
@@ -188,23 +188,19 @@ const SessionDetail = () => {
 
   const handleSelectedProperties = async (deviceId:string) => {
     const properties = await getSelectedProperties(deviceId, sessionId);
-
     const selectedPropertiesIds = properties.map((property) => {
       console.log(property.moduleManufacturer, property.moduleName, property.sensorType, property.propertyName);
-      return `${property.moduleManufacturer} - ${property.moduleName}:${property.sensorType}:${property.propertyName}`;
+      return `${property.moduleManufacturer}:${property.moduleName}:${property.sensorType}:${property.propertyName}`;
     });
-    console.log("selected properties: ", selectedPropertiesIds);
 
     const allProperties = await loadRows( await getDeviceProperties(deviceId), setAllProperties);
-    console.log("all properties: ", allProperties);
-
     const updatedSelection = updateSelection(selectedPropertiesIds, allProperties);
-
-    console.log("updated selection before setting properties: ", updatedSelection);
     setSelectedProperties(updatedSelection);
+
     setLoading(false);
 
-    return updatedSelection;
+    // return updatedSelection;
+    return selectedPropertiesIds;
   }
 
   const handleOpenDialog2 = async (deviceId) => {
@@ -214,7 +210,12 @@ const SessionDetail = () => {
     setDialogOpen2(true);
   };
 
-  const handleCloseDialog2 = async () => {
+  const handleCloseDialog2 = async (step) => {
+    if (step === 2) {
+      await saveSampleRate(sessionId, selectedDevice, sampleRate);
+      // await updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
+    }
+
     setDialogOpen2(false);
     setActiveStep(0);
     setSampleRate(null);
@@ -241,7 +242,7 @@ const SessionDetail = () => {
 
   const handleBack = async () => {
     if (activeStep === 0) {
-      await handleCloseDialog2();
+      await handleCloseDialog2(activeStep);
     }
     else if (activeStep === 2) {
       setSampleRate(null);
@@ -359,7 +360,7 @@ const SessionDetail = () => {
             disabled={isSaveDisabled && activeStep === steps.length - 1}
             onClick={() => {
               if (activeStep === steps.length - 1) {
-                handleCloseDialog2();
+                handleCloseDialog2(activeStep);
               } else {
                 handleNext(sessionId, device);
               }
@@ -554,7 +555,7 @@ const SessionDetail = () => {
 
   useEffect(() => {
     fetchSampleRates();
-  }, [devices, sessionId]);
+  }, [devices, sessionId, sampleRate]);
 
   const ConfirmationDialog = ({ open, onClose, onConfirm, sessionId }) => (
     <Dialog open={open} onClose={onClose}>

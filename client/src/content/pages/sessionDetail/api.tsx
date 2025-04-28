@@ -100,3 +100,11 @@ export const listUnits = async () => {
 export const getSampleRate = async (sessionId: number, deviceId: string) => {
     return apiRequest(`/api/devices/getSampleRate/${sessionId}/${deviceId}`, "GET");
 }
+
+export const saveSampleRate = async (sessionId: number, deviceId: string, sampleRate: number) => {
+    return apiRequest("/api/devices/saveSampleRate", "PUT", {
+      sessionId,
+      deviceId,
+      sampleRate,
+    });
+}

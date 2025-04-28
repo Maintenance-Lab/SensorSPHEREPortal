@@ -326,11 +326,11 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
             if (data.event === "sampleRate" && data.deviceId === deviceId) {
                 console.log("sample rate updated for device: ", data.sampleRate, data.deviceId);
 
-                const doc = await DeviceSensorConfiguration.update(
-                    { sampleRate: data.sampleRate },
-                    { where: { sessionId: sessionId, deviceId: deviceId } }
-                );
-                if (!doc) return reject(new Error("Failed to update sample rate"));
+                // const doc = await SessionDeviceMapping.update(
+                //     { sampleRate: data.sampleRate },
+                //     { where: { sessionId: sessionId, deviceId: deviceId } }
+                // );
+                // if (!doc) return reject(new Error("Failed to update sample rate"));
 
                 clearTimeout(timeout);
                 return resolve(data.sampleRate);
@@ -339,6 +339,17 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
     });
 }
 
+export const saveSampleRate = async (sessionId: number, deviceId: string, sampleRate: number): Promise<any> => {
+    return new Promise(async (resolve, reject) => {
+        console.log("In save sample rate: ", sampleRate, deviceId);
+        const doc = await SessionDeviceMapping.update(
+            { sampleRate: sampleRate },
+            { where: { sessionId: sessionId, deviceId: deviceId } }
+        );
+        if (!doc) return reject(new Error("Failed to update sample rate"));
+        return resolve(doc);
+    });
+}
 
 // TODO CHECK OF SELECT EN DESELECT WERKT
 export const updateSelectedProperties = async (sessionId: number, deviceId: string, selectedProperties: any): Promise<any> => {

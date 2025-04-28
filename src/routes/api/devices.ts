@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties, sendConfigurationToDevice, getSampleRate, saveSampleRate } from '../../services/Device.js';
+import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties, sendConfigurationToDevice,
+    getSampleRate, saveSampleRate, sendStartBatch } from '../../services/Device.js';
 import SessionDeviceMapping from '../../models/mappings/SessionDeviceMapping.js';
 import { getDeviceProperties } from '../../services/Device.js';
 import Property from '../../models/Property.js';
@@ -172,6 +173,23 @@ router.get("/units", async (_, res) => {
     return res.json(docs);
 });
 
+
+router.put("/startBatch", async (req, res) => {
+    console.log("in start batch");
+    const sessionId = req.body.sessionId;
+
+    const doc = await sendStartBatch(sessionId);
+    if (!doc) return res.status(500).json({ message: "Failed to start batch" });
+    return res.json(doc);
+});
+
+// router.put("/stopBatch", async (req, res) => {
+//     console.log("in stop batch");
+//     const sessionId = req.body.sessionId;
+    // const doc = await sendStopBatch(sessionId);
+    // if (!doc) return res.status(500).json({ message: "Failed to stop batch" });
+    // return res.json(doc);
+// });
 
 
 

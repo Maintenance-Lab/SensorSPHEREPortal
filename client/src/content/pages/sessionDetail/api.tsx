@@ -108,3 +108,9 @@ export const saveSampleRate = async (sessionId: number, deviceId: string, sample
       sampleRate,
     });
 }
+
+export const startBatch = async (sessionId: number) => {
+    return apiRequest("/api/devices/startBatch", "PUT", {
+      sessionId
+    });
+}

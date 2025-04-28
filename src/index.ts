@@ -14,6 +14,10 @@ mqtt.subscribe('interface/listUnitsResult');
 mqtt.subscribe('interface/+/validateConfigurationResult');
 console.log("Subscribed to interface/listUnitsResult and interface/<mac_addr>/validateConfigurationResult");
 
+// Subscribed to check
+// Subscribe to all topics starting with 'interface/'
+mqtt.subscribe('interface/+');
+
 export default mqtt;
 
 cleanup(() => {

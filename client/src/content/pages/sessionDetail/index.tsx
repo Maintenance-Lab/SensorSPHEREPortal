@@ -20,13 +20,14 @@ import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useMemo } from 'react';
+import LinearProgress from '@mui/material/LinearProgress';
 
 // Imports from functions moved to different files
 import { RenderTree } from "./types";
 import { loadRows, getOnChange, updateSelection } from "./treeView";
 import { fetchDevices, removeDevicesFromSession, sendConfiguration, updateSession, deleteSession, addDevices,
   getDeviceProperties, getSelectedProperties, updateSelectedProperties, fetchAvailableDevices, fetchSession, projectData,
-  listUnits, getSampleRate, saveSampleRate,
+  listUnits, getSampleRate, saveSampleRate, startBatch,
  } from "./api";
 
 //  Api calls in api.tsx
@@ -147,6 +148,9 @@ const SessionDetail = () => {
   const [activeStep, setActiveStep] = React.useState(0);
   const [sampleRate, setSampleRate] = React.useState(null);
   const steps = ['Select Properties', 'Find sample rate', 'Save configuration'];
+
+  const [progress, setProgress] = useState(0);
+  const [sessionStatus, setSessionStatus] = useState('Not started');
 
   // New rows when new devices added from mqtt
   // const [newDevices, setNewDevices] = useState([]);
@@ -557,6 +561,20 @@ const SessionDetail = () => {
     fetchSampleRates();
   }, [devices, sessionId, sampleRate]);
 
+  const handleStartSession = async () => {
+    // continue doing nothing
+    startBatch(sessionId);
+
+  }
+
+  // const handlePauseSession = async () => {
+  //   // continue doing nothing
+  // }
+
+  const handleStopSession = async () => {
+    // continue doing nothing
+  }
+
   const ConfirmationDialog = ({ open, onClose, onConfirm, sessionId }) => (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Confirm Deletion</DialogTitle>
@@ -725,6 +743,63 @@ const SessionDetail = () => {
           </Stack>
         </Stack>
       </PageTitleWrapper>
+
+
+
+        <Container>
+        <Stack spacing={1}>
+          <Paper elevation={3} sx={{ p: 2, borderRadius: 2 }}>
+            <Stack spacing={1}>
+              <Typography variant="h5" fontWeight="bold">
+                Session Progress
+              </Typography>
+
+              {/* Progress Bar */}
+              <LinearProgress variant="determinate" value={progress} />
+
+              {/* Time and Status */}
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="body1">
+                  {/* Elapsed Time: {formatTime(elapsedTime)} */}
+                  Elapsed Time: {"todo"}
+                </Typography>
+                <Typography variant="body1">
+                  {/* Remaining Time: {formatTime(remainingTime)} */}
+                  Remaining Time: {"todo"}
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Status: {sessionStatus}
+                </Typography>
+              </Stack>
+
+              {/* Control Buttons */}
+              <Stack direction="row" spacing={1} justifyContent="center">
+                {sessionStatus !== 'Running' && (
+                  <Button variant="contained" color="primary" onClick={handleStartSession}>
+                    Start
+                  </Button>
+                )}
+                {/* {sessionStatus === 'Running' && (
+                  <Button variant="outlined" color="warning" onClick={handlePauseSession}>
+                    Pause
+                  </Button>
+                )} */}
+                <Button variant="contained" color="error" onClick={handleStopSession}>
+                  Stop
+                </Button>
+              </Stack>
+            </Stack>
+          </Paper>
+        </Stack>
+      </Container>
+
+
+
+
+
+
+
+
       <Container>
         <Stack spacing={2}>
           <Typography variant="h2" sx={{ pt: 2 }}>Connected Devices in Session</Typography>

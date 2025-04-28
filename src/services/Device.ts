@@ -339,6 +339,32 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
     });
 }
 
+export const sendStartBatch = async (sessionId: number): Promise<any> => {
+    return new Promise(async (_, reject) => {
+        console.log("Starting batch for session: ", sessionId);
+
+        // Get all devices for the session
+        const devices = await SessionDeviceMapping.findAll({
+            where: { sessionId: sessionId },
+            attributes: ['deviceId'],
+            raw: true
+        });
+        if (!devices) return reject(new Error("Failed to fetch devices"));
+        console.log("Devices: ", devices);
+
+
+        const units = devices.map(device => device.deviceId);
+        console.log("Units: ", units);
+
+        const message = {
+            "units": units
+        }
+
+        const options = { qos: 2 };
+        mqtt.publish("interface/startBatch", JSON.stringify(message), options);
+    });
+}
+
 export const saveSampleRate = async (sessionId: number, deviceId: string, sampleRate: number): Promise<any> => {
     return new Promise(async (resolve, reject) => {
         console.log("In save sample rate: ", sampleRate, deviceId);

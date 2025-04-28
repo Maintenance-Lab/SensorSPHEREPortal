@@ -144,18 +144,8 @@ export const updateSelection = (selectedIds: string[], allProperties: RenderTree
 
 
 // TODO:
-// 1. Fix selected properties,
-//    API stuurt goede properties
-//    updateSelection doet het niet goed
-//    handleSelectedProperties heeft drm niet goede waarden
-// 2. Fix selected properties in treeview
 // 3. Bij back vanaf stap 2 bij configure gaat hij nog een x naar 2
 
-// Properties nu goed geladen
-//  - Checken of deselecteren ook werkt
-//  - Goede selected properties laden
-//  -
-//  - Null error frequency weghalen
 
 
 

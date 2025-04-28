@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties, sendConfigurationToDevice } from '../../services/Device.js';
+import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties, sendConfigurationToDevice, getSampleRate } from '../../services/Device.js';
 import SessionDeviceMapping from '../../models/mappings/SessionDeviceMapping.js';
 import { getDeviceProperties } from '../../services/Device.js';
 import Property from '../../models/Property.js';
@@ -106,9 +106,9 @@ router.get("/available/:session", async (req, res) => {
     return res.json(doc);
 });
 
-router.put("/selectedProperties", async (req, res) => {
-    const sessionId = Number(req.body.sessionId);
-    const deviceId = req.body.deviceId;
+router.get("/selectedProperties/:sessionId/:deviceId", async (req, res) => {
+    const sessionId = Number(req.params.sessionId);
+    const deviceId = req.params.deviceId;
 
     const doc = await getSelectedProperties(sessionId, deviceId);
     if (!doc) return res.status(500).json({ message: "Failed to fetch properties" });
@@ -125,22 +125,18 @@ router.put("/updateSelectedProperties", async (req, res) => {
     return res.json(doc);
 });
 
-router.put("/sendConfiguration", async (req, res) => {
-    // {
-    //     "mac": "XX:XX:XX:XX:XX:XX",
-    //     "sensors": [
-    //         {
-    //             "manufacturer": "M5stack",
-    //             "model": "ENV3",
-    //             "properties":{
-    //                   "humidity",
-    //                   "Air pressure",
-    //                   "Temperature"
-    //             }
-    //         }
-    //     ]
-    // }
+router.get("/getSampleRate/:sessionId/:deviceId", async (req, res) => {
+    const sessionId = Number(req.params.sessionId);
+    const deviceId = req.params.deviceId;
 
+    const doc = await getSampleRate(sessionId, deviceId);
+    if (doc === null || doc === undefined) {
+        return res.status(404).json({ message: "Failed to fetch sample rate" });
+    }
+    return res.json(doc);
+});
+
+router.put("/sendConfiguration", async (req, res) => {
     const sessionId = req.body.sessionId;
     const deviceId = req.body.selectedDevice;
     console.log("sendConfiguration: ", sessionId, deviceId);

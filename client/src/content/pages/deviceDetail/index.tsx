@@ -58,7 +58,7 @@ const DeviceDetail = () => {
     const grouped = {};
 
     data.forEach(item => {
-      const moduleKey = `${item.moduleManufacturer} - ${item.moduleName}`;
+      const moduleKey = `${item.moduleManufacturer}:${item.moduleName}`;
       if (!grouped[moduleKey]) grouped[moduleKey] = {};
       if (!grouped[moduleKey][item.sensorType]) grouped[moduleKey][item.sensorType] = new Set();
       grouped[moduleKey][item.sensorType].add(item.propertyName);
@@ -67,6 +67,8 @@ const DeviceDetail = () => {
     for (const mod in grouped) {
       const sensorTypes = grouped[mod];
       const children = [];
+
+      const modLabel = mod.replace(/:/g, ' ');
 
       for (const type in sensorTypes) {
         const propertyNodes = Array.from(sensorTypes[type]).map((prop, i) => (
@@ -81,7 +83,7 @@ const DeviceDetail = () => {
       }
 
       tree.push(
-        <TreeItem key={mod} nodeId={mod} label={mod}>
+        <TreeItem key={mod} nodeId={mod} label={modLabel}>
           {children}
         </TreeItem>
       );

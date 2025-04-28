@@ -26,7 +26,7 @@ import { RenderTree } from "./types";
 import { loadRows, getOnChange, updateSelection } from "./treeView";
 import { fetchDevices, removeDevicesFromSession, sendConfiguration, updateSession, deleteSession, addDevices,
   getDeviceProperties, getSelectedProperties, updateSelectedProperties, fetchAvailableDevices, fetchSession, projectData,
-  listUnits
+  listUnits, getSampleRate
  } from "./api";
 
 //  Api calls in api.tsx
@@ -135,6 +135,7 @@ const SessionDetail = () => {
   const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
   const [selectedAddDeviceIds, setSelectedAddDeviceIds] = useState([]);
   const [devices, setDevices] = useState([]);
+  const [devicesRows, setDevicesRows] = useState<GridRowsProp>([]);
   const [availableDevices, setAvailableDevices] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [allProperties, setAllProperties] = useState<RenderTree>();
@@ -145,7 +146,7 @@ const SessionDetail = () => {
 
   const [activeStep, setActiveStep] = React.useState(0);
   const [sampleRate, setSampleRate] = React.useState(null);
-  const steps = ['Select Properties', 'Find frequency', 'Save configuration'];
+  const steps = ['Select Properties', 'Find sample rate', 'Save configuration'];
 
   // New rows when new devices added from mqtt
   // const [newDevices, setNewDevices] = useState([]);
@@ -189,13 +190,13 @@ const SessionDetail = () => {
     const properties = await getSelectedProperties(deviceId, sessionId);
 
     const selectedPropertiesIds = properties.map((property) => {
+      console.log(property.moduleManufacturer, property.moduleName, property.sensorType, property.propertyName);
       return `${property.moduleManufacturer} - ${property.moduleName}:${property.sensorType}:${property.propertyName}`;
     });
+    console.log("selected properties: ", selectedPropertiesIds);
 
     const allProperties = await loadRows( await getDeviceProperties(deviceId), setAllProperties);
     console.log("all properties: ", allProperties);
-
-
 
     const updatedSelection = updateSelection(selectedPropertiesIds, allProperties);
 
@@ -216,7 +217,7 @@ const SessionDetail = () => {
   const handleCloseDialog2 = async () => {
     setDialogOpen2(false);
     setActiveStep(0);
-    sampleRate(null);
+    setSampleRate(null);
   };
 
   const handleNext = async (sessionId, selectedDevice) => {
@@ -224,11 +225,12 @@ const SessionDetail = () => {
     setActiveStep(newStep);
 
     if (newStep === 1) {
+      console.log("update selected properties van 1")
       await updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
-      const frequency = await sendConfiguration(sessionId, selectedDevice);
-      if (frequency !== null) {
+      const sampleRate = await sendConfiguration(sessionId, selectedDevice);
+      if (sampleRate !== null) {
         setIsSaveDisabled(false);
-        sampleRate(frequency);
+        setSampleRate(sampleRate);
       }
       else {
         setIsSaveDisabled(true);
@@ -242,7 +244,7 @@ const SessionDetail = () => {
       await handleCloseDialog2();
     }
     else if (activeStep === 2) {
-      sampleRate(null);
+      setSampleRate(null);
       setActiveStep(0);
     }
     else {
@@ -255,9 +257,9 @@ const SessionDetail = () => {
       case 0:
         return 'Select properties to include in data collection';
       case 1:
-        return 'Finding maximum frequency';
+        return 'Finding maximum sample rate';
       case 2:
-        return 'Maximum frequency of this device with selected properties';
+        return 'Maximum sample rate of this device with selected properties';
     }
   };
 
@@ -287,7 +289,7 @@ const SessionDetail = () => {
             <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>{sampleRate} Hz</Typography>)
           }
         return (
-          <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>No frequency found</Typography>
+          <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>No sample rate found</Typography>
         )
     }
   }
@@ -399,7 +401,7 @@ const SessionDetail = () => {
       flex: 1
     },
     { field: 'status', headerName: 'Status', flex: 1 },
-    { field: 'sampleRate', headerName: 'Max Hz', flex: 1 },
+    { field: 'sampleRate', headerName: 'Sample Rate', flex: 1 },
     {
       field: "configureButton", headerName: "", width: 150, renderCell: (params) => (
         <Box
@@ -477,29 +479,17 @@ const SessionDetail = () => {
       flex: 1
     },
     { field: 'status', headerName: 'Status', flex: 1 },
-    { field: 'sampleRate', headerName: 'Max Hz', flex: 1 },
   ];
 
-  const devicesRows: GridRowsProp = useMemo(() => {
-    const rows = devices.map((device) => ({
-      name:     device.manufacturer,
-      id:       device.deviceId,
-      status:   device.connectStatus,
-      battery:  device.batteryLevel,
-      sampleRate:    device.sampleRate,
-    }));
-
-    return rows;
-  }, [devices]);
-
   const availableDevicesRows: GridRowsProp = useMemo(() => {
-    const rows = availableDevices.map((device) => ({
-      name:     device.manufacturer,
-      id:       device.deviceId,
-      status:   device.connectStatus,
-      battery:  device.batteryLevel,
-      sampleRate:    device.sampleRate,
-    }));
+    const rows = availableDevices.map((device) => {
+        return {
+          name:     device.manufacturer,
+          id:       device.deviceId,
+          status:   device.connectStatus,
+          battery:  device.batteryLevel,
+        }
+    });
 
     return rows;
 }, [availableDevices]);
@@ -545,6 +535,26 @@ const SessionDetail = () => {
   useEffect(() => {
     renewAvailableDevices();
   }, []);
+
+  const fetchSampleRates = async () => {
+    const rows = await Promise.all(
+      devices.map(async (device) => {
+        const sampleRate = await getSampleRate(sessionId, device.deviceId);
+        return {
+          name: device.manufacturer,
+          id: device.deviceId,
+          status: device.connectStatus,
+          battery: device.batteryLevel,
+          sampleRate: sampleRate ?? "Loading...",
+        };
+      })
+    );
+    setDevicesRows(rows);
+  };
+
+  useEffect(() => {
+    fetchSampleRates();
+  }, [devices, sessionId]);
 
   const ConfirmationDialog = ({ open, onClose, onConfirm, sessionId }) => (
     <Dialog open={open} onClose={onClose}>

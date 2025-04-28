@@ -14,7 +14,7 @@ const apiRequest = async (url: string, method: string, body?: object) => {
     }
 
     return res.json();
-  };
+};
 
 export const fetchDevices =  async (sessionId: number) =>
     apiRequest(`/api/devices/all/${sessionId}`, "GET");
@@ -57,11 +57,12 @@ export const getDeviceProperties = async (deviceId: string) => {
 };
 
 export const getSelectedProperties = async (deviceId: string, sessionId: number) => {
-    return apiRequest("/api/devices/selectedProperties", "PUT", {
-      deviceId,
-      sessionId,
-    });
+  console.log("getSelectedProperties voor in api aaroepen: ", deviceId, sessionId);
+  return apiRequest(`/api/devices/selectedProperties/${sessionId}/${deviceId}`, "GET");
+  // return apiRequest("/api/devices/hello", "GET");
+  console.log("sent api request");
 }
+
 
 export const updateSelectedProperties = async (deviceId: string, sessionId: number, selectedProperties: string[]) => {
   console.log("updateSelectedProperties: ", deviceId, sessionId, selectedProperties);
@@ -94,4 +95,8 @@ export const listUnits = async () => {
     const res = await apiRequest("/api/devices/units", "GET");
     if (!res) return [];
     return res;
+}
+
+export const getSampleRate = async (sessionId: number, deviceId: string) => {
+    return apiRequest(`/api/devices/getSampleRate/${sessionId}/${deviceId}`, "GET");
 }

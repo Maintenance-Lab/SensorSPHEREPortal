@@ -7,13 +7,14 @@ import Session from '../Session.js';
 class SessionDeviceMapping extends Model {
     sessionId: number;
     deviceId: string;
-    configuredHz: number;
+    sampleRate: number;
 }
 
 SessionDeviceMapping.init({
     sessionId: { type: DataTypes.INTEGER, primaryKey: true,  references: { model: Session, key: 'sessionId' }, allowNull: false },
     deviceId: { type: DataTypes.STRING, primaryKey: true, references: { model: Device, key: 'deviceId' },  allowNull: false, validate: { is: /^([0-9A-F][0-9A-F]:){5}([0-9A-F][0-9A-F])$/i } },
-    configuredHz: { type: DataTypes.INTEGER, allowNull: false },
+    sampleRate: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    // TODO: default value sampleRate aanpassen
 }, {
     sequelize,
     modelName: 'SessionDeviceMapping',

@@ -9,12 +9,13 @@ export const loadRows = async (properties: any, setAllProperties: any) => {
 
   for (const entry of properties) {
     const { moduleManufacturer, moduleName, sensorType, propertyName } = entry;
-    const moduleKey = `${moduleManufacturer} - ${moduleName}`;
+    const moduleKey = `${moduleManufacturer}:${moduleName}`;
+    const moduleDisplay = `${moduleManufacturer} ${moduleName}`;
 
     if (!root.children![moduleKey]) {
       root.children![moduleKey] = {
         id: moduleKey,
-        name: moduleKey,
+        name: moduleDisplay,
         children: {}
       };
     }
@@ -37,7 +38,6 @@ export const loadRows = async (properties: any, setAllProperties: any) => {
   return root;
 };
 
-
 const getAllChild = (nodes: RenderTree | null): string[] => {
     if (!nodes) return [];
 
@@ -53,7 +53,6 @@ const getAllChild = (nodes: RenderTree | null): string[] => {
     return [...new Set(array)];
 };
 
-
 const findParent = (nodeId: string, nodes: RenderTree): RenderTree | null => {
     if (!nodes || !nodes.children) return null;
 
@@ -67,12 +66,10 @@ const findParent = (nodeId: string, nodes: RenderTree): RenderTree | null => {
     return null;
 };
 
-
 const areAllChildrenSelected = (parent: RenderTree, selectedSet: Set<string>): boolean => {
     if (!parent.children) return false;
     return Object.values(parent.children).every(child => selectedSet.has(child.id));
 };
-
 
 export const getOnChange = async (checked: boolean, nodes: RenderTree, allProperties: RenderTree, setSelectedProperties: any) => {
     const allNodeIds = getAllChild(nodes);
@@ -109,9 +106,6 @@ export const getOnChange = async (checked: boolean, nodes: RenderTree, allProper
     return [...newSelection];
     });
 };
-
-
-
 
 export const updateSelection = (selectedIds: string[], allProperties: RenderTree) => {
     const newSelection = [...selectedIds];
@@ -157,6 +151,11 @@ export const updateSelection = (selectedIds: string[], allProperties: RenderTree
 // 2. Fix selected properties in treeview
 // 3. Bij back vanaf stap 2 bij configure gaat hij nog een x naar 2
 
+// Properties nu goed geladen
+//  - Checken of deselecteren ook werkt
+//  - Goede selected properties laden
+//  -
+//  - Null error frequency weghalen
 
 
 

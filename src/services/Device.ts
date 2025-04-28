@@ -9,120 +9,136 @@ import WebSocket from 'ws';
 import Sensor from "../models/Sensor.js";
 
 import { FIRMWARE } from '../config.js';
+import Session from "src/models/Session.js";
 
 const socket = new WebSocket('ws://localhost:8080');
 
 // Hulp functies
 const splitProperty = (property: string): any => {
-    const manufacturer = property.split(":")[0];
-    const model = property.split(":")[1];
-    const propertyName = property.split(":")[2];
-
-    return { manufacturer, model, propertyName };
+    const split = property.split(":");
+    const sensorType = split[2];
+    const sensorProperty = split[3];
+    return { sensorType, sensorProperty };
 }
 const createConfigMessage = async (deviceProperties: any) => {
     console.log("DEVICE PROPERTIES: ", deviceProperties);
     const deviceId = deviceProperties.deviceId;
+    const moduleMap = deviceProperties.moduleMap;
     // const manufacturers = deviceProperties.manufacturers;
-    const models = deviceProperties.models;
+    // const models = deviceProperties.models;
+
     const message: any = {
         "mac": deviceId,
         "firmware": FIRMWARE,
         "sensorModules": []
     };
 
-    // for (const manufacturer in manufacturers) {
-    //     const models = manufacturers[manufacturer];
-
-    //     // Iterate through each model of the manufacturer
-    //     for (const model in models) {
-    //         const properties = models[model];
-    //         const sensor = {
-    //             "manufacturer": manufacturer,
-    //             "model": model,
-    //             "properties": properties,
-    //         };
-    //         message.sensors.push(sensor);
-    //     }
-    // }
-
     // Iterate through each manufacturer in models
-    for (const model in models) {
-        // { "moduleName": "IMU",
-		// 	"manufacturer": "M5Stack",
-		// 	"sensors": [
-		// 		{ "sensorType": "MPU6886",
-		// 			"measurements": [
-		// 				{ "type": "acceleration_x", "active": true },
-		// 				{ "type": "acceleration_y", "active": true },
-		// 				{ "type": "acceleration_z", "active": true },
-		// 				{ "type": "gyroscope_x", "active": true },
-		// 				{ "type": "gyroscope_y", "active": true },
-		// 				{ "type": "gyroscope_z", "active": true },
-		// 				{ "type": "temperature", "active": false }
-		// 			]
-		// 		}
-		// 	]
-		//  }
+    for (const moduleName in moduleMap) {
+        const moduleData = moduleMap[moduleName];
+        const sensorsArray = [];
 
+        for (const sensorType in moduleData.sensors) {
+          sensorsArray.push({
+            sensorType: sensorType,
+            measurements: moduleData.sensors[sensorType]
+          });
+        }
 
+        message.sensorModules.push({
+            moduleName: moduleName,
+            manufacturer: moduleData.manufacturer,
+            sensors: sensorsArray
+          });
 
 
         // Iterate through each manufacturer of the model
-        const manufacturers = models[model];
-        for (const manufacturer in manufacturers) {
-            const properties = manufacturers[manufacturer];
-            const sensor = {
-                "manufacturer": manufacturer,
-                "model": model,
-                "properties": properties,
-            };
-            message.sensorModules.push(sensor);
-        }
+        // const manufacturers = models[model];
+        // for (const manufacturer in manufacturers) {
+        //     const properties = manufacturers[manufacturer];
+        //     const sensor = {
+        //         "manufacturer": manufacturer,
+        //         "model": model,
+        //         "properties": properties,
+        //     };
+        //     message.sensorModules.push(sensor);
+        // }
     }
     console.log("message: ", message);
-
     return message;
 };
 
-const createPropertyDict = async (properties: any[], deviceId: string) => {
-    // manufacturers: { M5stack: { ENV3: [Array] }, M5stack5: { ENV35: [Array] } }
 
-    let deviceProperties: any = { deviceId };
-    // let manufacturers: any = {};
-    let models: any = {};
+const createPropertyDict = (properties: any[], deviceId: string) => {
+    console.log("properties in createPropertyDict", properties);
+
+    const deviceProperties: any = { deviceId };
+    const moduleMap: any = {}; // { "ENV III" : { manufacturer: "M5Stack", sensors: [ ... ] } }
 
     properties.forEach((property: any) => {
-        const { manufacturer, model, propertyName } = property;
+      const { moduleManufacturer, moduleName, sensorType, propertyName } = property;
 
-        // If model doesn't exist in the models object, create it
-        if (!models[model]) {
-            models[model] = {};
-        }
-        // If the manufacturer doesn't exist under the model, create it
-        if (!models[model][manufacturer]) {
-            models[model][manufacturer] = [];
-        }
-        models[model][manufacturer].push(propertyName);
+      if (!moduleMap[moduleName]) {
+        moduleMap[moduleName] = {
+          manufacturer: moduleManufacturer,
+          sensors: {}
+        };
+      }
 
-        // // If the manufacturer doesn't exist in the manufacturers object, create it
-        // if (!manufacturers[manufacturer]) {
-        //     manufacturers[manufacturer] = {};
-        // }
-        // // If the model doesn't exist under the manufacturer, create it
-        // if (!manufacturers[manufacturer][model]) {
-        //     manufacturers[manufacturer][model] = [];
-        // }
-        // manufacturers[manufacturer][model].push(propertyName);
+      if (!moduleMap[moduleName].sensors[sensorType]) {
+        moduleMap[moduleName].sensors[sensorType] = [];
+      }
+
+      moduleMap[moduleName].sensors[sensorType].push({
+        type: propertyName,
+        active: true
+      });
     });
 
-    deviceProperties.models = models;
-    // deviceProperties.manufacturers = manufacturers;
+    deviceProperties.moduleMap = moduleMap;
     console.log("deviceProperties: ", deviceProperties);
     return deviceProperties;
 };
 
+// const createPropertyDict = async (properties: any[], deviceId: string) => {
+//     console.log(" properties in createPropertyDict", properties);
+//     // manufacturers: { M5stack: { ENV3: [Array] }, M5stack5: { ENV35: [Array] } }
 
+//     let deviceProperties: any = { deviceId };
+//     // let manufacturers: any = {};
+//     let models: any = {};
+
+//     properties.forEach((property: any) => {
+//         // const { manufacturer, model, propertyName } = property;
+//         const { moduleManufacturer, moduleName, sensorType, propertyName } = property;
+//         console.log("manufactureer, model, sensorType, propertyName: ", moduleManufacturer, moduleName, sensorType, propertyName);
+
+//         // // If model doesn't exist in the models object, create it
+//         // if (!models[model]) {
+//         //     models[model] = {};
+//         // }
+//         // // If the manufacturer doesn't exist under the model, create it
+//         // if (!models[model][manufacturer]) {
+//         //     models[model][manufacturer] = [];
+//         // }
+//         // models[model][manufacturer].push(propertyName);
+
+//         // // If the manufacturer doesn't exist in the manufacturers object, create it
+//         // if (!manufacturers[manufacturer]) {
+//         //     manufacturers[manufacturer] = {};
+//         // }
+//         // // If the model doesn't exist under the manufacturer, create it
+//         // if (!manufacturers[manufacturer][model]) {
+//         //     manufacturers[manufacturer][model] = [];
+//         // }
+//         // manufacturers[manufacturer][model].push(propertyName);
+//     });
+
+//     deviceProperties.models = models;
+//     // deviceProperties.manufacturers = manufacturers;
+//     console.log("deviceProperties: ", deviceProperties);
+//     return deviceProperties;
+// };
 
 
 // Geen hulp functies -----------------------------------------------------------
@@ -130,16 +146,6 @@ export const getAllDevices = async (): Promise<Device[]> => {
     return new Promise(async (resolve) => {
         console.log("in getAllDevices");
         const results = await Device.findAll();
-        if (!results) return resolve([]);
-        return resolve(results);
-    });
-}
-
-// Retrieve all devices with a lastHearbeat longer then 10 minutes ago
-export const getAllOldDevices = async (): Promise<Device[]> => {
-    return new Promise(async (resolve) => {
-        console.log("in getAllOldDevices");
-        const results = await Device.findAll({ where: { connectStatus: "connected", lastHeartbeat: { [Op.lt]: Date.now() - 300000 } } });
         if (!results) return resolve([]);
         return resolve(results);
     });
@@ -182,6 +188,23 @@ export const getAllDevicesSession = async (sessionId: number): Promise<Device[]>
         return resolve(result);
       });
 }
+
+export const getSampleRate = async (sessionId: number, deviceId: string): Promise<any> => {
+    return new Promise(async (resolve, reject) => {
+        const doc = await SessionDeviceMapping.findOne({
+            where : { sessionId: sessionId, deviceId: deviceId },
+            attributes: ['sampleRate'],
+            raw: true,
+        });
+        if (!doc) return reject(new Error("Mapping not found"));
+
+        const sampleRate = doc.sampleRate;
+        if (sampleRate === null || sampleRate === undefined) {
+            return reject(new Error("Sample rate not found"));
+        }
+        return resolve(sampleRate);
+    });
+};
 
 export const getDeviceById = async (id: string): Promise<Device> => {
     return new Promise(async (resolve, reject) => {
@@ -237,28 +260,47 @@ export const getDeviceProperties = async (deviceId: string) => {
 };
 
 export const getSelectedProperties = async (sessionId: number, deviceId: string): Promise<any> => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const properties = await DeviceSensorConfiguration.findAll({
-                where: { sessionId: sessionId, deviceId: deviceId, active: true },
-            });
-            if (!properties) return reject(new Error("Failed to fetch properties"));
+    return new Promise(async (resolve, _) => {
+        const configEntries = await DeviceSensorConfiguration.findAll({
+            where: { sessionId: sessionId, deviceId: deviceId, active: true },
+            attributes: ['sensorProperty', 'sensorType'],
+            raw: true
+        });
 
-            return resolve(properties);
-        }   catch (error) {
-            console.error("Database query failed:", error);
-            return resolve("Failed to fetch properties");
-        }
-    });
+        if (!configEntries.length) return resolve([]);
+
+        // Get module mappings
+        const moduleMappings = await DeviceModuleMapping.findAll({
+            where: { deviceId },
+            attributes: ['moduleName', 'moduleManufacturer', 'sensorType'],
+            raw: true
+        });
+
+        // Now match properties with module mappings based on sensorType
+        const result = [];
+
+        for (const config of configEntries) {
+            const mapping = moduleMappings.find(
+              map => map.sensorType === config.sensorType
+            );
+
+            if (mapping) {
+              result.push({
+                moduleManufacturer: mapping.moduleManufacturer,
+                moduleName: mapping.moduleName,
+                sensorType: config.sensorType,
+                propertyName: config.sensorProperty
+              });
+            }
+          }
+
+        if (!result) return resolve([]);
+        return resolve(result)
+    });;
 }
 
 export const listUnits = async (): Promise<any> => {
     return new Promise(async (resolve, _) => {
-        // const message = {
-        //     "command": "list_units",
-        //     "timestamp": Date.now()
-        // };
-
         const message = {
             "filterActiveOnly": true,
         }
@@ -279,14 +321,24 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
     return new Promise(async (resolve, reject) => {
         console.log("Sending configuration to device: ", sessionId, deviceId);
 
+        // const selectedProperties = await getSelectedProperties(sessionId, deviceId);
+        // // if (!properties) return reject(new Error("Failed to fetch properties"));
+        // if (!selectedProperties) return reject(new Error("Failed to fetch selected properties"));
+
+        // // Get all properties for the device
+        // const allProperties = await getDeviceProperties(deviceId);
+        // if (!allProperties) return reject(new Error("Failed to fetch all properties"));
+
         const properties = await getSelectedProperties(sessionId, deviceId);
-        if (!properties) return reject(new Error("Failed to fetch properties"));
+        if (!properties) return reject(new Error("Failed to fetch selected properties"));
 
         const deviceProperties = await createPropertyDict(properties, deviceId);
         if (!deviceProperties) return reject(new Error("Failed to create property dictionary"));
 
         const message = await createConfigMessage(deviceProperties);
-        console.log("Message ----------------- : \n", message);
+        console.log("MESSAGE");
+        console.dir(message, { depth: null, colors: true });
+        // console.log("Message ----------------- : \n", message);
 
         // Send configuration (selected properties) to gateway
         const options = { qos: 2 };
@@ -296,23 +348,31 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
             resolve(null);
         }, 5000);
 
-        socket.onmessage = (event) => {
+        socket.onmessage = async (event) => {
             console.log("Received message from server: ", event.data);
             const data = JSON.parse(event.data.toString());
 
-            if (data.event === "frequency" && data.deviceId === deviceId) {
-                console.log("Frequency updated for device: ", data.frequency, data.deviceId);
+            if (data.event === "sampleRate" && data.deviceId === deviceId) {
+                console.log("sample rate updated for device: ", data.sampleRate, data.deviceId);
+
+                const doc = await DeviceSensorConfiguration.update(
+                    { sampleRate: data.sampleRate },
+                    { where: { sessionId: sessionId, deviceId: deviceId } }
+                );
+                if (!doc) return reject(new Error("Failed to update sample rate"));
+
                 clearTimeout(timeout);
-                return resolve(data.frequency);
+                return resolve(data.sampleRate);
             }
         };
     });
 }
 
 
-
+// TODO CHECK OF SELECT EN DESELECT WERKT
 export const updateSelectedProperties = async (sessionId: number, deviceId: string, selectedProperties: any): Promise<any> => {
     return new Promise(async (resolve, reject) => {
+        console.log("selectedProperties: ", selectedProperties);
         try {
             // set all properties from device and session to inactive
             const updatedPropertiesFalse = await DeviceSensorConfiguration.update(
@@ -322,13 +382,13 @@ export const updateSelectedProperties = async (sessionId: number, deviceId: stri
             if (!updatedPropertiesFalse) return reject(new Error("Failed to update properties"));
 
             for (const p of selectedProperties) {
-                if (p.split(":").length === 3) {
-                    const { manufacturer, model, propertyName } = splitProperty(p);
+                if (p.split(":").length === 4) {
+                    const { sensorType, sensorProperty } = splitProperty(p);
 
                     // set all selected properties to active
                     const updatedPropertyTrue = await DeviceSensorConfiguration.update(
                         { active: true },
-                        { where: { sessionId: sessionId, deviceId: deviceId, manufacturer: manufacturer, model: model, propertyName: propertyName } }
+                        { where: { sessionId: sessionId, deviceId: deviceId, sensorType: sensorType, sensorProperty: sensorProperty } }
                     );
                     if (!updatedPropertyTrue) return reject(new Error("Failed to update properties"));
                 }

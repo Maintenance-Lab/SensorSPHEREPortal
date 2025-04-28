@@ -6,6 +6,8 @@ import Module from "../models/Module.js";
 import DeviceModel from "../models/DeviceModel.js";
 import Sensor from "../models/Sensor.js";
 import WebSocket from 'ws';
+import Session from "src/models/Session.js";
+import SessionDeviceMapping from "src/models/mappings/SessionDeviceMapping.js";
 
 // Set up WebSocket server
 export const wss = new WebSocket.Server({ port: 8080 });
@@ -23,35 +25,27 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
             }
         }
         else if (topicParts[0] == "interface" && topicParts[2] == "validateConfigurationResult") {
-            updateFrequency(message);
+            sendSampleRate(message);
         }
 
         return resolve({ message: "Message received" });
     });
 }
 
-export const updateFrequency = async (message: any) => {
-    return new Promise(async (resolve, reject) => {
+
+const sendSampleRate= async (message: any) => {
+    return new Promise(async (resolve, _) => {
         const deviceId = message.mac;
-        const frequency = message.sampleRate;;
-        console.log("In return configurations: ", deviceId, frequency);
+        const sampleRate = message.sampleRate;
 
-        sendFrequency(frequency, deviceId);
+        console.log("In send sample rate: ", sampleRate, deviceId);
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify({ event: "sampleRate", sampleRate: sampleRate, deviceId: deviceId }));
+            }
+        });
 
-        // Update device with sampleRate
-        const doc = await Device.update({ sampleRate: frequency }, { where: { deviceId } });
-        if (!doc) return reject(new Error("Error updating entry"));
-
-        return resolve({ message: "Frequency updated" });
-    });
-}
-
-const sendFrequency = (frequency: number, deviceId: string) => {
-    console.log("sending frequency to sockt: ", frequency);
-    wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ event: "frequency", frequency: frequency, deviceId: deviceId }));
-        }
+        return resolve({ message: "Sample rate sent" });
     });
 }
 

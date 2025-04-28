@@ -11,7 +11,6 @@ class Device extends Model {
     model: string;
     connectStatus: string;
     batteryLevel: number;
-    sampleRate: number;
     lastHeartbeat: Date;
 }
 
@@ -21,7 +20,6 @@ Device.init({
     model: { type: DataTypes.STRING(100), allowNull: false, references: { model: DeviceModel, key: 'model' } },
     connectStatus: { type: DataTypes.STRING, defaultValue: "connected", validate: { isIn: [["connected", "disconnected", "online"]] }},
     batteryLevel: { type: DataTypes.INTEGER, defaultValue: 0},
-    sampleRate: { type: DataTypes.INTEGER, defaultValue: 0},
     lastHeartbeat: { type: DataTypes.DATE, defaultValue: new Date() }
 },
 {

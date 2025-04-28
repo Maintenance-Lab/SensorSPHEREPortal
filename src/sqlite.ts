@@ -85,7 +85,7 @@ const initDb = () => {
             CREATE TABLE IF NOT EXISTS SessionDeviceMapping (
                 sessionId INTEGER,
                 deviceId INTEGER,
-                configuredHz INTEGER,
+                sampleRate INTEGER,
                 PRIMARY KEY (sessionId, deviceId),
                 FOREIGN KEY (sessionId) REFERENCES Session(sessionId),
                 FOREIGN KEY (deviceId) REFERENCES Device(deviceId)
@@ -100,7 +100,6 @@ const initDb = () => {
                 model TEXT,
                 connectStatus TEXT,
                 batteryLevel INTEGER,
-                sampleRate INTEGER,
                 lastHeartbeat DATE,
                 PRIMARY KEY (deviceId),
                 FOREIGN KEY (manufacturer) REFERENCES Manufacturer(manufacturer)

@@ -26,35 +26,9 @@ const createConfigMessage = async (deviceProperties: any) => {
     const message: any = {
         "mac": deviceId,
         "firmware": FIRMWARE,
-        "sensorModules": []
+        "sensorModules": deviceProperties.modules,
     };
 
-    // properties.forEach((property: any) => {
-    //     const { moduleManufacturer, moduleName, sensorType, propertyName, active } = property;
-
-
-
-    // Iterate through each manufacturer in models
-    // for (const moduleName in moduleMap) {
-    //     const moduleData = moduleMap[moduleName];
-    //     const sensorsArray = [];
-
-    //     for (const sensorType in moduleData.sensors) {
-    //       sensorsArray.push({
-    //         sensorType: sensorType,
-    //         measurements: moduleData.sensors[sensorType]
-    //       });
-    //     }
-
-    //     message.sensorModules.push({
-    //         moduleName: moduleName,
-    //         manufacturer: moduleData.manufacturer,
-    //         sensors: sensorsArray
-    //       });
-
-
-
-    // }
     console.log("message: ", message);
     return message;
 };
@@ -96,7 +70,7 @@ const createPropertyDict = (properties: any, deviceId: string) => {
         });
     });
 
-    deviceProperties.models = modules;
+    deviceProperties.modules = modules;
     console.log("deviceProperties: ");
     console.dir(deviceProperties, { depth: null, colors: true });
     return deviceProperties;

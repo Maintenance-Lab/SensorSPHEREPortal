@@ -8,7 +8,7 @@ export const loadRows = async (properties: any, setAllProperties: any) => {
   };
 
   for (const entry of properties) {
-    const { moduleManufacturer, moduleName, sensorType, propertyName } = entry;
+    const { moduleManufacturer, moduleName, sensorType, propertyName, _} = entry;
     const moduleKey = `${moduleManufacturer}:${moduleName}`;
     const moduleDisplay = `${moduleManufacturer} ${moduleName}`;
 

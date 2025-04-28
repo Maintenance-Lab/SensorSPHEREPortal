@@ -21,82 +21,84 @@ const splitProperty = (property: string): any => {
     return { sensorType, sensorProperty };
 }
 const createConfigMessage = async (deviceProperties: any) => {
-    console.log("DEVICE PROPERTIES: ", deviceProperties);
-    const deviceId = deviceProperties.deviceId;
-    const moduleMap = deviceProperties.moduleMap;
-    // const manufacturers = deviceProperties.manufacturers;
-    // const models = deviceProperties.models;
-
+// const createConfigMessage = async (deviceId: string, properties: any) => {
+    const { deviceId, models } = deviceProperties;
     const message: any = {
         "mac": deviceId,
         "firmware": FIRMWARE,
         "sensorModules": []
     };
 
+    // properties.forEach((property: any) => {
+    //     const { moduleManufacturer, moduleName, sensorType, propertyName, active } = property;
+
+
+
     // Iterate through each manufacturer in models
-    for (const moduleName in moduleMap) {
-        const moduleData = moduleMap[moduleName];
-        const sensorsArray = [];
+    // for (const moduleName in moduleMap) {
+    //     const moduleData = moduleMap[moduleName];
+    //     const sensorsArray = [];
 
-        for (const sensorType in moduleData.sensors) {
-          sensorsArray.push({
-            sensorType: sensorType,
-            measurements: moduleData.sensors[sensorType]
-          });
-        }
+    //     for (const sensorType in moduleData.sensors) {
+    //       sensorsArray.push({
+    //         sensorType: sensorType,
+    //         measurements: moduleData.sensors[sensorType]
+    //       });
+    //     }
 
-        message.sensorModules.push({
-            moduleName: moduleName,
-            manufacturer: moduleData.manufacturer,
-            sensors: sensorsArray
-          });
+    //     message.sensorModules.push({
+    //         moduleName: moduleName,
+    //         manufacturer: moduleData.manufacturer,
+    //         sensors: sensorsArray
+    //       });
 
 
-        // Iterate through each manufacturer of the model
-        // const manufacturers = models[model];
-        // for (const manufacturer in manufacturers) {
-        //     const properties = manufacturers[manufacturer];
-        //     const sensor = {
-        //         "manufacturer": manufacturer,
-        //         "model": model,
-        //         "properties": properties,
-        //     };
-        //     message.sensorModules.push(sensor);
-        // }
-    }
+
+    // }
     console.log("message: ", message);
     return message;
 };
 
-
-const createPropertyDict = (properties: any[], deviceId: string) => {
-    console.log("properties in createPropertyDict", properties);
-
+const createPropertyDict = (properties: any, deviceId: string) => {
     const deviceProperties: any = { deviceId };
-    const moduleMap: any = {}; // { "ENV III" : { manufacturer: "M5Stack", sensors: [ ... ] } }
+    const modules: { [key: string]: any[] } = {}; // Simplified typing for modules
 
     properties.forEach((property: any) => {
-      const { moduleManufacturer, moduleName, sensorType, propertyName } = property;
+        const { moduleManufacturer, moduleName, sensorType, propertyName, active } = property;
+        const groupKey = "sensorModules";
 
-      if (!moduleMap[moduleName]) {
-        moduleMap[moduleName] = {
-          manufacturer: moduleManufacturer,
-          sensors: {}
-        };
-      }
+        if (!modules[groupKey]) {
+            modules[groupKey] = [];
+        }
 
-      if (!moduleMap[moduleName].sensors[sensorType]) {
-        moduleMap[moduleName].sensors[sensorType] = [];
-      }
+        let existingModule = modules[groupKey].find(module => module.moduleName === moduleName);
+        if (!existingModule) {
+            existingModule = {
+                moduleName: moduleName,
+                moduleManufacturer: moduleManufacturer,
+                sensors: []
+            };
+            modules[groupKey].push(existingModule);
+        }
 
-      moduleMap[moduleName].sensors[sensorType].push({
-        type: propertyName,
-        active: true
-      });
+        let existingSensor = existingModule.sensors.find((sensor: any) => sensor.sensorType === sensorType);
+        if (!existingSensor) {
+            existingSensor = {
+                sensorType: sensorType,
+                measurements: []
+            };
+            existingModule.sensors.push(existingSensor);
+        }
+
+        existingSensor.measurements.push({
+            type: propertyName,
+            active: active === 1
+        });
     });
 
-    deviceProperties.moduleMap = moduleMap;
-    console.log("deviceProperties: ", deviceProperties);
+    deviceProperties.models = modules;
+    console.log("deviceProperties: ");
+    console.dir(deviceProperties, { depth: null, colors: true });
     return deviceProperties;
 };
 
@@ -221,7 +223,7 @@ export const getDeviceProperties = async (deviceId: string) => {
 
         const configEntries = await DeviceSensorConfiguration.findAll({
             where: { deviceId },
-            attributes: ['sensorProperty', 'sensorType'],
+            attributes: ['sensorProperty', 'sensorType', 'active'],
             raw: true
         });
 
@@ -249,7 +251,8 @@ export const getDeviceProperties = async (deviceId: string) => {
                 moduleManufacturer: mapping.moduleManufacturer,
                 moduleName: mapping.moduleName,
                 sensorType: config.sensorType,
-                propertyName: config.sensorProperty
+                propertyName: config.sensorProperty,
+                active: config.active
               });
             }
           }
@@ -321,16 +324,10 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
     return new Promise(async (resolve, reject) => {
         console.log("Sending configuration to device: ", sessionId, deviceId);
 
-        // const selectedProperties = await getSelectedProperties(sessionId, deviceId);
-        // // if (!properties) return reject(new Error("Failed to fetch properties"));
-        // if (!selectedProperties) return reject(new Error("Failed to fetch selected properties"));
-
-        // // Get all properties for the device
-        // const allProperties = await getDeviceProperties(deviceId);
-        // if (!allProperties) return reject(new Error("Failed to fetch all properties"));
-
-        const properties = await getSelectedProperties(sessionId, deviceId);
-        if (!properties) return reject(new Error("Failed to fetch selected properties"));
+        // Get all properties for the device
+        const properties = await getDeviceProperties(deviceId);
+        console.log("allProperties: ", properties);
+        if (!properties) return reject(new Error("Failed to fetch all properties"));
 
         const deviceProperties = await createPropertyDict(properties, deviceId);
         if (!deviceProperties) return reject(new Error("Failed to create property dictionary"));

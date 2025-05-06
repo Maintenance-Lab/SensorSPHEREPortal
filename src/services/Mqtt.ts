@@ -19,10 +19,10 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
 
         if (topic == "interface/listUnitsResult") {
             // Devices that are online
-            if (topicParts[1] === 'listUnitsResult') {
-                console.log("Got message on listUnitsResult topic");
-                updateDeviceStatus(message);
-            }
+            // if (topicParts[1] === 'listUnitsResult') {
+            console.log("Got message on listUnitsResult topic");
+            updateDeviceStatus(message);
+            // }
         }
         else if (topicParts[0] == "interface" && topicParts[2] == "handshake") {
             addDeviceToDatabase(message);
@@ -119,7 +119,8 @@ const addOrUpdateDevice = async (entry: any) => {
     });
 }
 
-// TODO: test of nieuwe device goed wordt opgeslagen
+
+
 const addDeviceToDatabase = async (message: any) => {
     return new Promise(async (resolve, _) => {
 
@@ -185,41 +186,42 @@ const addDeviceToDatabase = async (message: any) => {
     });
 }
 
+
+
+
 const updateDeviceStatus = async (message: any) => {
     return new Promise(async (resolve, _) => {
+        let devices = [];
+
+
         // If list of units
-        if (message.units) {
-            console.log("test");
-            for (const unit of message.units) {
-                const deviceId = unit.mac;
-                console.log("In update device status: ", message, deviceId);
-                const existingDevice = await Device.findOne({ where: { deviceId: deviceId } });
+        // if (message.units) {
+        //     console.log("test");
+        for (const unit of message.units) {
+            const deviceId = unit.mac;
+            devices.push(deviceId);
+            console.log("In update device status: ", message, deviceId);
+            const existingDevice = await Device.findOne({ where: { deviceId: deviceId } });
 
-                if (!existingDevice) {
-                    return resolve({ message: "Device does not exist in database yet" });
-                }
-
-                message.connectStatus = "connected";
-                // Set right battery level, connection status and lastHearbeat date for device
-                await Device.update({ batteryLevel: unit.battery, connectStatus: unit.status, lastHeartbeat: unit.last_seen }, { where: { deviceId } });
+            if (!existingDevice) {
+                return resolve({ message: "Device does not exist in database yet" });
             }
 
-            return resolve({ message: "Device status updated" });
+            await Device.update({ batteryLevel: unit.batteryLevel, connectStatus: "active", lastHeartbeat: unit.lastSeen }, { where: { deviceId } });
         }
 
-        const deviceId = message.mac;
-        console.log("In update device status: ", message, deviceId);
-        const existingDevice = await Device.findOne({ where: { deviceId: deviceId } });
+        // return resolve({ message: "Device status updated" });
 
-        if (!existingDevice) {
-            return resolve({ message: "Device does not exist in database yet" });
+        // all other devices to non-active
+        const allDevices = await Device.findAll({ where: { connectStatus: "active" } });
+        for (const device of allDevices) {
+            if (!devices.includes(device.deviceId)) {
+                await Device.update({ connectStatus: "inactive" }, { where: { deviceId: device.deviceId } });
+            }
         }
-
-        message.connectStatus = "connected";
-        // Set right battery level, connection status and lastHearbeat date for device
-        await Device.update({ batteryLevel: message.battery, connectStatus: message.status, lastHeartbeat: Date.now() }, { where: { deviceId } });
 
         return resolve({ message: "Device status updated" });
+
     });
 }
 

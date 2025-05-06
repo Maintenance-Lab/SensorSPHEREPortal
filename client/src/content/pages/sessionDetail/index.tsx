@@ -27,7 +27,7 @@ import { RenderTree } from "./types";
 import { loadRows, getOnChange, updateSelection } from "./treeView";
 import { fetchDevices, removeDevicesFromSession, sendConfiguration, updateSession, deleteSession, addDevices,
   getDeviceProperties, getSelectedProperties, updateSelectedProperties, fetchAvailableDevices, fetchSession, projectData,
-  listUnits, getSampleRate, saveSampleRate, startBatch,
+  listUnits, getSampleRate, saveSampleRate, startBatch, stopBatch
  } from "./api";
 
 //  Api calls in api.tsx
@@ -598,6 +598,7 @@ const SessionDetail = () => {
   // }
 
   const handleStopSession = async () => {
+    stopBatch(sessionId);
     setSessionStatus('Stopped');
   }
 

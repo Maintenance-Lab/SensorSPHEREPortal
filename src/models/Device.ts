@@ -18,7 +18,8 @@ Device.init({
     deviceId: { type: DataTypes.STRING, primaryKey: true,  allowNull: false, validate: { is: /^([0-9A-F][0-9A-F]:){5}([0-9A-F][0-9A-F])$/i } },
     manufacturer: { type: DataTypes.STRING(100), allowNull: false,  references: { model: Manufacturer, key: 'manufacturer' } },
     model: { type: DataTypes.STRING(100), allowNull: false, references: { model: DeviceModel, key: 'model' } },
-    connectStatus: { type: DataTypes.STRING, defaultValue: "connected", validate: { isIn: [["connected", "disconnected", "online"]] }},
+    // connectStatus: { type: DataTypes.STRING, defaultValue: "connected", validate: { isIn: [["connected", "disconnected", "online"]] }},
+    connectStatus: { type: DataTypes.STRING, defaultValue: "active" },
     batteryLevel: { type: DataTypes.INTEGER, defaultValue: 0},
     lastHeartbeat: { type: DataTypes.DATE, defaultValue: new Date() }
 },

@@ -114,3 +114,12 @@ export const startBatch = async (sessionId: number) => {
       sessionId
     });
 }
+
+export const stopBatch = async (sessionId: number) => {
+  return apiRequest("/api/devices/stopBatch", "PUT", {
+    sessionId
+  });
+}
+
+
+

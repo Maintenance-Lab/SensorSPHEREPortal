@@ -12,10 +12,10 @@ startDb();
 
 mqtt.subscribe('interface/listUnitsResult');
 mqtt.subscribe('interface/+/validateConfigurationResult');
-console.log("Subscribed to interface/listUnitsResult and interface/<mac_addr>/validateConfigurationResult");
+mqtt.subscribe('interface/+/handshake');
+console.log("Subscribed to interface/listUnitsResult, interface/<mac_addr>/validateConfigurationResult and interface/<mac_addr>/handshake topics");
 
-// Subscribed to check
-// Subscribe to all topics starting with 'interface/'
+// Subscribed for testing
 mqtt.subscribe('interface/+');
 
 export default mqtt;

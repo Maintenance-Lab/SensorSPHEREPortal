@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { getDeviceById, getAllDevices, getAllDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties, sendConfigurationToDevice,
-    getSampleRate, saveSampleRate, sendStartBatch } from '../../services/Device.js';
+import { getDeviceById, getAllDevices, getAllAvailableDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties, sendConfigurationToDevice,
+    getSampleRate, saveSampleRate, sendStartBatch, sendStopBatch } from '../../services/Device.js';
 import SessionDeviceMapping from '../../models/mappings/SessionDeviceMapping.js';
 import { getDeviceProperties } from '../../services/Device.js';
 import Property from '../../models/Property.js';
@@ -103,7 +103,7 @@ router.get("/properties/:deviceId", async (req, res) => {
 
 router.get("/available/:session", async (req, res) => {
     const sessionId = Number(req.params.session);
-    const doc = await getAllDevicesSession(sessionId);
+    const doc = await getAllAvailableDevicesSession(sessionId);
     if (!doc) return res.status(404).json({ message: "Devices not found" });
     return res.json(doc);
 });
@@ -183,13 +183,13 @@ router.put("/startBatch", async (req, res) => {
     return res.json(doc);
 });
 
-// router.put("/stopBatch", async (req, res) => {
-//     console.log("in stop batch");
-//     const sessionId = req.body.sessionId;
-    // const doc = await sendStopBatch(sessionId);
-    // if (!doc) return res.status(500).json({ message: "Failed to stop batch" });
-    // return res.json(doc);
-// });
+router.put("/stopBatch", async (req, res) => {
+    console.log("in stop batch");
+    const sessionId = req.body.sessionId;
+    const doc = await sendStopBatch(sessionId);
+    if (!doc) return res.status(500).json({ message: "Failed to stop batch" });
+    return res.json(doc);
+});
 
 
 

@@ -145,18 +145,28 @@ const SessionDetail = () => {
   const [loading, setLoading] = useState(false);
   const [isSaveDisabled, setIsSaveDisabled] = useState(false);
 
+
   const [activeStep, setActiveStep] = React.useState(0);
   const [sampleRate, setSampleRate] = React.useState(null);
   const steps = ['Select Properties', 'Find sample rate', 'Save configuration'];
 
   const [progress, setProgress] = useState(0);
   const [sessionStatus, setSessionStatus] = useState('Not started');
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   // New rows when new devices added from mqtt
   // const [newDevices, setNewDevices] = useState([]);
 
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
+
+  const formatTime = (seconds) => {
+    if (!seconds && seconds !== 0) return '00:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
+
 
   const MemoizedTreeItem = React.memo(TreeItem);
   const renderTree = useCallback((nodes: RenderTree) => {
@@ -533,7 +543,8 @@ const SessionDetail = () => {
   const renewAvailableDevices = async () => {
     // // Opvragen units
     // console.log("wrm vragen we deze nu op")
-    const devices = await listUnits();
+    // const devices = await listUnits();
+    await listUnits();
     await handleAvailableDevices(sessionId, setAvailableDevices);
   }
 
@@ -561,10 +572,25 @@ const SessionDetail = () => {
     fetchSampleRates();
   }, [devices, sessionId, sampleRate]);
 
-  const handleStartSession = async () => {
-    // continue doing nothing
-    startBatch(sessionId);
 
+
+
+
+  useEffect(() => {
+    let interval;
+    if (sessionStatus === 'Running') {
+      interval = setInterval(() => {
+        setElapsedTime((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [sessionStatus]);
+
+
+  const handleStartSession = async () => {
+    startBatch(sessionId);
+    setElapsedTime(0);
+    setSessionStatus('Running');
   }
 
   // const handlePauseSession = async () => {
@@ -572,7 +598,7 @@ const SessionDetail = () => {
   // }
 
   const handleStopSession = async () => {
-    // continue doing nothing
+    setSessionStatus('Stopped');
   }
 
   const ConfirmationDialog = ({ open, onClose, onConfirm, sessionId }) => (
@@ -746,59 +772,44 @@ const SessionDetail = () => {
 
 
 
-        <Container>
-        <Stack spacing={1}>
+      <Container>
+        <Stack spacing={2}>
           <Paper elevation={3} sx={{ p: 2, borderRadius: 2 }}>
-            <Stack spacing={1}>
-              <Typography variant="h5" fontWeight="bold">
-                Session Progress
+            <Stack spacing={2}>
+              <Typography variant="h6" fontWeight="bold">
+                Session Overview
               </Typography>
 
-              {/* Progress Bar */}
-              <LinearProgress variant="determinate" value={progress} />
-
-              {/* Time and Status */}
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="body1">
-                  {/* Elapsed Time: {formatTime(elapsedTime)} */}
-                  Elapsed Time: {"todo"}
+              {/* Status and Elapsed Time */}
+              <Stack direction="row" spacing={3} justifyContent="space-between" alignItems="center">
+                <Typography variant="body2">
+                  Elapsed Time: {formatTime(elapsedTime)}
                 </Typography>
-                <Typography variant="body1">
-                  {/* Remaining Time: {formatTime(remainingTime)} */}
-                  Remaining Time: {"todo"}
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
+                <Typography variant="body2" color="text.secondary">
                   Status: {sessionStatus}
                 </Typography>
               </Stack>
 
-              {/* Control Buttons */}
-              <Stack direction="row" spacing={1} justifyContent="center">
-                {sessionStatus !== 'Running' && (
+              {/* Conditional Buttons */}
+              {(sessionStatus === 'Not started' || sessionStatus === 'Stopped') && (
+                <Stack direction="row" spacing={1} justifyContent="flex-end">
                   <Button variant="contained" color="primary" onClick={handleStartSession}>
-                    Start
+                    Start Session
                   </Button>
-                )}
-                {/* {sessionStatus === 'Running' && (
-                  <Button variant="outlined" color="warning" onClick={handlePauseSession}>
-                    Pause
+                </Stack>
+              )}
+
+              {sessionStatus === 'Running' && (
+                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                  <Button variant="outlined" color="error" onClick={handleStopSession}>
+                    Stop Session
                   </Button>
-                )} */}
-                <Button variant="contained" color="error" onClick={handleStopSession}>
-                  Stop
-                </Button>
-              </Stack>
+                </Stack>
+              )}
             </Stack>
           </Paper>
         </Stack>
       </Container>
-
-
-
-
-
-
-
 
       <Container>
         <Stack spacing={2}>

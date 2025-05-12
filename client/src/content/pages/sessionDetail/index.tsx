@@ -382,141 +382,142 @@ const SessionDetail = () => {
   )
 };
 
-  const devicesColumns: GridColDef[] = [
-    {
-      field: 'id', headerName: 'MAC Address', renderCell: (params) => (
-      <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}
-        onClick={(event) => {
-        event.stopPropagation();
-      }}>
+const renderBatteryCell = (params) => {
+  const level = params.value;
+  let IconComponent = Icons.BatteryAlert;
+  let color = 'error.main';
+
+  if (level === null || level === undefined) {
+    IconComponent = Icons.BatteryAlert;
+    color = 'gray';
+  } else if (level > 90) {
+    IconComponent = Icons.BatteryFull;
+    color = 'success.main';
+  } else if (level > 75) {
+    IconComponent = Icons.Battery80;
+    color = 'success.main';
+  } else if (level > 50) {
+    IconComponent = Icons.Battery60;
+    color = 'warning.main';
+  } else if (level > 30) {
+    IconComponent = Icons.Battery50;
+    color = 'warning.main';
+  } else if (level > 15) {
+    IconComponent = Icons.Battery30;
+    color = 'error.main';
+  } else {
+    IconComponent = Icons.Battery20;
+    color = 'error.main';
+  }
+
+  return (
+    <Stack direction="row" alignItems="center" sx={{ color, fontWeight: 500 }}>
+      <IconComponent fontSize="small" />
+      <Typography variant="inherit" sx={{ ml: 0.5 }}>
+        {level != null ? `${level}%` : '?'}
+      </Typography>
+    </Stack>
+  );
+};
+
+const renderConnectedCell = (params) => {
+  const status = params.value;
+
+  if (status === 'connected') {
+    return <Icons.Link sx={{ color: green[500] }} />;
+  } else if (status === 'disconnected') {
+    return <Icons.LinkOff sx={{ color: red[500] }} />;
+  } else {
+    return null;
+  }
+};
+
+const commonColumns: GridColDef[] = [
+  { field: 'id', headerName: 'MAC Address', flex: 1,
+    renderCell: (params) => (
+      <Link
+        href={`/devices/detail/${params.id}`}
+        sx={{ padding: 1, marginX: -1 }}
+        onClick={(event) => event.stopPropagation()}
+      >
         {params.value}
       </Link>
-      ),
-      flex: 1
-    },
-    {
-      field: 'battery', headerName: 'Battery', renderCell: (params) => (
-        <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
-          <Icons.BatteryFull fontSize="small" />
-          {params.value ? (
-            <Typography variant="inherit">{params.value}%</Typography>
-          ) : (
-            <Typography variant="inherit">?</Typography>
-          )}
-        </Stack>
-      ),
-      flex: 1
-    },
-    { field: 'connected', headerName: 'Connected', width: 130, align: 'center', headerAlign: 'center',
-      renderCell: (params) => {
-        const status = params.value
+    ),
+  },
+  { field: 'battery', headerName: 'Battery', flex: 1, renderCell: renderBatteryCell },
+  { field: 'connected', headerName: 'Connected', width: 130, align: 'center', headerAlign: 'center',
+    renderCell: renderConnectedCell
+  },
+];
 
-        if (status === 'connected') {
-          return <Icons.Link sx={{ color: green[500] }} />;
-        } else if (status === 'disconnected') {
-          return <Icons.LinkOff sx={{ color: red[500] }} />;
-        }
-      },
-    },
-    { field: 'sampleRate', headerName: 'Sample Rate', flex: 1, align: 'center', headerAlign: 'center' },
-    {
-      field: "configureButton", headerName: "Configure", width: 150, align: 'center', headerAlign: 'center', renderCell: (params) => (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "95%",
-            width: "100%",
-          }}
-        >
-          <div>
+const devicesColumns: GridColDef[] = [
+  ...commonColumns,
+  {
+    field: 'sampleRate',
+    headerName: 'Sample Rate',
+    flex: 1,
+    align: 'center',
+    headerAlign: 'center',
+  },
+  {
+    field: 'configureButton',
+    headerName: 'Configure',
+    width: 150,
+    align: 'center',
+    headerAlign: 'center',
+    sortable: false,
+    filterable: false,
+    renderCell: (params) => (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "95%",
+          width: "100%",
+        }}
+      >
+        <div>
           <Button
             color="primary"
             size="small"
             onClick={(event) => {
               event.stopPropagation();
-
-              // handleOpenDialog2(params.row.id);
               handleRowClick(params.row.id, event);
-              // DeviceConfigDialog({ device: params.row.id, open: isDialogOpen2 });
             }}
             sx={{
-              textTransform: "none", fontWeight: "bold", display: "flex",
-              alignItems: "center", height: "auto", margin: "auto",
+              textTransform: "none",
+              fontWeight: "bold",
+              display: "flex",
+              alignItems: "center",
+              height: "auto",
+              margin: "auto",
             }}
           >
-            <Icons.Settings/>
+            <Icons.Settings />
           </Button>
-          {/* <DeviceConfigDialog
-            open={isDialogOpen2}
-            device={selectedDevice}
-          /> */}
-
-          {/* only open dialog on selection row */}
-          { selectedDevice === params.row.id && open && loading === false && (
-            <DeviceConfigDialog
-              open={isDialogOpen2}
-              device={selectedDevice}
-            />
+          {selectedDevice === params.row.id && open && loading === false && (
+            <DeviceConfigDialog open={isDialogOpen2} device={selectedDevice} />
           )}
-          </div>
-        </Box>
-      ),
-      sortable: false,
-      filterable: false,
-    }
-  ];
+        </div>
+      </Box>
+    ),
+  },
+];
 
-  const availableDevicesColumns: GridColDef[] = [
-    {
-      field: 'id', headerName: 'MAC Address', renderCell: (params) => (
-      <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}
-        onClick={(event) => {
-        event.stopPropagation();
-      }}>
-        {params.value}
-      </Link>
-      ),
-      flex: 1
-    },
-    {
-      field: 'battery', headerName: 'Battery', renderCell: (params) => (
-        <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
-          <Icons.BatteryFull fontSize="small" />
-          {params.value ? (
-            <Typography variant="inherit">{params.value}%</Typography>
-          ) : (
-            <Typography variant="inherit">?</Typography>
-          )}
-        </Stack>
-      ),
-      flex: 1
-    },
-    { field: 'connected', headerName: 'Connected', width: 130, align: 'center', headerAlign: 'center',
-      renderCell: (params) => {
-        const status = params.value
+const availableDevicesColumns: GridColDef[] = [...commonColumns];
 
-        if (status === 'connected') {
-          return <Icons.Link sx={{ color: green[500] }} />;
-        } else if (status === 'disconnected') {
-          return <Icons.LinkOff sx={{ color: red[500] }} />;
-        }
-      },
-    },
-  ];
+const availableDevicesRows: GridRowsProp = useMemo(() => {
+  const rows = availableDevices.map((device) => {
+      return {
+        name:     device.manufacturer,
+        id:       device.deviceId,
+        connected:   device.connectStatus,
+        battery:  device.batteryLevel,
+      }
+  });
 
-  const availableDevicesRows: GridRowsProp = useMemo(() => {
-    const rows = availableDevices.map((device) => {
-        return {
-          name:     device.manufacturer,
-          id:       device.deviceId,
-          connected:   device.connectStatus,
-          battery:  device.batteryLevel,
-        }
-    });
-
-    return rows;
+  return rows;
 }, [availableDevices]);
 
   const handleNameChange = async (event) => {

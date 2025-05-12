@@ -1,26 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Button, TextField, Link, Typography, Container, Box, Paper, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
-import BatteryFullIcon from '@mui/icons-material/BatteryFull';
-import Stack from '@mui/material/Stack';
-import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';
-import { ArchiveOutlined, DeleteOutline, Devices, Inventory, UnarchiveOutlined, DesignServicesOutlined, DoNotStepOutlined } from '@mui/icons-material';
-import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import EditIcon from '@mui/icons-material/Edit';
-import { TreeView, TreeItem } from '@mui/lab'
-import { Checkbox, FormControlLabel } from '@mui/material'
-import React from 'react';
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { useCallback } from 'react';
-import Stepper from '@mui/material/Stepper';
-import Step from '@mui/material/Step';
-import StepLabel from '@mui/material/StepLabel';
-import CircularProgress from '@mui/material/CircularProgress';
-import { useMemo } from 'react';
-import LinearProgress from '@mui/material/LinearProgress';
+import { Button, TextField, Link, Typography, Container, Box, Paper, Dialog,
+  DialogActions, DialogContent, DialogTitle, Stack, Checkbox, FormControlLabel,
+  Stepper, Step, StepLabel, CircularProgress } from '@mui/material';
+import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer,
+  GridToolbarQuickFilter } from '@mui/x-data-grid';
+import { ArchiveOutlined, DeleteOutline, Devices, Inventory,
+  UnarchiveOutlined, DesignServicesOutlined } from '@mui/icons-material';
+import { TreeView, TreeItem } from '@mui/lab';
+import { green, red } from '@mui/material/colors';
+
+import * as Icons from '@mui/icons-material';
 
 // Imports from functions moved to different files
 import { RenderTree } from "./types";
@@ -89,7 +81,7 @@ function ConnectedDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDev
             variant="outlined"
             size="medium"
             color="error"
-            startIcon={<DeleteOutlineOutlinedIcon />}
+            startIcon={<Icons.DeleteOutlineOutlined />}
             disabled={!activeSelection}
             // onClick={() => removeDevicesFromSession(sessionId, selectedDeviceIds, fetchSessionDevices, fetchAvailableDevices)}
             onClick={() => handleRemoveDevices(sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices)}
@@ -284,8 +276,8 @@ const SessionDetail = () => {
         return (
           <TreeView
             multiSelect={true}
-            defaultExpandIcon={<ChevronRightIcon/>}
-            defaultCollapseIcon={<ExpandMoreIcon />}
+            defaultExpandIcon={<Icons.ChevronRight/>}
+            defaultCollapseIcon={<Icons.ExpandMore/>}
             defaultSelected={selectedProperties}
             expanded={expandedNodes}
             onNodeToggle={(e, nodeIds) => {
@@ -405,7 +397,7 @@ const SessionDetail = () => {
     {
       field: 'battery', headerName: 'Battery', renderCell: (params) => (
         <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
-          <BatteryFullIcon fontSize="small" />
+          <Icons.BatteryFull fontSize="small" />
           {params.value ? (
             <Typography variant="inherit">{params.value}%</Typography>
           ) : (
@@ -415,10 +407,20 @@ const SessionDetail = () => {
       ),
       flex: 1
     },
-    { field: 'status', headerName: 'Status', flex: 1 },
-    { field: 'sampleRate', headerName: 'Sample Rate', flex: 1 },
+    { field: 'connected', headerName: 'Connected', width: 130, align: 'center', headerAlign: 'center',
+      renderCell: (params) => {
+        const status = params.value
+
+        if (status === 'connected') {
+          return <Icons.Link sx={{ color: green[500] }} />;
+        } else if (status === 'disconnected') {
+          return <Icons.LinkOff sx={{ color: red[500] }} />;
+        }
+      },
+    },
+    { field: 'sampleRate', headerName: 'Sample Rate', flex: 1, align: 'center', headerAlign: 'center' },
     {
-      field: "configureButton", headerName: "", width: 150, renderCell: (params) => (
+      field: "configureButton", headerName: "Configure", width: 150, align: 'center', headerAlign: 'center', renderCell: (params) => (
         <Box
           sx={{
             display: "flex",
@@ -430,8 +432,6 @@ const SessionDetail = () => {
         >
           <div>
           <Button
-            variant="outlined"
-            startIcon={<EditIcon />}
             color="primary"
             size="small"
             onClick={(event) => {
@@ -446,7 +446,7 @@ const SessionDetail = () => {
               alignItems: "center", height: "auto", margin: "auto",
             }}
           >
-            Configure
+            <Icons.Settings/>
           </Button>
           {/* <DeviceConfigDialog
             open={isDialogOpen2}
@@ -483,7 +483,7 @@ const SessionDetail = () => {
     {
       field: 'battery', headerName: 'Battery', renderCell: (params) => (
         <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
-          <BatteryFullIcon fontSize="small" />
+          <Icons.BatteryFull fontSize="small" />
           {params.value ? (
             <Typography variant="inherit">{params.value}%</Typography>
           ) : (
@@ -493,7 +493,17 @@ const SessionDetail = () => {
       ),
       flex: 1
     },
-    { field: 'status', headerName: 'Status', flex: 1 },
+    { field: 'connected', headerName: 'Connected', width: 130, align: 'center', headerAlign: 'center',
+      renderCell: (params) => {
+        const status = params.value
+
+        if (status === 'connected') {
+          return <Icons.Link sx={{ color: green[500] }} />;
+        } else if (status === 'disconnected') {
+          return <Icons.LinkOff sx={{ color: red[500] }} />;
+        }
+      },
+    },
   ];
 
   const availableDevicesRows: GridRowsProp = useMemo(() => {
@@ -501,7 +511,7 @@ const SessionDetail = () => {
         return {
           name:     device.manufacturer,
           id:       device.deviceId,
-          status:   device.connectStatus,
+          connected:   device.connectStatus,
           battery:  device.batteryLevel,
         }
     });
@@ -559,7 +569,7 @@ const SessionDetail = () => {
         return {
           name: device.manufacturer,
           id: device.deviceId,
-          status: device.connectStatus,
+          connected: device.connectStatus,
           battery: device.batteryLevel,
           sampleRate: sampleRate ?? "Loading...",
         };

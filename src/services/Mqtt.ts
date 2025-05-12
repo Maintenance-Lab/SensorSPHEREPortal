@@ -207,16 +207,16 @@ const updateDeviceStatus = async (message: any) => {
                 return resolve({ message: "Device does not exist in database yet" });
             }
 
-            await Device.update({ batteryLevel: unit.batteryLevel, connectStatus: "active", lastHeartbeat: unit.lastSeen }, { where: { deviceId } });
+            await Device.update({ batteryLevel: unit.batteryLevel, connectStatus: "connected", lastHeartbeat: unit.lastSeen }, { where: { deviceId } });
         }
 
         // return resolve({ message: "Device status updated" });
 
         // all other devices to non-active
-        const allDevices = await Device.findAll({ where: { connectStatus: "active" } });
+        const allDevices = await Device.findAll({ where: { connectStatus: "connected" } });
         for (const device of allDevices) {
             if (!devices.includes(device.deviceId)) {
-                await Device.update({ connectStatus: "inactive" }, { where: { deviceId: device.deviceId } });
+                await Device.update({ connectStatus: "disconnected" }, { where: { deviceId: device.deviceId } });
             }
         }
 

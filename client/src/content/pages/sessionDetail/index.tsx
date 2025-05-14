@@ -411,6 +411,42 @@ const SessionDetail = () => {
   )
 };
 
+const formatLastSeen = (timestamp: string): string => {
+  if (!timestamp || typeof timestamp !== 'string') return 'Never';
+
+  // Fix formatting to match ISO
+  const iso = timestamp
+    .replace(' ', 'T')
+    .replace(/ ([+-]\d{2}:\d{2})$/, '$1')
+    .replace(/ ([+-]\d{4})$/, (_, offset) => {
+    return offset.slice(0, 3) + ':' + offset.slice(3);
+  });
+
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return 'Never';
+
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} second${diffInSeconds === 1 ? '' : 's'} ago`;
+  }
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;
+  }
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
+};
+
+
 const renderBatteryCell = (params) => {
   const level = params.value;
   let IconComponent = Icons.BatteryAlert;
@@ -460,14 +496,14 @@ const renderConnectedCell = (params) => {
   }
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%' }}>
       {Icon}
     </Box>
   );
 };
 
 const commonColumns: GridColDef[] = [
-  { field: 'id', headerName: 'MAC Address', flex: 1,
+  { field: 'id', headerName: 'MAC Address', flex: 2,
     renderCell: (params) => (
       <Link
         href={`/devices/detail/${params.id}`}
@@ -478,30 +514,30 @@ const commonColumns: GridColDef[] = [
       </Link>
     ),
   },
+  { field: 'lastSeen', headerName: 'Last Seen', flex: 1,
+    renderCell: (params) => (
+      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%' }}>
+        <Typography variant="body2" color="text.secondary">
+          {params.value}
+        </Typography>
+      </Box>
+    ),
+  },
   { field: 'battery', headerName: 'Battery', flex: 1, renderCell: renderBatteryCell },
-  { field: 'connected', headerName: 'Connected', width: 130, align: 'center', headerAlign: 'center',
+  { field: 'connected', headerName: 'Connected',flex: 1,
     renderCell: renderConnectedCell
   },
 ];
 
 const devicesColumns: GridColDef[] = [
   ...commonColumns,
-  { field: 'sampleRate', headerName: 'Sample Rate', flex: 1, align: 'center', headerAlign: 'center'},
-  {field: 'configureButton', headerName: 'Configure', width: 150,
-    align: 'center',
-    headerAlign: 'center',
-    sortable: false,
-    filterable: false,
+  { field: 'sampleRate', headerName: 'Sample Rate', flex: 1,},
+  {field: 'configureButton', headerName: 'Configure', flex: 1, align: 'center', headerAlign: 'center',
+    sortable: false, filterable: false,
     renderCell: (params) => (
       <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "95%",
-          width: "100%",
-        }}
-      >
+        sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "95%",
+          width: "100%" }}>
         <div>
           <Button
             color="primary"
@@ -510,15 +546,8 @@ const devicesColumns: GridColDef[] = [
               event.stopPropagation();
               handleRowClick(params.row.id, event);
             }}
-            sx={{
-              textTransform: "none",
-              fontWeight: "bold",
-              display: "flex",
-              alignItems: "center",
-              height: "auto",
-              margin: "auto",
-            }}
-          >
+            sx={{ textTransform: "none", fontWeight: "bold", display: "flex", alignItems: "center",
+              height: "auto", margin: "auto"}}>
             <Icons.Settings />
           </Button>
           {selectedDevice === params.row.id && open && loading === false && (
@@ -530,15 +559,27 @@ const devicesColumns: GridColDef[] = [
   },
 ];
 
-const availableDevicesColumns: GridColDef[] = [...commonColumns];
+const availableDevicesColumns: GridColDef[] = [
+  ...commonColumns,
+  {
+    field: 'sampleRatePadding', headerName: '', flex: 1, sortable: false,
+    filterable: false, renderCell: () => null, disableColumnMenu: true,
+  },
+  {
+    field: 'configurePadding', headerName: '', flex: 1, sortable: false,
+    filterable: false, renderCell: () => null, disableColumnMenu: true,
+  },
+];
 
 const availableDevicesRows: GridRowsProp = useMemo(() => {
   const rows = availableDevices.map((device) => {
+      const lastSeen = formatLastSeen(device.lastHeartbeat);
       return {
         name:     device.manufacturer,
         id:       device.deviceId,
         connected:   device.connectStatus,
         battery:  device.batteryLevel,
+        lastSeen: lastSeen,
       }
   });
 
@@ -588,16 +629,20 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
     renewAvailableDevices();
   }, []);
 
+
   const fetchSampleRates = async () => {
     const rows = await Promise.all(
       devices.map(async (device) => {
         const sampleRate = await getSampleRate(sessionId, device.deviceId);
+        const lastSeen = await formatLastSeen(device.lastHeartbeat);
+
         return {
           name: device.manufacturer,
           id: device.deviceId,
           connected: device.connectStatus,
           battery: device.batteryLevel,
-          sampleRate: sampleRate ?? "Loading...",
+          sampleRate: sampleRate,
+          lastSeen: lastSeen,
         };
       })
     );

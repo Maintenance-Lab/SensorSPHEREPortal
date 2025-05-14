@@ -135,7 +135,6 @@ const SessionDetail = () => {
   const [selectedProperties, setSelectedProperties] = useState(['root']);
   const [expandedNodes, setExpandedNodes] = useState<string[]>(['root']);
   const [loading, setLoading] = useState(false);
-  const [isSaveDisabled, setIsSaveDisabled] = useState(false);
 
 
   const [activeStep, setActiveStep] = React.useState(0);
@@ -217,17 +216,29 @@ const SessionDetail = () => {
   };
 
   const handleCloseDialog2 = async (step) => {
-    if (step === 2) {
+    if (step === 2 && sampleRate !== null) {
       await saveSampleRate(sessionId, selectedDevice, sampleRate);
       // await updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
     }
 
+    console.log("handleCloseDialog2", step, sampleRate);
     setDialogOpen2(false);
     setActiveStep(0);
     setSampleRate(null);
   };
 
   const handleNext = async (sessionId, selectedDevice) => {
+    if (activeStep === steps.length - 1) {
+      if (sampleRate !== null) {
+        handleCloseDialog2(activeStep);
+        return;
+      }
+      else {
+        setActiveStep(0);
+        return;
+      }
+    }
+
     const newStep = activeStep + 1;
     setActiveStep(newStep);
 
@@ -236,30 +247,15 @@ const SessionDetail = () => {
       await updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
       const sampleRate = await sendConfiguration(sessionId, selectedDevice);
       if (sampleRate !== null) {
-        setIsSaveDisabled(false);
         setSampleRate(sampleRate);
       }
-      else {
-        setIsSaveDisabled(true);
-      }
+
       setActiveStep((prev) => prev + 1);
     }
   };
 
-  const handleBack = async () => {
-    if (activeStep === 0) {
-      await handleCloseDialog2(activeStep);
-    }
-    else if (activeStep === 2) {
-      setSampleRate(null);
-      setActiveStep(0);
-    }
-    else {
-      setActiveStep((prevActiveStep) => prevActiveStep - 1);
-    }
-  };
-
   const stepTitle = (index: number) => {
+    console.log("step title", index)
     switch (index) {
       case 0:
         return 'Select properties to include in data collection';
@@ -271,6 +267,7 @@ const SessionDetail = () => {
   };
 
   const stepContent = (index: number) => {
+    console.log("step content", index)
     switch (index) {
       case 0:
         return (
@@ -354,26 +351,27 @@ const SessionDetail = () => {
             padding: "8px", display: "flex", justifyContent: "space-between", alignItems: "center",
             zIndex: 5 }}
         >
-        <Button
-          color="inherit"
-          onClick={handleBack}
-          sx={{ ml: 1 }}
-        >
-          {activeStep === 0 ? "Cancel" : activeStep === 1 ? "Back" : "Reconfigure"}
-        </Button>
         {activeStep !== 1 && (
           <Button
-            disabled={isSaveDisabled && activeStep === steps.length - 1}
+            color="inherit"
+            onClick={handleCloseDialog2}
+            sx={{ ml: 1 }}
+          >
+            Cancel
+          </Button>
+        )}
+        {activeStep !== 1 && (
+          <Button
             onClick={() => {
-              if (activeStep === steps.length - 1) {
-                handleCloseDialog2(activeStep);
-              } else {
+              // if (activeStep === steps.length - 1) {
+              //   handleCloseDialog2(activeStep);
+              // } else {
                 handleNext(sessionId, device);
-              }
+              // }
             }}
             sx={{ mr: 1 }}
           >
-            {activeStep === steps.length - 1 ? "Save configuration" : "Next"}
+          {activeStep === steps.length - 1 ? sampleRate == null ? "Reconfigure" : "Save configuration": "Next"}
           </Button>
         )}
         </Box>
@@ -424,9 +422,9 @@ const renderConnectedCell = (params) => {
   const status = params.value;
 
   if (status === 'connected') {
-    return <Icons.Link sx={{ color: green[500] }} />;
+    return <Icons.Sensors sx={{ color: green[500] }} />;
   } else if (status === 'disconnected') {
-    return <Icons.LinkOff sx={{ color: red[500] }} />;
+    return <Icons.SensorsOff sx={{ color: red[500] }} />;
   } else {
     return null;
   }
@@ -452,17 +450,8 @@ const commonColumns: GridColDef[] = [
 
 const devicesColumns: GridColDef[] = [
   ...commonColumns,
-  {
-    field: 'sampleRate',
-    headerName: 'Sample Rate',
-    flex: 1,
-    align: 'center',
-    headerAlign: 'center',
-  },
-  {
-    field: 'configureButton',
-    headerName: 'Configure',
-    width: 150,
+  { field: 'sampleRate', headerName: 'Sample Rate', flex: 1, align: 'center', headerAlign: 'center'},
+  {field: 'configureButton', headerName: 'Configure', width: 150,
     align: 'center',
     headerAlign: 'center',
     sortable: false,

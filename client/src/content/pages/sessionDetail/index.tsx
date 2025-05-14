@@ -453,9 +453,9 @@ const renderConnectedCell = (params) => {
   const status = params.value;
 
   if (status === 'connected') {
-    return <Icons.Sensors sx={{ color: green[500] }} />;
+    return <Icons.Sensors sx={{ color: 'success.main' }} />;
   } else if (status === 'disconnected') {
-    return <Icons.SensorsOff sx={{ color: red[500] }} />;
+    return <Icons.SensorsOff sx={{ color: 'error.main' }} />;
   } else {
     return null;
   }

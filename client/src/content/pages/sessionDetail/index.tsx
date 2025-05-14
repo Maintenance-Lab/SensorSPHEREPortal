@@ -215,6 +215,11 @@ const SessionDetail = () => {
     setDialogOpen2(true);
   };
 
+  const handleReconfigure = async () => {
+    setActiveStep(0);
+    setSampleRate(null);
+  }
+
   const handleCloseDialog2 = async (step) => {
     if (step === 2 && sampleRate !== null) {
       await saveSampleRate(sessionId, selectedDevice, sampleRate);
@@ -360,18 +365,25 @@ const SessionDetail = () => {
             Cancel
           </Button>
         )}
-        {activeStep !== 1 && (
+        {activeStep === 2 && (
           <Button
             onClick={() => {
-              // if (activeStep === steps.length - 1) {
-              //   handleCloseDialog2(activeStep);
-              // } else {
-                handleNext(sessionId, device);
-              // }
+              handleReconfigure()
             }}
             sx={{ mr: 1 }}
           >
-          {activeStep === steps.length - 1 ? sampleRate == null ? "Reconfigure" : "Save configuration": "Next"}
+            Reconfigure
+          </Button>
+        )}
+        {activeStep !== 1 && (
+          <Button
+            onClick={() => {
+                handleNext(sessionId, device);
+            }}
+            sx={{ mr: 1 }}
+            disabled={activeStep === steps.length - 1 && sampleRate == null}
+          >
+          {activeStep === steps.length - 1 ? "Save": "Next"}
           </Button>
         )}
         </Box>

@@ -265,7 +265,16 @@ const SessionDetail = () => {
       case 0:
         return 'Select properties to include in data collection';
       case 1:
-        return 'Finding maximum sample rate';
+        return (
+          <>
+            Testing for sample rate
+            <br />
+            <Typography variant="caption" color="textSecondary">
+              This may take a few seconds.
+            </Typography>
+          </>
+      );
+        // return 'Finding maximum sample rate';
       case 2:
         return 'Maximum sample rate of this device with selected properties';
     }
@@ -290,7 +299,7 @@ const SessionDetail = () => {
       );
       case 1:
         return (
-          <CircularProgress />
+          <CircularProgress size={100}/>
         )
       case 2:
         if (sampleRate !== null) {
@@ -327,8 +336,8 @@ const SessionDetail = () => {
       }}
     >
       <DialogContent
-        sx={{width: "50vw", height: "70vh", display: "flex", flexDirection: "column",
-          "& .MuiDialog-paper": { width: "50vw", height: "70vh" }}}
+        sx={{width: "50vw", height: "90vh", display: "flex", flexDirection: "column",
+          "& .MuiDialog-paper": { width: "50vw", height: "90vh" }}}
       >
         <Box sx={{ position: "sticky", top: 0, backgroundColor: "white", zIndex: 10 }}>
           <Stepper activeStep={activeStep}>
@@ -346,46 +355,56 @@ const SessionDetail = () => {
             {stepTitle(activeStep)}
           </Typography>
         </Box>
-        <Box sx={{ flexGrow: 1, overflowY: "auto", padding: 2 }}>
-          <Box sx={{ display: "flex", justifyContent: activeStep === 0 ? "flex-start" : "center" }}>
+        <Box sx={{ flexGrow: 1, overflowY: "auto", padding: 2, display: "flex", justifyContent: activeStep === 0 ? "flex-start" : "center",
+            alignItems: activeStep === 0 ? "flex-start" : "center" }}>
+          <Box sx={{ display: "flex", justifyContent: activeStep === 0 ? "flex-start" : "center",
+            alignItems: activeStep === 0 ? "flex-start" : "center" }}>
             {stepContent(activeStep)}
           </Box>
         </Box>
-        <Box
-          sx={{position: "sticky", bottom: 0, backgroundColor: "white", borderTop: "1px solid #ddd",
-            padding: "8px", display: "flex", justifyContent: "space-between", alignItems: "center",
-            zIndex: 5 }}
-        >
-        {activeStep !== 1 && (
-          <Button
-            color="inherit"
-            onClick={handleCloseDialog2}
-            sx={{ ml: 1 }}
-          >
-            Cancel
-          </Button>
-        )}
-        {activeStep === 2 && (
-          <Button
-            onClick={() => {
-              handleReconfigure()
-            }}
-            sx={{ mr: 1 }}
-          >
-            Reconfigure
-          </Button>
-        )}
-        {activeStep !== 1 && (
-          <Button
-            onClick={() => {
-                handleNext(sessionId, device);
-            }}
-            sx={{ mr: 1 }}
-            disabled={activeStep === steps.length - 1 && sampleRate == null}
-          >
-          {activeStep === steps.length - 1 ? "Save": "Next"}
-          </Button>
-        )}
+        <Box sx={{ position: "sticky", bottom: 0, backgroundColor: "white", borderTop: "1px solid #ddd",
+            padding: "8px", display: "flex", flexDirection: "column", zIndex: 5 }}>
+          {activeStep === 0 && (
+            <Typography
+              variant="caption"
+              color="textSecondary"
+              align="center"
+              sx={{ mt: 1 }}
+            >
+              Proceeding will start testing for sample rate. <br />
+              This may take a few seconds.
+            </Typography>
+          )}
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+            {activeStep !== 1 && (
+              <Button color="inherit" onClick={handleCloseDialog2} sx={{ ml: 1 }}>
+                Cancel
+              </Button>
+            )}
+
+            {activeStep === 2 && (
+              <Button
+                onClick={() => {
+                  handleReconfigure();
+                }}
+                sx={{ mr: 1 }}
+              >
+                Reconfigure
+              </Button>
+            )}
+
+            {activeStep !== 1 && (
+              <Button
+                onClick={() => {
+                  handleNext(sessionId, device);
+                }}
+                sx={{ mr: 1 }}
+                disabled={activeStep === steps.length - 1 && sampleRate == null}
+              >
+                {activeStep === steps.length - 1 ? "Save" : "Next"}
+              </Button>
+            )}
+          </Box>
         </Box>
       </DialogContent>
     </Dialog>

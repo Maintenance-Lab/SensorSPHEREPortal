@@ -452,13 +452,18 @@ const renderBatteryCell = (params) => {
 const renderConnectedCell = (params) => {
   const status = params.value;
 
+  let Icon = null;
   if (status === 'connected') {
-    return <Icons.Sensors sx={{ color: 'success.main' }} />;
+    Icon =  <Icons.Sensors sx={{ color: 'success.main' }} />;
   } else if (status === 'disconnected') {
-    return <Icons.SensorsOff sx={{ color: 'error.main' }} />;
-  } else {
-    return null;
+    Icon = <Icons.SensorsOff sx={{ color: 'error.main' }} />;
   }
+
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
+      {Icon}
+    </Box>
+  );
 };
 
 const commonColumns: GridColDef[] = [

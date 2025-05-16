@@ -417,8 +417,13 @@ const isValidDate = (dateString: any) => {
   return !isNaN(date.getTime());
 };
 
-const calculateLastSeen = (timestamp: string) => {
+const calculateLastSeen = (device) => {
+  const timestamp = device.lastHeartbeat;
   if (!timestamp || typeof timestamp !== 'string') return Infinity;
+
+  if (device.connectStatus === 'connected') {
+    return 0;
+  }
 
   // Format the timestamp into a valid ISO string
   const iso = timestamp
@@ -440,8 +445,13 @@ const calculateLastSeen = (timestamp: string) => {
   return Infinity;
 };
 
-const formatLastSeen = (timestamp: string): string => {
-  const diffInSeconds = Math.floor(calculateLastSeen(timestamp) / 1000);
+const formatLastSeen = (device): string => {
+  const timestamp = device.lastHeartbeat;
+  if (!timestamp || typeof timestamp !== 'string') return 'Unknown';
+  if (device.connectStatus === 'connected') {
+    return 'Now';
+  }
+  const diffInSeconds = Math.floor(calculateLastSeen(device) / 1000);
 
   if (diffInSeconds === Infinity) return 'A long time ago';
 
@@ -600,8 +610,8 @@ const availableDevicesColumns: GridColDef[] = [
 
 const availableDevicesRows: GridRowsProp = useMemo(() => {
   const rows = availableDevices.map((device) => {
-    const lastSeenRaw = calculateLastSeen(device.lastHeartbeat);
-    const lastSeen = formatLastSeen(device.lastHeartbeat);;
+    const lastSeenRaw = calculateLastSeen(device);
+    const lastSeen = formatLastSeen(device);;
       return {
         name:     device.manufacturer,
         id:       device.deviceId,
@@ -660,8 +670,8 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
     const rows = await Promise.all(
       devices.map(async (device) => {
         const sampleRate = await getSampleRate(sessionId, device.deviceId);
-        const lastSeenRaw = calculateLastSeen(device.lastHeartbeat);
-        const lastSeen = formatLastSeen(device.lastHeartbeat);
+        const lastSeenRaw = calculateLastSeen(device);
+        const lastSeen = formatLastSeen(device);
 
         return {
           name: device.manufacturer,

@@ -10,7 +10,8 @@ import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer,
 import { ArchiveOutlined, DeleteOutline, Devices, Inventory,
   UnarchiveOutlined, DesignServicesOutlined } from '@mui/icons-material';
 import { TreeView, TreeItem } from '@mui/lab';
-import { green, red } from '@mui/material/colors';
+import { GridValueGetter } from '@mui/x-data-grid';
+import { GridRenderCellParams } from '@mui/x-data-grid';
 
 import * as Icons from '@mui/icons-material';
 
@@ -411,22 +412,38 @@ const SessionDetail = () => {
   )
 };
 
-const formatLastSeen = (timestamp: string): string => {
-  if (!timestamp || typeof timestamp !== 'string') return 'Never';
+const isValidDate = (dateString: any) => {
+  const date = new Date(dateString);
+  return !isNaN(date.getTime());
+};
 
-  // Fix formatting to match ISO
+const calculateLastSeen = (timestamp: string) => {
+  if (!timestamp || typeof timestamp !== 'string') return Infinity;
+
+  // Format the timestamp into a valid ISO string
   const iso = timestamp
     .replace(' ', 'T')
     .replace(/ ([+-]\d{2}:\d{2})$/, '$1')
     .replace(/ ([+-]\d{4})$/, (_, offset) => {
-    return offset.slice(0, 3) + ':' + offset.slice(3);
-  });
+      return offset.slice(0, 3) + ':' + offset.slice(3);
+    });
 
   const date = new Date(iso);
-  if (isNaN(date.getTime())) return 'Never';
+
+  // If it's an invalid date, return Infinity
+    if (!isValidDate(date)) return Infinity;
 
   const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  if (now.getTime() - date.getTime()) {
+    return now.getTime() - date.getTime();
+  }
+  return Infinity;
+};
+
+const formatLastSeen = (timestamp: string): string => {
+  const diffInSeconds = Math.floor(calculateLastSeen(timestamp) / 1000);
+
+  if (diffInSeconds === Infinity) return 'A long time ago';
 
   if (diffInSeconds < 60) {
     return `${diffInSeconds} second${diffInSeconds === 1 ? '' : 's'} ago`;
@@ -445,7 +462,6 @@ const formatLastSeen = (timestamp: string): string => {
   const diffInDays = Math.floor(diffInHours / 24);
   return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
 };
-
 
 const renderBatteryCell = (params) => {
   const level = params.value;
@@ -503,7 +519,7 @@ const renderConnectedCell = (params) => {
 };
 
 const commonColumns: GridColDef[] = [
-  { field: 'id', headerName: 'MAC Address', flex: 2,
+  { field: 'id', headerName: 'MAC Address', flex: 2, sortable: false,
     renderCell: (params) => (
       <Link
         href={`/devices/detail/${params.id}`}
@@ -514,7 +530,7 @@ const commonColumns: GridColDef[] = [
       </Link>
     ),
   },
-  { field: 'lastSeen', headerName: 'Last Seen', flex: 1,
+  { field: 'lastSeen', headerName: 'Last Seen', flex: 1, sortable: false,
     renderCell: (params) => (
       <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%' }}>
         <Typography variant="body2" color="text.secondary">
@@ -523,17 +539,28 @@ const commonColumns: GridColDef[] = [
       </Box>
     ),
   },
-  { field: 'battery', headerName: 'Battery', flex: 1, renderCell: renderBatteryCell },
-  { field: 'connected', headerName: 'Connected',flex: 1,
+  { field: 'battery', headerName: 'Battery', flex: 1, sortable: false, renderCell: renderBatteryCell },
+  { field: 'connected', headerName: 'Connected',flex: 1, sortable: false,
     renderCell: renderConnectedCell
   },
+  {
+    field: 'lastSeenRaw',
+    headerName: 'Last Seen Raw',
+    sortable:true,
+    renderCell: (params) => (
+      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%' }}>
+        <Typography variant="body2" color="text.secondary">
+          {params.value}
+        </Typography>
+      </Box>
+    ),
+  }
 ];
 
 const devicesColumns: GridColDef[] = [
   ...commonColumns,
-  { field: 'sampleRate', headerName: 'Sample Rate', flex: 1,},
-  {field: 'configureButton', headerName: 'Configure', flex: 1, align: 'center', headerAlign: 'center',
-    sortable: false, filterable: false,
+  { field: 'sampleRate', headerName: 'Sample Rate', flex: 1, sortable: false},
+  {field: 'configureButton', headerName: 'Configure', flex: 1, sortable: false, align: 'center', headerAlign: 'center',
     renderCell: (params) => (
       <Box
         sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "95%",
@@ -562,24 +589,26 @@ const devicesColumns: GridColDef[] = [
 const availableDevicesColumns: GridColDef[] = [
   ...commonColumns,
   {
-    field: 'sampleRatePadding', headerName: '', flex: 1, sortable: false,
-    filterable: false, renderCell: () => null, disableColumnMenu: true,
+    field: 'sampleRatePadding', headerName: '', flex: 1,sortable: false,
+    renderCell: () => null, disableColumnMenu: true,
   },
   {
     field: 'configurePadding', headerName: '', flex: 1, sortable: false,
-    filterable: false, renderCell: () => null, disableColumnMenu: true,
+    renderCell: () => null, disableColumnMenu: true,
   },
 ];
 
 const availableDevicesRows: GridRowsProp = useMemo(() => {
   const rows = availableDevices.map((device) => {
-      const lastSeen = formatLastSeen(device.lastHeartbeat);
+    const lastSeenRaw = calculateLastSeen(device.lastHeartbeat);
+    const lastSeen = formatLastSeen(device.lastHeartbeat);;
       return {
         name:     device.manufacturer,
         id:       device.deviceId,
         connected:   device.connectStatus,
         battery:  device.batteryLevel,
         lastSeen: lastSeen,
+        lastSeenRaw: lastSeenRaw,
       }
   });
 
@@ -618,9 +647,6 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
   }, [sessionId]);
 
   const renewAvailableDevices = async () => {
-    // // Opvragen units
-    // console.log("wrm vragen we deze nu op")
-    // const devices = await listUnits();
     await listUnits();
     await handleAvailableDevices(sessionId, setAvailableDevices);
   }
@@ -634,7 +660,8 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
     const rows = await Promise.all(
       devices.map(async (device) => {
         const sampleRate = await getSampleRate(sessionId, device.deviceId);
-        const lastSeen = await formatLastSeen(device.lastHeartbeat);
+        const lastSeenRaw = calculateLastSeen(device.lastHeartbeat);
+        const lastSeen = formatLastSeen(device.lastHeartbeat);
 
         return {
           name: device.manufacturer,
@@ -643,6 +670,7 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
           battery: device.batteryLevel,
           sampleRate: sampleRate,
           lastSeen: lastSeen,
+          lastSeenRaw: lastSeenRaw
         };
       })
     );
@@ -900,13 +928,19 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
             <DataGrid
               rows={devicesRows}
               columns={devicesColumns}
+              sortingOrder={['asc']}
               density='compact'
               autoHeight
               pageSizeOptions={[10]}
+              columnVisibilityModel={{
+                lastSeenRaw: false,
+              }}
+              disableColumnMenu
+              disableColumnResize
               initialState={{
                 pagination: { paginationModel: { pageSize: 10 } },
                 sorting: {
-                  sortModel: [{ field: 'id', sort: 'desc' }],
+                  sortModel: [{ field: 'lastSeenRaw', sort: 'asc' }],
                 },
               }}
               checkboxSelection
@@ -938,8 +972,14 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
             <DataGrid
               rows={availableDevicesRows}
               columns={availableDevicesColumns}
+              sortModel={[{ field: 'lastSeenRaw', sort: 'asc' }]}
+              columnVisibilityModel={{
+                lastSeenRaw: false,
+              }}
               density='compact'
               autoHeight
+              disableColumnMenu
+              disableColumnResize
               checkboxSelection
               onRowSelectionModelChange={(newSelection) => setSelectedAddDeviceIds(newSelection)}
               slots={{

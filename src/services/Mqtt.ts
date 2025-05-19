@@ -6,8 +6,7 @@ import Module from "../models/Module.js";
 import DeviceModel from "../models/DeviceModel.js";
 import Sensor from "../models/Sensor.js";
 import WebSocket from 'ws';
-import Session from "src/models/Session.js";
-import SessionDeviceMapping from "src/models/mappings/SessionDeviceMapping.js";
+import mqtt from '../index.js';
 
 // Set up WebSocket server
 export const wss = new WebSocket.Server({ port: 8080 });
@@ -15,20 +14,29 @@ export const wss = new WebSocket.Server({ port: 8080 });
 export const MQTTMessage = async (topic: string, message: Buffer) => {
     return new Promise(async (resolve, _) => {
         const topicParts = topic.split("/");
-        message = JSON.parse(message.toString());
+        const parsed_message = JSON.parse(message.toString());
 
         if (topic == "interface/listUnitsResult") {
-            // Devices that are online
-            // if (topicParts[1] === 'listUnitsResult') {
             console.log("Got message on listUnitsResult topic");
-            updateDeviceStatus(message);
-            // }
+            updateDeviceStatus(parsed_message);
         }
-        else if (topicParts[0] == "interface" && topicParts[2] == "handshake") {
-            addDeviceToDatabase(message);
+        else if (topic == "interface/handshake/requestStatus") {
+            console.log("Got message on handshake topic");
+            console.log(parsed_message);
+            console.log("Sending handshake response");
+            const deviceId = parsed_message.mac
+            // Send handshake response
+            const message_out = {
+                "requestStatusResult": "test",
+                "mac": deviceId
+            }
+            const options = { qos: 2 };
+            mqtt.publish("interface/handshake/requestStatusResult", JSON.stringify(message_out), options);
+            // console.log("Adding device to database");
+            // addDeviceToDatabase(message);
         }
         else if (topicParts[0] == "interface" && topicParts[2] == "validateConfigurationResult") {
-            sendSampleRate(message);
+            sendSampleRate(parsed_message);
         }
         else {
             console.log("MQTT topic not implemented");

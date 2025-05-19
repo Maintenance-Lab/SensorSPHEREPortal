@@ -130,17 +130,20 @@ export const getAllDevices = async (): Promise<Device[]> => {
 
 // Devices mapped to session
 export const getDevicesMappedToSession = async (sessionId: number): Promise<Device[]> => {
+    console.log("in getDevicesMappedToSession");
     return new Promise(async (resolve) => {
-        // Inner join
-        const result = await Device.findAll({
-            include: {
-                model: SessionDeviceMapping,
-                where: { sessionId: sessionId },
-                required: true
-            }});
-        if (!result) return resolve([]);
-
-        return resolve(result);
+        try {
+            const result = await Device.findAll({
+                include: {
+                    model: SessionDeviceMapping,
+                    where: { sessionId: sessionId },
+                    required: true
+                }});
+        }
+        catch (error) {
+            console.error("Error fetching devices mapped to session:", error);
+            return resolve([]);
+        }
       });
 }
 

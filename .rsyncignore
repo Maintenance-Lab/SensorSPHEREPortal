@@ -1,0 +1,31 @@
+.rsyncignore
+deploy.sh
+.git/
+docs/
+
+# db
+database/db.sqlite3
+
+# dependencies
+/node_modules
+/client/node_modules
+/client/.pnp
+/client.pnp.js
+
+# testing
+/client/coverage
+
+# production
+/client/build
+/dist
+
+# misc
+.DS_Store
+
+*.log*
+.vscode
+/node_modules
+/node_modules
+
+# populate database python file
+*.lock

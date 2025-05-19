@@ -26,8 +26,8 @@ export const setupRelations = () => {
     AccountProjectMapping.belongsTo(Project, { foreignKey: 'projectId' });
 
     // Session Device Mapping
-    Session.belongsToMany(Device, { through: SessionDeviceMapping, foreignKey: 'sessionId' });
-    Device.belongsToMany(Session, { through: SessionDeviceMapping, foreignKey: 'deviceId' });
+    // Session.belongsToMany(Device, { through: SessionDeviceMapping, foreignKey: 'sessionId' });
+    // Device.belongsToMany(Session, { through: SessionDeviceMapping, foreignKey: 'deviceId' });
 
     Session.hasMany(SessionDeviceMapping, { foreignKey: 'sessionId' });
     Device.hasMany(SessionDeviceMapping, { foreignKey: 'deviceId' });

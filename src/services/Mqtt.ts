@@ -32,8 +32,8 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
             }
             const options = { qos: 2 };
             mqtt.publish("interface/handshake/requestStatusResult", JSON.stringify(message_out), options);
-            // console.log("Adding device to database");
-            // addDeviceToDatabase(message);
+            console.log("Adding device to database");
+            addDeviceToDatabase(message);
         }
         else if (topicParts[0] == "interface" && topicParts[2] == "validateConfigurationResult") {
             sendSampleRate(parsed_message);
@@ -131,37 +131,41 @@ const addOrUpdateDevice = async (entry: any) => {
 
 const addDeviceToDatabase = async (message: any) => {
     return new Promise(async (resolve, _) => {
-
         // Loop through all units in message
-        for (const unit of message.units) {
-            const deviceId = unit.mac;
+        const deviceId = message.mac;
 
             // Add device to database if device does not exist
-            await addOrUpdateDevice({ deviceId: deviceId, manufacturer: unit.manufacturer, model: unit.model, batteryLevel: unit.batteryLevel })
+            await addOrUpdateDevice({ deviceId: deviceId, manufacturer: message.manufacturer, model: message.model, batteryLevel: message.batteryLevel })
 
             // If sensor module manufacturer does not exist, add it to database
-            for (const module of unit.sensorModules) {
+            for (const module of message.sensorModules) {
                 await addNewEntryToTable(Manufacturer, { manufacturer: module.manufacturer })
 
+
+                // TODO:: UPDATE WITH PAYLOAD
                 // If sensor type does not exist, add it to database
-                for (const sensor of module.sensors) {
-                    await addNewEntryToTable(Sensor, { type: sensor.sensorType })
-                    console.log("manufacturer !!!!!!!!!!!!!!!!!!!!!!! ", module.manufacturer);
-                    await addNewEntryToTable(Module, { name: module.moduleName, manufacturer: module.manufacturer, sensorType: sensor.sensorType })
+                try {
+                    for (const sensor of module.sensors) {
+                        await addNewEntryToTable(Sensor, { type: sensor.sensorType })
+                        console.log("manufacturer !!!!!!!!!!!!!!!!!!!!!!! ", module.manufacturer);
+                        await addNewEntryToTable(Module, { name: module.moduleName, manufacturer: module.manufacturer, sensorType: sensor.sensorType })
 
-                    // Add deviceModuleMapping to database if it does not exist
-                    await addNewEntryToTable(DeviceModuleMapping, { deviceId: deviceId, moduleName: module.moduleName, moduleManufacturer: module.manufacturer, sensorType: sensor.sensorType })
+                        // Add deviceModuleMapping to database if it does not exist
+                        await addNewEntryToTable(DeviceModuleMapping, { deviceId: deviceId, moduleName: module.moduleName, moduleManufacturer: module.manufacturer, sensorType: sensor.sensorType })
 
-                    for (const measurement of sensor.measurements) {
-                        // Parse range [min, max] to rangeMin and rangeMax
-                        const rangeMin = measurement.range[0];
-                        const rangeMax = measurement.range[1];
+                        for (const measurement of sensor.measurements) {
+                            // Parse range [min, max] to rangeMin and rangeMax
+                            const rangeMin = measurement.range[0];
+                            const rangeMax = measurement.range[1];
 
-                        // Accuracy is "±0.05", needs to be float
-                        const accuracy = parseFloat(measurement.accuracy.replace("±", "").replace(",", ".").trim());
-                        console.log("new accuracy: ", accuracy);
-                        await addNewEntryToTable(Property, { name: measurement.type , sensorType: sensor.sensorType, unit: measurement.unit, accuracy: accuracy, rangeMin: rangeMin, rangeMax: rangeMax })
+                            // Accuracy is "±0.05", needs to be float
+                            const accuracy = parseFloat(measurement.accuracy.replace("±", "").replace(",", ".").trim());
+                            console.log("new accuracy: ", accuracy);
+                            await addNewEntryToTable(Property, { name: measurement.type , sensorType: sensor.sensorType, unit: measurement.unit, accuracy: accuracy, rangeMin: rangeMin, rangeMax: rangeMax })
+                        }
                     }
+                } catch (e) {
+                    console.log("Error parsing handshake payload: ", e);
                 }
             }
 
@@ -181,7 +185,6 @@ const addDeviceToDatabase = async (message: any) => {
             //         await addNewEntryToTable(SensorProperty, { propertyName: property, model: sensor.moduleName, manufacturer: sensor.manufacturer })
             //     }
             // }
-        }
 
         // Send message to all connected clients, so page can reload devices
         wss.clients.forEach(client => {

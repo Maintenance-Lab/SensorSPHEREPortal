@@ -112,6 +112,7 @@ router.get("/id/:projectId", async (req, res) => {
     if (!response) return;
 
     const id = Number(req.params.projectId);
+    console.log("DIT IS DE ID", id);
     const doc: any = await getProjectById(id);
     if (!doc) return res.status(404).json({ message: "Project not found" });
 
@@ -120,7 +121,6 @@ router.get("/id/:projectId", async (req, res) => {
 
     const mapping = await AccountProjectMapping.findOne({ where: { accountId: account.accountId, projectId: id } });
     if (!mapping) return res.status(401).json({ message: "Unauthorized" });
-    console.log("we gaan returnen")
 
     return res.json(doc);
   }

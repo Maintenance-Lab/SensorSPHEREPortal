@@ -34,8 +34,8 @@ const handleRemoveDevices = async (sessionId, selectedDeviceIds, fetchSessionDev
   const success = await removeDevicesFromSession(sessionId, selectedDeviceIds);
 
   if (success) {
-    fetchSessionDevices(sessionId, setDevices);
-    handleAvailableDevices(sessionId, setAvailableDevices);
+    await fetchSessionDevices(sessionId, setDevices);
+    await handleAvailableDevices(sessionId, setAvailableDevices);
   }
 };
 
@@ -43,8 +43,8 @@ const handleAddDevices = async (sessionId, selectedAddDeviceIds, fetchSessionDev
   const success = await addDevices(sessionId, selectedAddDeviceIds);
 
   if (success) {
-    fetchSessionDevices(sessionId, setDevices);
-    handleAvailableDevices(sessionId, setAvailableDevices);
+    await fetchSessionDevices(sessionId, setDevices);
+    await handleAvailableDevices(sessionId, setAvailableDevices);
   }
 }
 
@@ -55,7 +55,7 @@ const handleFetchSession = async (sessionId, setSessionName, setSessionDescripti
   setIsArchived(sessionData.archived);
   setSessionDescription(sessionData.description);
 
-  handleProjectData(sessionData.projectId, setProjectName);
+  await handleProjectData(sessionData.projectId, setProjectName);
 }
 
 const handleProjectData = async (projectId, setProjectName) => {
@@ -643,14 +643,16 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
   };
 
   const handleDeleteSession = async (sessionId) => {
-    await deleteSession(sessionId);
+    console.log("handling delete session", sessionId);
     if (!projectId) {
-      handleFetchSession(sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived);
+      await handleFetchSession(sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived);
     }
+    await deleteSession(sessionId);
     window.location.href = '/projects/detail/' + projectId;
   };
 
   useEffect(() => {
+    console.log("in session id useEffect", sessionId);
     fetchSessionDevices(sessionId, setDevices);
     handleAvailableDevices(sessionId, setAvailableDevices);
     handleFetchSession(sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived);
@@ -662,6 +664,7 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
   }
 
   useEffect(() => {
+    console.log("IN USE EFFECT LEGE LIJST")
     renewAvailableDevices();
   }, []);
 

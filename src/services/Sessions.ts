@@ -3,6 +3,7 @@ import Project from '../models/Project.js';
 import Device from '../models/Device.js';
 import SessionDeviceMapping from '../models/mappings/SessionDeviceMapping.js';
 import { config } from 'dotenv-safe';
+import DeviceSensorConfiguration from '../models/DeviceSensorConfiguration.js';
 
 /* FUNCTIES DIE WERKEN - volgens mij (amber)
     getSessionById
@@ -151,10 +152,14 @@ export const deleteSessions = async (ids: Array<number>) => {
 
       const project = await Project.findByPk(session.projectId);
       if (!project) return reject(new Error("Project not found"));
-      updateProjectLastActive(project.projectId);
+      await updateProjectLastActive(project.projectId);
 
+
+      await DeviceSensorConfiguration.destroy({ where: { sessionId: id }});
       await SessionDeviceMapping.destroy({ where: { sessionId: id }});
       const result = await Session.destroy({ where: { sessionId: id }});
+
+      console.log("session deleted");
       results.push(result);
     }
 

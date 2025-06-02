@@ -50,7 +50,6 @@ router.get("/project/active/:projectId", async (req, res) => {
     const projectId = Number(req.params.projectId);
     console.log("projectId voor de sessions", projectId)
     const doc = await getActiveSessionsByProject(projectId);
-    console.log("Sessions van het project", doc)
     if (!doc) return res.status(404).json({ message: "Project not found" });
     return res.json(doc);
 });
@@ -140,7 +139,7 @@ router.put("/update-many", async (req, res) => {
     }
   });
 
-router.delete("/delete", async (req, res) => {
+router.post("/delete", async (req, res) => {
     console.log("in delete session");
 
     const { ids } = req.body;

@@ -32,10 +32,10 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';  // Import the coll
 const fetchActiveProjects = async () => {
   const res = await fetch('/api/projects/active', {
     method: 'GET',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
-    }
+    },
   });
 
   if (!res.ok) {
@@ -50,9 +50,9 @@ const fetchActiveProjects = async () => {
 const fetchSessionsForProject = async (projectId: number) => {
   const res = await fetch(`/api/sessions/project/${projectId}`, {
     method: 'GET',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include',
     },
   });
 
@@ -69,10 +69,10 @@ const fetchSessionsForProject = async (projectId: number) => {
 const fetchDevices = async () => {
   const devices = await fetch('/api/devices/all', {
     method: 'GET',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
-    }
+    },
   });
 
   if (!devices.ok) {
@@ -186,9 +186,9 @@ const Devices = () => {
     try {
       const response = await fetch('/api/devices/addToSession', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          credentials: 'include',
         },
         body: JSON.stringify({
           sessionId,

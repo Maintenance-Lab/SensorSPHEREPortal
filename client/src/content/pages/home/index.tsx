@@ -26,10 +26,10 @@ const Home = () => {
   const test = async () => {
     const res = await fetch('/api/sessions/project/active/21', {
       method: 'GET',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        credentials: 'include'
-      }
+      },
     });
 
     if (!res.ok) {
@@ -48,10 +48,10 @@ const Home = () => {
   const fetchLatestProjects = async () => {
     const res = await fetch('/api/projects/latest', {
       method: 'GET',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        credentials: 'include'
-      }
+      },
     });
 
     if (!res.ok) {
@@ -65,10 +65,10 @@ const Home = () => {
       console.log('Fetching project 1', projectId);
       const projectRes = await fetch('/api/projects/id/' + projectId, {
         method: 'GET',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          credentials: 'include'
-        }
+        },
       });
 
       if (!projectRes.ok) {

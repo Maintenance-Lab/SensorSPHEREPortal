@@ -10,6 +10,8 @@ import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer,
 import { ArchiveOutlined, DeleteOutline, Devices, Inventory,
   UnarchiveOutlined, DesignServicesOutlined } from '@mui/icons-material';
 import { TreeView, TreeItem } from '@mui/lab';
+import { useNavigate } from 'react-router-dom';
+
 import { GridValueGetter } from '@mui/x-data-grid';
 import { GridRenderCellParams } from '@mui/x-data-grid';
 
@@ -146,6 +148,9 @@ const SessionDetail = () => {
   const [sessionStatus, setSessionStatus] = useState('Not started');
   const [elapsedTime, setElapsedTime] = useState(0);
 
+  const navigate = useNavigate();
+
+
   // New rows when new devices added from mqtt
   // const [newDevices, setNewDevices] = useState([]);
 
@@ -195,7 +200,6 @@ const SessionDetail = () => {
   const handleSelectedProperties = async (deviceId:string) => {
     const properties = await getSelectedProperties(deviceId, sessionId);
     const selectedPropertiesIds = properties.map((property) => {
-      console.log(property.moduleManufacturer, property.moduleName, property.sensorType, property.propertyName);
       return `${property.moduleManufacturer}:${property.moduleName}:${property.sensorType}:${property.propertyName}`;
     });
 
@@ -227,7 +231,6 @@ const SessionDetail = () => {
       // await updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
     }
 
-    console.log("handleCloseDialog2", step, sampleRate);
     setDialogOpen2(false);
     setActiveStep(0);
     setSampleRate(null);
@@ -249,7 +252,6 @@ const SessionDetail = () => {
     setActiveStep(newStep);
 
     if (newStep === 1) {
-      console.log("update selected properties van 1")
       await updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
       const sampleRate = await sendConfiguration(sessionId, selectedDevice);
       if (sampleRate !== null) {
@@ -261,7 +263,6 @@ const SessionDetail = () => {
   };
 
   const stepTitle = (index: number) => {
-    console.log("step title", index)
     switch (index) {
       case 0:
         return 'Select properties to include in data collection';
@@ -282,7 +283,6 @@ const SessionDetail = () => {
   };
 
   const stepContent = (index: number) => {
-    console.log("step content", index)
     switch (index) {
       case 0:
         return (
@@ -643,16 +643,14 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
   };
 
   const handleDeleteSession = async (sessionId) => {
-    console.log("handling delete session", sessionId);
     if (!projectId) {
       await handleFetchSession(sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived);
     }
     await deleteSession(sessionId);
-    window.location.href = '/projects/detail/' + projectId;
+    navigate('/projects/detail/' + projectId);
   };
 
   useEffect(() => {
-    console.log("in session id useEffect", sessionId);
     fetchSessionDevices(sessionId, setDevices);
     handleAvailableDevices(sessionId, setAvailableDevices);
     handleFetchSession(sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived);
@@ -664,7 +662,6 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
   }
 
   useEffect(() => {
-    console.log("IN USE EFFECT LEGE LIJST")
     renewAvailableDevices();
   }, []);
 

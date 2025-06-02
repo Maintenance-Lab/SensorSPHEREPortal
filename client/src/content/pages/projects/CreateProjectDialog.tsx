@@ -20,9 +20,9 @@ const CreateProjectDialog = ({ open, setOpen }) => {
     try {
       const response = await fetch('/api/projects/create', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          credentials: 'include'
         },
         body: JSON.stringify({ name, description })
       });

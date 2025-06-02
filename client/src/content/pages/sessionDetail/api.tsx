@@ -1,5 +1,4 @@
 const apiRequest = async (url: string, method: string, body?: object) => {
-  console.log("BODY IN API REQUEST: ", JSON.stringify(body));
     const res = await fetch(url, {
       method,
       headers: {
@@ -43,7 +42,7 @@ export const updateSession = async (sessionId: number, name: string, description
 }
 
 export const deleteSession = async (sessionId: number) => {
-    return apiRequest("/api/sessions/delete", "DELETE",{
+    return apiRequest("/api/sessions/delete", "POST",{
       ids: [sessionId]
   });
 }

@@ -28,7 +28,10 @@ function ManagementUserSettings() {
 
   const getAccount = async () => {
     const response = await fetch('/api/account', {
-      headers: { credentials: 'include' }
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      }
     });
     if (response.status === 401) {
       navigate('/login');

@@ -35,10 +35,10 @@ import { set } from 'date-fns';
 const fetchActiveProjects = async () => {
   const res = await fetch('/api/projects/active', {
     method: 'GET',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
-    }
+    },
   });
 
   if (!res.ok) {
@@ -52,10 +52,10 @@ const fetchActiveProjects = async () => {
 const fetchArchivedProjects = async () => {
   const res = await fetch('/api/projects/archived', {
     method: 'GET',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
-    }
+    },
   });
 
   if (!res.ok) {
@@ -69,10 +69,10 @@ const fetchArchivedProjects = async () => {
 const fetchPendingProjects = async () => {
   const res = await fetch('/api/projects/pending', {
     method: 'GET',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
-    }
+    },
   });
 
   if (!res.ok) {
@@ -87,9 +87,9 @@ const fetchPendingProjects = async () => {
 const createProject = async (name, description) => {
   const response = await fetch('/api/projects/create', {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
     },
     body: JSON.stringify({ name, description })
   });
@@ -105,9 +105,9 @@ const createProject = async (name, description) => {
 const deleteProjects = async (projectIds) => {
   const response = await fetch('/api/projects/delete', {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
     },
     body: JSON.stringify({
       ids: projectIds
@@ -119,9 +119,9 @@ const archiveProjects = async (projectIds, tab) => {
   const archived = tab === '2' ? true : false;
   const response = await fetch('/api/projects/update-many', {
     method: 'PUT',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
     },
     body: JSON.stringify(
       [
@@ -134,9 +134,9 @@ const archiveProjects = async (projectIds, tab) => {
 const accept = async (projectId) => {
   const response = await fetch('/api/projects/accept', {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
     },
     body: JSON.stringify({ projectId })
   });
@@ -149,9 +149,9 @@ const accept = async (projectId) => {
 const decline = async (projectId) => {
   const response = await fetch('/api/projects/decline', {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
     },
     body: JSON.stringify({ projectId })
   });

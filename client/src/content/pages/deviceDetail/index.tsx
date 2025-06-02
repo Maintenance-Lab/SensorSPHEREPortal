@@ -20,9 +20,9 @@ const DeviceDetail = () => {
     console.log("in getDeviceDetails api call");
     const res:any = await fetch('/api/devices/properties/' + deviceId, {
       method: 'GET',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        credentials: 'include'
       },
     });
 
@@ -38,9 +38,9 @@ const DeviceDetail = () => {
     console.log("in getdevice by id api call");
     const res:any = await fetch('/api/devices/id/' + deviceId, {
       method: 'GET',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        credentials: 'include'
       },
     });
 

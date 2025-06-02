@@ -84,10 +84,10 @@ const fetchData = async () => {
   // Fetch data from your API or server
   const res = await fetch('/api/admin/accounts', {
     method: 'GET',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
-    }
+    },
   });
 
   if (!res.ok) {
@@ -136,9 +136,9 @@ const ManageUsers = () => {
 
     fetch('/api/admin/accounts/update', {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        credentials: 'include'
       },
       body: JSON.stringify({
         _id: id,
@@ -200,9 +200,9 @@ const ManageUsers = () => {
 
     fetch('/api/admin/accounts/create', {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        credentials: 'include'
       },
       body: JSON.stringify({
         ...formData

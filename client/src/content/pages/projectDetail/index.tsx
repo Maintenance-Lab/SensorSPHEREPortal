@@ -245,9 +245,9 @@ const addDevicesRows: GridRowsProp = Object.keys(devicesPlaceholder).map((macAdd
 const updateProject = async (projectId: number, name: string, description: string, archived: boolean, sensorUnits) => {
   const res = await fetch('/api/projects/update/' + projectId, {
     method: 'PUT',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
     },
     body: JSON.stringify({
       name: name,
@@ -267,9 +267,9 @@ const archiveSessions = async (sessionIds, tab) => {
   const archived = tab === '2' ? true : false;
   const response = await fetch('/api/session/update-many', {
     method: 'PUT',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
     },
     body: JSON.stringify(
       [
@@ -282,9 +282,9 @@ const archiveSessions = async (sessionIds, tab) => {
 const addCollaborator = async (projectId, email) => {
   const res = await fetch('/api/project/collaborator/add', {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
     },
     body: JSON.stringify({
       projectId: projectId,
@@ -303,9 +303,9 @@ const addCollaborator = async (projectId, email) => {
 const deleteProject = async (projectId: number) => {
   const res = await fetch('/api/projects/delete', {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
     },
     body: JSON.stringify({
       ids: [projectId]
@@ -322,9 +322,9 @@ const createSession = async (projectId: number, name, description, sensorUnits) 
   try {
     const res = await fetch('/api/sessions/create', {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        credentials: 'include'
       },
       body: JSON.stringify({
         projectId: projectId,
@@ -347,15 +347,13 @@ const createSession = async (projectId: number, name, description, sensorUnits) 
 };
 
 const fetchActiveSessions = async (projectId: number) => {
-  console.log('op dit project id zoekt ie pt2', projectId)
   const res = await fetch('/api/sessions/project/active/' + projectId, {
     method: 'GET',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
-    }
+    },
   })
-  console.log('res', res);
 
   if (!res.ok) {
     console.error('Failed to fetch data');
@@ -368,10 +366,10 @@ const fetchActiveSessions = async (projectId: number) => {
 const fetchArchivedSessions = async (projectId) => {
   const res = await fetch('/api/sessions/project/archived/'+ projectId, {
     method: 'GET',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
-    }
+    },
   });
 
   if (!res.ok) {
@@ -385,9 +383,9 @@ const fetchArchivedSessions = async (projectId) => {
 const updateSession = async (sessionId, archived) => {
   const res = await fetch('/api/sessions/update/' + sessionId, {
     method: 'PUT',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
     },
     body: JSON.stringify({
       archived: archived
@@ -404,9 +402,9 @@ const deleteSessions = async (sessionIds) => {
   console.log("in andere delete session");
   const res = await fetch('/api/sessions/delete', {
     method: 'DELETE',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      credentials: 'include'
     },
     body: JSON.stringify({
       ids: sessionIds
@@ -493,9 +491,9 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, sens
     const archived = tab === '2' ? true : false;
     const response = await fetch('/api/sessions/update-many', {
       method: 'PUT',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        credentials: 'include'
       },
       body: JSON.stringify(
         [
@@ -721,22 +719,17 @@ const ProjectDetail = () => {
   };
 
   const fetchData = async () => {
-    console.log('Fetching data 2.2 ');
     try {
       let sessions = [];
       switch (currentTab) {
         case '2':
-          console.log("op dit porjectid zoekt ie",projectId)
           sessions = await fetchActiveSessions(projectId);
-          console.log('wat is dit', sessions)
           break;
         case '4':
           sessions = await fetchArchivedSessions(projectId);
-          console.log('wat is dit 2', sessions)
           break;
         default:
           sessions = await fetchActiveSessions(projectId);
-          console.log('default', sessions)
           break;
       }
       setSortedSessions(sessions);
@@ -771,31 +764,27 @@ const ProjectDetail = () => {
   }));
 
 
-  const fetchProject = async () => {
-    console.log('Fetching project 2', projectId);
-    try {
-      const res = await fetch('/api/projects/id/' + projectId, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
+const fetchProject = async () => {
+    const res = await fetch('/api/projects/id/' + projectId, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-      if (!res.ok) {
-        console.error('Failed to fetch data');
-        return [];
-      }
+    if (!res.ok) {
+      console.error('Failed to fetch data');
+      return [];
+    }
 
-      const data = await res.json();
-      setProjectName(data.name);
-      setProjectDescription(data.description);
-      setIsArchived(data.archived);
-    }
-    catch (error) {
-      console.error('Failed to fetch data', error);
-    }
-  };
+    const data = await res.json();
+    console.log("Fetched project data:", data);
+    console.log("Fetched project actual data", data.name, data.description, data.archived);
+    setProjectName(data.name);
+    setProjectDescription(data.description);
+    setIsArchived(data.archived);
+};
 
   const handleNameChange = async (event) => {
     await updateProject(projectId, event.target.value, projectDescription, isArchived, projectSensorUnits);

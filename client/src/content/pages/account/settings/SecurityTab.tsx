@@ -124,7 +124,10 @@ function SecurityTab(props: SecurityTabProps) {
     // }
     const response = await fetch('/api/account/password', {
       method: 'POST',
-      headers: { credentials: 'include', 'Content-Type': 'application/json' },
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ currentPass, newPass, confirmNewPass })
     });
     if (response.status == 401) navigate('/login');
@@ -152,7 +155,10 @@ function SecurityTab(props: SecurityTabProps) {
   const deleteSession = async (id: string) => {
     const response = await fetch(`/api/account/session/${id}`, {
       method: 'DELETE',
-      headers: { credentials: 'include' }
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      }
     });
     if (response.status == 401) navigate('/login');
     return response.json();

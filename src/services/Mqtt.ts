@@ -185,15 +185,6 @@ const addDeviceToDatabase = async (message: any) => {
             //         await addNewEntryToTable(SensorProperty, { propertyName: property, model: sensor.moduleName, manufacturer: sensor.manufacturer })
             //     }
             // }
-
-        // Send message to all connected clients, so page can reload devices
-
-        // console.log("Sending list_units event to all clients");
-        // wss.clients.forEach(client => {
-        //     console.log("Sending list_units event to client ........................ ");
-        //     if (client.readyState === WebSocket.OPEN) {
-        //         client.send(JSON.stringify({ event: "list_units", units: message.units }));
-        //     }
         // });
 
         return resolve({ message: "Device created" });
@@ -236,7 +227,6 @@ const updateDeviceStatus = async (message: any) => {
 
         console.log("Sending list_units event to all clients");
         wss.clients.forEach(client => {
-            console.log("Sending list_units event to client ........................ ");
             if (client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify({ event: "list_units", units: message.units }));
             }

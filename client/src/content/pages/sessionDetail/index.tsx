@@ -737,10 +737,6 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
     fetchSampleRates();
   }, [devices, sessionId, sampleRate]);
 
-
-
-
-
   useEffect(() => {
     let interval;
     if (sessionStatus === 'Running') {
@@ -753,20 +749,33 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
 
   const checkStartingConditions = async () => {
     const devices = await fetchDevices(sessionId);
+    const errorTypes: string[] = [];
 
     // Check if there are any devices connected
     if (devices.length === 0) {
-      setIsStartDisabled(true);
+      errorTypes.push("no_devices");
     }
 
     // Check if all batteries are above 10%
     const lowBatteryDevices = devices.filter(device => device.batteryLevel < 10);
     if (lowBatteryDevices.length > 0) {
-      setIsStartDisabled(true);
+      errorTypes.push("low_battery");
     }
 
-    console.log("All devices have been goedgekeurd.");
-    setIsStartDisabled(false);
+    // Check if status of all devices is 'connected'
+    const disconnectedDevices = devices.filter(device => device.connectStatus !== 'connected');
+    if (disconnectedDevices.length > 0) {
+      errorTypes.push("not_connected");
+    }
+
+
+    // Set the start button state based on the error types
+    if (errorTypes.length > 0) {
+      setIsStartDisabled(true);
+    }
+    else {
+      setIsStartDisabled(false);
+    }
   }
 
   const handleStartSession = async () => {

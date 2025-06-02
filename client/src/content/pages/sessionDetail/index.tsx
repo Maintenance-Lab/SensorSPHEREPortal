@@ -12,9 +12,6 @@ import { ArchiveOutlined, DeleteOutline, Devices, Inventory,
 import { TreeView, TreeItem } from '@mui/lab';
 import { useNavigate } from 'react-router-dom';
 
-import { GridValueGetter } from '@mui/x-data-grid';
-import { GridRenderCellParams } from '@mui/x-data-grid';
-
 import * as Icons from '@mui/icons-material';
 
 // Imports from functions moved to different files
@@ -32,23 +29,23 @@ import { fetchDevices, removeDevicesFromSession, sendConfiguration, updateSessio
     return availableDevicesData;
  };
 
-const handleRemoveDevices = async (sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices) => {
-  const success = await removeDevicesFromSession(sessionId, selectedDeviceIds);
+// const handleRemoveDevices = async (sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices) => {
+//   const success = await removeDevicesFromSession(sessionId, selectedDeviceIds);
 
-  if (success) {
-    await fetchSessionDevices(sessionId, setDevices);
-    await handleAvailableDevices(sessionId, setAvailableDevices);
-  }
-};
+//   if (success) {
+//     await fetchSessionDevices(sessionId, setDevices);
+//     await handleAvailableDevices(sessionId, setAvailableDevices);
+//   }
+// };
 
-const handleAddDevices = async (sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices) => {
-  const success = await addDevices(sessionId, selectedAddDeviceIds);
+// const handleAddDevices = async (sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices) => {
+//   const success = await addDevices(sessionId, selectedAddDeviceIds);
 
-  if (success) {
-    await fetchSessionDevices(sessionId, setDevices);
-    await handleAvailableDevices(sessionId, setAvailableDevices);
-  }
-}
+//   if (success) {
+//     await fetchSessionDevices(sessionId, setDevices);
+//     await handleAvailableDevices(sessionId, setAvailableDevices);
+//   }
+// }
 
 const handleFetchSession = async (sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived) => {
   const sessionData = await fetchSession(sessionId);
@@ -73,49 +70,31 @@ const fetchSessionDevices = async (sessionId, setDevices) => {
 };
 
 
-function ConnectedDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDevices, setAvailableDevices, setDevices }) {
-  const activeSelection = selectedDeviceIds.length > 0;
+// function ConnectedDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDevices, setAvailableDevices, setDevices }) {
+//   const activeSelection = selectedDeviceIds.length > 0;
 
-  return (
-    <GridToolbarContainer sx={{ padding: 1 }}>
-      <Stack direction="row" spacing={1}>
-        <GridToolbarQuickFilter variant="outlined" size='small' justify-content="space-between" sx={{ padding: 0 }} />
-          <Button
-            variant="outlined"
-            size="medium"
-            color="error"
-            startIcon={<Icons.DeleteOutlineOutlined />}
-            disabled={!activeSelection}
-            // onClick={() => removeDevicesFromSession(sessionId, selectedDeviceIds, fetchSessionDevices, fetchAvailableDevices)}
-            onClick={() => handleRemoveDevices(sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices)}
+//   return (
+//     <GridToolbarContainer sx={{ padding: 1 }}>
+//       <Stack direction="row" spacing={1}>
+//         <GridToolbarQuickFilter variant="outlined" size='small' justify-content="space-between" sx={{ padding: 0 }} />
+//           <Button
+//             variant="outlined"
+//             size="medium"
+//             color="error"
+//             startIcon={<Icons.DeleteOutlineOutlined />}
+//             disabled={!activeSelection}
+//             // onClick={() => removeDevicesFromSession(sessionId, selectedDeviceIds, fetchSessionDevices, fetchAvailableDevices)}
+//             onClick={() => handleRemoveDevices(sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices)}
 
-          >
-            Remove Devices from Session
-          </Button>
-      </Stack>
-    </GridToolbarContainer>
-  );
-}
+//           >
+//             Remove Devices from Session
+//           </Button>
+//       </Stack>
+//     </GridToolbarContainer>
+//   );
+// }
 
-function AvailableDevicesToolbar({ selectedAddDeviceIds, sessionId, fetchSessionDevices,  setAvailableDevices, setDevices}) {
-  const activeSelection = selectedAddDeviceIds.length > 0;
 
-  return (
-    <GridToolbarContainer sx={{ padding: 1 }}>
-      <Stack direction="row" spacing={1}>
-      <GridToolbarQuickFilter variant="outlined" size="small" sx={{ padding: 0 }} />
-        <Button
-          variant="outlined"
-          startIcon={<Devices />}
-          onClick={() =>  handleAddDevices(sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices)}
-          disabled={!activeSelection}
-        >
-          Add Devices to Session
-        </Button>
-      </Stack>
-    </GridToolbarContainer>
-  );
-}
 
 const SessionDetail = () => {
   const sessionId = Number(useParams().sessionId);
@@ -147,6 +126,7 @@ const SessionDetail = () => {
   const [progress, setProgress] = useState(0);
   const [sessionStatus, setSessionStatus] = useState('Not started');
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [isStartDisabled, setIsStartDisabled] = useState(true);
 
   const navigate = useNavigate();
 
@@ -156,6 +136,70 @@ const SessionDetail = () => {
 
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
+
+  const handleAddDevices = async (sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices) => {
+    const success = await addDevices(sessionId, selectedAddDeviceIds);
+
+    if (success) {
+      await fetchSessionDevices(sessionId, setDevices);
+      await handleAvailableDevices(sessionId, setAvailableDevices);
+      await checkStartingConditions();
+    }
+  }
+
+  const handleRemoveDevices = async (sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices) => {
+    const success = await removeDevicesFromSession(sessionId, selectedDeviceIds);
+
+    if (success) {
+      await fetchSessionDevices(sessionId, setDevices);
+      await handleAvailableDevices(sessionId, setAvailableDevices);
+      await checkStartingConditions();
+    }
+  };
+
+  function AvailableDevicesToolbar({ selectedAddDeviceIds, sessionId, fetchSessionDevices,  setAvailableDevices, setDevices}) {
+    const activeSelection = selectedAddDeviceIds.length > 0;
+
+    return (
+      <GridToolbarContainer sx={{ padding: 1 }}>
+        <Stack direction="row" spacing={1}>
+        <GridToolbarQuickFilter variant="outlined" size="small" sx={{ padding: 0 }} />
+          <Button
+            variant="outlined"
+            startIcon={<Devices />}
+            onClick={() =>  handleAddDevices(sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices)}
+            disabled={!activeSelection}
+          >
+            Add Devices to Session
+          </Button>
+        </Stack>
+      </GridToolbarContainer>
+    );
+  }
+
+  function ConnectedDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDevices, setAvailableDevices, setDevices }) {
+    const activeSelection = selectedDeviceIds.length > 0;
+
+    return (
+      <GridToolbarContainer sx={{ padding: 1 }}>
+        <Stack direction="row" spacing={1}>
+          <GridToolbarQuickFilter variant="outlined" size='small' justify-content="space-between" sx={{ padding: 0 }} />
+            <Button
+              variant="outlined"
+              size="medium"
+              color="error"
+              startIcon={<Icons.DeleteOutlineOutlined />}
+              disabled={!activeSelection}
+              // onClick={() => removeDevicesFromSession(sessionId, selectedDeviceIds, fetchSessionDevices, fetchAvailableDevices)}
+              onClick={() => handleRemoveDevices(sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices)}
+
+            >
+              Remove Devices from Session
+            </Button>
+        </Stack>
+      </GridToolbarContainer>
+    );
+  }
 
   const formatTime = (seconds) => {
     if (!seconds && seconds !== 0) return '00:00';
@@ -659,6 +703,8 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
   const renewAvailableDevices = async () => {
     await listUnits();
     await handleAvailableDevices(sessionId, setAvailableDevices);
+    await checkStartingConditions();
+
   }
 
   useEffect(() => {
@@ -705,6 +751,23 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
     return () => clearInterval(interval);
   }, [sessionStatus]);
 
+  const checkStartingConditions = async () => {
+    const devices = await fetchDevices(sessionId);
+
+    // Check if there are any devices connected
+    if (devices.length === 0) {
+      setIsStartDisabled(true);
+    }
+
+    // Check if all batteries are above 10%
+    const lowBatteryDevices = devices.filter(device => device.batteryLevel < 10);
+    if (lowBatteryDevices.length > 0) {
+      setIsStartDisabled(true);
+    }
+
+    console.log("All devices have been goedgekeurd.");
+    setIsStartDisabled(false);
+  }
 
   const handleStartSession = async () => {
     startBatch(sessionId);
@@ -913,7 +976,7 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
               {/* Conditional Buttons */}
               {(sessionStatus === 'Not started' || sessionStatus === 'Stopped') && (
                 <Stack direction="row" spacing={1} justifyContent="flex-end">
-                  <Button variant="contained" color="primary" onClick={handleStartSession}>
+                  <Button variant="contained" color="primary" onClick={handleStartSession} disabled={isStartDisabled}>
                     Start Session
                   </Button>
                 </Stack>

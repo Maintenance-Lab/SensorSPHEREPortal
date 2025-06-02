@@ -134,42 +134,42 @@ const addDeviceToDatabase = async (message: any) => {
         // Loop through all units in message
         const deviceId = message.mac;
 
-            // Add device to database if device does not exist
-            await addOrUpdateDevice({ deviceId: deviceId, manufacturer: message.manufacturer, model: message.model, batteryLevel: message.batteryLevel })
+        // Add device to database if device does not exist
+        await addOrUpdateDevice({ deviceId: deviceId, manufacturer: message.manufacturer, model: message.model, batteryLevel: message.batteryLevel })
 
-            // If sensor module manufacturer does not exist, add it to database
-            for (const module of message.sensorModules) {
-                await addNewEntryToTable(Manufacturer, { manufacturer: module.manufacturer })
+        // If sensor module manufacturer does not exist, add it to database
+        for (const module of message.sensorModules) {
+            await addNewEntryToTable(Manufacturer, { manufacturer: module.manufacturer })
 
 
-                // TODO:: UPDATE WITH PAYLOAD
-                // If sensor type does not exist, add it to database
-                try {
-                    for (const sensor of module.sensors) {
-                        await addNewEntryToTable(Sensor, { type: sensor.sensorType })
-                        console.log("manufacturer !!!!!!!!!!!!!!!!!!!!!!! ", module.manufacturer);
-                        await addNewEntryToTable(Module, { name: module.moduleName, manufacturer: module.manufacturer, sensorType: sensor.sensorType })
+            // TODO:: UPDATE WITH PAYLOAD
+            // If sensor type does not exist, add it to database
+            try {
+                for (const sensor of module.sensors) {
+                    await addNewEntryToTable(Sensor, { type: sensor.sensorType })
+                    console.log("manufacturer !!!!!!!!!!!!!!!!!!!!!!! ", module.manufacturer);
+                    await addNewEntryToTable(Module, { name: module.moduleName, manufacturer: module.manufacturer, sensorType: sensor.sensorType })
 
-                        // Add deviceModuleMapping to database if it does not exist
-                        await addNewEntryToTable(DeviceModuleMapping, { deviceId: deviceId, moduleName: module.moduleName, moduleManufacturer: module.manufacturer, sensorType: sensor.sensorType })
+                    // Add deviceModuleMapping to database if it does not exist
+                    await addNewEntryToTable(DeviceModuleMapping, { deviceId: deviceId, moduleName: module.moduleName, moduleManufacturer: module.manufacturer, sensorType: sensor.sensorType })
 
-                        for (const measurement of sensor.measurements) {
-                            // Parse range [min, max] to rangeMin and rangeMax
-                            const rangeMin = measurement.range[0];
-                            const rangeMax = measurement.range[1];
+                    for (const measurement of sensor.measurements) {
+                        // Parse range [min, max] to rangeMin and rangeMax
+                        const rangeMin = measurement.range[0];
+                        const rangeMax = measurement.range[1];
 
-                            // Accuracy is "±0.05", needs to be float
-                            const accuracy = parseFloat(measurement.accuracy.replace("±", "").replace(",", ".").trim());
-                            console.log("new accuracy: ", accuracy);
-                            await addNewEntryToTable(Property, { name: measurement.type , sensorType: sensor.sensorType, unit: measurement.unit, accuracy: accuracy, rangeMin: rangeMin, rangeMax: rangeMax })
-                        }
+                        // Accuracy is "±0.05", needs to be float
+                        const accuracy = parseFloat(measurement.accuracy.replace("±", "").replace(",", ".").trim());
+                        console.log("new accuracy: ", accuracy);
+                        await addNewEntryToTable(Property, { name: measurement.type , sensorType: sensor.sensorType, unit: measurement.unit, accuracy: accuracy, rangeMin: rangeMin, rangeMax: rangeMax })
                     }
-                } catch (e) {
-                    console.log("Error parsing handshake payload: ", e);
                 }
+            } catch (e) {
+                console.log("Error parsing handshake payload: ", e);
             }
+        }
 
-            // // If sensor category or manufacturer does not exist, add it to database
+        // If sensor category or manufacturer does not exist, add it to database
             // // Then add sensor to database
             // for (const sensor of unit.sensorModules) {
 
@@ -187,11 +187,14 @@ const addDeviceToDatabase = async (message: any) => {
             // }
 
         // Send message to all connected clients, so page can reload devices
-        wss.clients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify({ event: "list_units", units: message.units }));
-            }
-        });
+
+        // console.log("Sending list_units event to all clients");
+        // wss.clients.forEach(client => {
+        //     console.log("Sending list_units event to client ........................ ");
+        //     if (client.readyState === WebSocket.OPEN) {
+        //         client.send(JSON.stringify({ event: "list_units", units: message.units }));
+        //     }
+        // });
 
         return resolve({ message: "Device created" });
     });
@@ -230,6 +233,14 @@ const updateDeviceStatus = async (message: any) => {
                 await Device.update({ connectStatus: "disconnected" }, { where: { deviceId: device.deviceId } });
             }
         }
+
+        console.log("Sending list_units event to all clients");
+        wss.clients.forEach(client => {
+            console.log("Sending list_units event to client ........................ ");
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({ event: "list_units", units: message.units }));
+            }
+        });
 
         return resolve({ message: "Device status updated" });
 

@@ -16,8 +16,9 @@ const apiRequest = async (url: string, method: string, body?: object) => {
     return res.json();
 };
 
-export const fetchDevices =  async (sessionId: number) =>
-    apiRequest(`/api/devices/all/${sessionId}`, "GET");
+export const fetchDevices =  async (sessionId: number) => {
+  return apiRequest(`/api/devices/all/${sessionId}`, "GET");
+}
 
 export const removeDevicesFromSession = async (sessionId: number, selectedDeviceIds: number[]) => {
     return apiRequest("/api/sessions/removeFromSession", "DELETE", {

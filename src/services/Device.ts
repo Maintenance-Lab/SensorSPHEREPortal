@@ -132,19 +132,17 @@ export const getAllDevices = async (): Promise<Device[]> => {
 export const getDevicesMappedToSession = async (sessionId: number): Promise<Device[]> => {
     console.log("in getDevicesMappedToSession");
     return new Promise(async (resolve) => {
-        try {
-            const result = await Device.findAll({
-                include: {
-                    model: SessionDeviceMapping,
-                    where: { sessionId: sessionId },
-                    required: true
-                }});
-        }
-        catch (error) {
-            console.error("Error fetching devices mapped to session:", error);
-            return resolve([]);
-        }
-      });
+        const result = await Device.findAll({
+            include: {
+                model: SessionDeviceMapping,
+                where: { sessionId: sessionId },
+                required: true
+            }
+        });
+        if (!result) return resolve([]);
+        console.log("result: ", result);
+        return resolve(result);
+    });
 }
 
 // Devices not mapped to session
@@ -288,6 +286,7 @@ export const listUnits = async (): Promise<any> => {
         const options = { qos: 2 };
         mqtt.publish("interface/listUnits", JSON.stringify(message), options);
 
+        console.log("Requesting list of units ---------");
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data.toString());
             if (data.event === "list_units") {

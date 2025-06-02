@@ -401,7 +401,7 @@ const updateSession = async (sessionId, archived) => {
 const deleteSessions = async (sessionIds) => {
   console.log("in andere delete session");
   const res = await fetch('/api/sessions/delete', {
-    method: 'DELETE',
+    method: 'POST',
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',

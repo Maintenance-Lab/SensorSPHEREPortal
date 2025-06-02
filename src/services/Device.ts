@@ -302,11 +302,10 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
         const message = await createConfigMessage(deviceProperties);
         console.log("MESSAGE");
         console.dir(message, { depth: null, colors: true });
-        // console.log("Message ----------------- : \n", message);
 
         // Send configuration (selected properties) to gateway
         const options = { qos: 2 };
-        mqtt.publish("interface/" + deviceId + "/validateConfiguration", JSON.stringify(message), options);
+        mqtt.publish("interface/validateConfiguration", JSON.stringify(message), options);
 
         const timeout = setTimeout(() => {
             resolve(null);

@@ -30,7 +30,6 @@ import DeviceSensorConfiguration from '../../models/DeviceSensorConfiguration.js
 const router = Router();
 
 router.get("/id/:id", async (req, res) => {
-    console.log("in get session by id");
     const id = Number(req.params.id);
     const doc = await getSessionById(id);
     if (!doc) return res.status(404).json({ message: "Session not found" });
@@ -38,7 +37,6 @@ router.get("/id/:id", async (req, res) => {
 });
 
 router.get("/project/:projectId", async (req, res) => {
-    console.log("in get sessions by project id");
     const projectId = Number(req.params.projectId);
     const doc = await getSessionsByProject(projectId);
     if (!doc) return res.status(404).json({ message: "Project not found" });
@@ -46,9 +44,7 @@ router.get("/project/:projectId", async (req, res) => {
 });
 
 router.get("/project/active/:projectId", async (req, res) => {
-    console.log("in get active")
     const projectId = Number(req.params.projectId);
-    console.log("projectId voor de sessions", projectId)
     const doc = await getActiveSessionsByProject(projectId);
     if (!doc) return res.status(404).json({ message: "Project not found" });
     return res.json(doc);

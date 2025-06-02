@@ -63,7 +63,6 @@ router.post("/accept", async (req, res) => {
 });
 
 router.get("/active", async (req, res) => {
-  console.log("in get active")
   const response = await getSession(req, res);
   if (!response) return;
 
@@ -79,7 +78,6 @@ router.get("/active", async (req, res) => {
 });
 
 router.get("/all", async (req, res) => {
-  console.log("in get all")
   const response = await getSession(req, res);
   if (!response) return;
 
@@ -91,7 +89,6 @@ router.get("/all", async (req, res) => {
 });
 
 router.get("/archived", async (req, res) => {
-  console.log("in get archived")
   const response = await getSession(req, res);
   if (!response) return;
 
@@ -106,13 +103,11 @@ router.get("/archived", async (req, res) => {
 });
 
 router.get("/id/:projectId", async (req, res) => {
-  console.log("in get id")
   try {
     const response = await getSession(req, res);
     if (!response) return;
 
     const id = Number(req.params.projectId);
-    console.log("DIT IS DE ID", id);
     const doc: any = await getProjectById(id);
     if (!doc) return res.status(404).json({ message: "Project not found" });
 

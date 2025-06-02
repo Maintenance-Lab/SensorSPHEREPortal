@@ -72,7 +72,6 @@ const createPropertyDict = (properties: any, deviceId: string) => {
     });
 
     deviceProperties.modules = modules;
-    console.log("deviceProperties: ");
     console.dir(deviceProperties, { depth: null, colors: true });
     return deviceProperties;
 };
@@ -121,7 +120,6 @@ const createPropertyDict = (properties: any, deviceId: string) => {
 // Geen hulp functies -----------------------------------------------------------
 export const getAllDevices = async (): Promise<Device[]> => {
     return new Promise(async (resolve) => {
-        console.log("in getAllDevices");
         const results = await Device.findAll();
         if (!results) return resolve([]);
         return resolve(results);
@@ -130,7 +128,6 @@ export const getAllDevices = async (): Promise<Device[]> => {
 
 // Devices mapped to session
 export const getDevicesMappedToSession = async (sessionId: number): Promise<Device[]> => {
-    console.log("in getDevicesMappedToSession");
     return new Promise(async (resolve) => {
         const result = await Device.findAll({
             include: {
@@ -140,7 +137,6 @@ export const getDevicesMappedToSession = async (sessionId: number): Promise<Devi
             }
         });
         if (!result) return resolve([]);
-        console.log("result: ", result);
         return resolve(result);
     });
 }
@@ -161,8 +157,6 @@ export const getAllAvailableDevicesSession = async (sessionId: number): Promise<
             }
         });
         if (!result) return resolve([]);
-        console.log("in getAllAvailableDevicesSession");
-        console.log("SessionId: ", sessionId);
         return resolve(result);
       });
 }
@@ -186,7 +180,6 @@ export const getSampleRate = async (sessionId: number, deviceId: string): Promis
 
 export const getDeviceById = async (id: string): Promise<Device> => {
     return new Promise(async (resolve, reject) => {
-        console.log("in getDeviceById", id);
         const doc = await Device.findByPk(id);
         if (!doc) return reject(new Error("Device not found"));
         return resolve(doc.toJSON());
@@ -195,8 +188,6 @@ export const getDeviceById = async (id: string): Promise<Device> => {
 
 export const getDeviceProperties = async (deviceId: string) => {
     return new Promise(async (resolve, reject) => {
-        console.log("in getDeviceProperties");
-
         const configEntries = await DeviceSensorConfiguration.findAll({
             where: { deviceId },
             attributes: ['sensorProperty', 'sensorType', 'active'],
@@ -286,7 +277,6 @@ export const listUnits = async (): Promise<any> => {
         const options = { qos: 2 };
         mqtt.publish("interface/listUnits", JSON.stringify(message), options);
 
-        console.log("Requesting list of units ---------");
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data.toString());
             if (data.event === "list_units") {
@@ -344,7 +334,6 @@ export const sendConfigurationToDevice = async (sessionId: number, deviceId: any
 
 const getBatchUnits = async (sessionId: number) => {
     return new Promise(async (resolve, reject) => {
-        console.log("in getBatchUnits");
         // Get all devices for the session
         const devices = await SessionDeviceMapping.findAll({
             where: { sessionId: sessionId },
@@ -352,11 +341,8 @@ const getBatchUnits = async (sessionId: number) => {
             raw: true
         });
         if (!devices) return reject(new Error("Failed to fetch devices"));
-        console.log("Devices: ", devices);
 
         const units = devices.map(device => device.deviceId);
-        console.log("Units: ", units);
-
         const message = {
             "units": units
         }
@@ -367,21 +353,16 @@ const getBatchUnits = async (sessionId: number) => {
 
 export const sendStartBatch = async (sessionId: number): Promise<any> => {
     return new Promise(async (_, reject) => {
-        console.log("Starting batch for session: ", sessionId);
-
         const message = await getBatchUnits(sessionId);
         if (!message) return reject(new Error("Failed to create batch message"));
 
         const options = { qos: 2 };
         mqtt.publish("interface/startBatch", JSON.stringify(message), options);
-        console.log("Batch started for session: ", sessionId);
     });
 }
 
 export const sendStopBatch = async (sessionId: number): Promise<any> => {
     return new Promise(async (_, reject) => {
-        console.log("Stopping batch for session: ", sessionId);
-
         const message = await getBatchUnits(sessionId);
         if (!message) return reject(new Error("Failed to create batch message"));
 
@@ -392,7 +373,6 @@ export const sendStopBatch = async (sessionId: number): Promise<any> => {
 
 export const saveSampleRate = async (sessionId: number, deviceId: string, sampleRate: number): Promise<any> => {
     return new Promise(async (resolve, reject) => {
-        console.log("In save sample rate: ", sampleRate, deviceId);
         const doc = await SessionDeviceMapping.update(
             { sampleRate: sampleRate },
             { where: { sessionId: sessionId, deviceId: deviceId } }
@@ -404,7 +384,6 @@ export const saveSampleRate = async (sessionId: number, deviceId: string, sample
 
 export const updateSelectedProperties = async (sessionId: number, deviceId: string, selectedProperties: any): Promise<any> => {
     return new Promise(async (resolve, reject) => {
-        console.log("selectedProperties: ", selectedProperties);
         try {
             // set all properties from device and session to inactive
             const updatedPropertiesFalse = await DeviceSensorConfiguration.update(

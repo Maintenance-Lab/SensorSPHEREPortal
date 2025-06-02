@@ -23,14 +23,12 @@ export const getAllProjects = async () => {
   return new Promise(async (resolve) => {
     const results = await Project.findAll();
     if (!results) return resolve([]);
-    console.log("ALL PROJECTS: ", results.map((r) => r.projectId));
     return resolve(results);
   });
 };
 
 export const getProjectById = async (id: number): Promise<Project> => {
   return new Promise(async (resolve, reject) => {
-    console.log("in getProjectById", id);
     const doc = await Project.findByPk(id);
     if (!doc) return reject(new Error("Project not found"));
     return resolve(doc.toJSON());

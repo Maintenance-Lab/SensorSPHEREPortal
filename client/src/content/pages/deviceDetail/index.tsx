@@ -17,7 +17,6 @@ const DeviceDetail = () => {
   const [sensorTree, setSensorTree] = useState<React.ReactNode[]>([]);
 
   const getDeviceProperties = async (deviceId: string) => {
-    console.log("in getDeviceDetails api call");
     const res:any = await fetch('/api/devices/properties/' + deviceId, {
       method: 'GET',
       credentials: 'include',
@@ -35,7 +34,6 @@ const DeviceDetail = () => {
   };
 
   const getDeviceDetails = async (deviceId: string) => {
-    console.log("in getdevice by id api call");
     const res:any = await fetch('/api/devices/id/' + deviceId, {
       method: 'GET',
       credentials: 'include',

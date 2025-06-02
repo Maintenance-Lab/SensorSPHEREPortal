@@ -94,7 +94,6 @@ router.post("/addToSession", async (req, res) => {
 });
 
 router.get("/properties/:deviceId", async (req, res) => {
-    console.log("in get properties for device");
     const deviceId = req.params.deviceId;
     const doc = await getDeviceProperties(deviceId);
     if (!doc) return res.status(404).json({ message: "Device not found" });
@@ -143,7 +142,6 @@ router.put("/saveSampleRate", async (req, res) => {
     const deviceId = req.body.deviceId;
     const sampleRate = req.body.sampleRate;
 
-    console.log("In save sample rate: ", sampleRate, deviceId);
     const doc = await saveSampleRate(sessionId, deviceId, sampleRate);
     if (!doc) return res.status(500).json({ message: "Failed to update sample rate" });
     return res.json(doc);
@@ -152,11 +150,9 @@ router.put("/saveSampleRate", async (req, res) => {
 router.put("/sendConfiguration", async (req, res) => {
     const sessionId = req.body.sessionId;
     const deviceId = req.body.selectedDevice;
-    console.log("sendConfiguration: ", sessionId, deviceId);
 
     await sendConfigurationToDevice(sessionId, deviceId)
     .then((result) => {
-        console.log("RESULT: ", result);
         return res.json(result);
     })
     .catch((error) => {
@@ -166,16 +162,13 @@ router.put("/sendConfiguration", async (req, res) => {
 });
 
 router.get("/units", async (_, res) => {
-    console.log("in units");
     const docs = await listUnits();
     if (!docs) return res.status(404).json({ message: "Units not found" });
-    console.log("units: ", docs);
     return res.json(docs);
 });
 
 
 router.put("/startBatch", async (req, res) => {
-    console.log("in start batch");
     const sessionId = req.body.sessionId;
 
     const doc = await sendStartBatch(sessionId);
@@ -184,13 +177,10 @@ router.put("/startBatch", async (req, res) => {
 });
 
 router.put("/stopBatch", async (req, res) => {
-    console.log("in stop batch");
     const sessionId = req.body.sessionId;
     const doc = await sendStopBatch(sessionId);
     if (!doc) return res.status(500).json({ message: "Failed to stop batch" });
     return res.json(doc);
 });
-
-
 
 export default router;

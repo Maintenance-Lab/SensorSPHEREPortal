@@ -26,7 +26,6 @@ const updateProjectLastActive = async (projectId: number) => {
 
 
 export const getSessionById = async (id: number): Promise<Session> => {
-  console.log("in getSessionById", id);
   return new Promise(async (resolve, reject) => {
     const doc = await Session.findByPk(id);
     if (!doc) return reject(new Error("Session not found"));
@@ -37,7 +36,6 @@ export const getSessionById = async (id: number): Promise<Session> => {
 };
 
 export const getSessionsByProject = async (projectId: number) => {
-  console.log("in getSessionsByProject", projectId);
   return new Promise(async (resolve) => {
     const doc = await Session.findAll({ where: { projectId: projectId }});
     if (!doc) return resolve([]);
@@ -70,7 +68,6 @@ export const getActiveSessionsByProject = async (projectId: number) => {
 // };
 
 export const getArchivedSessionsByProject = async (projectId: number) => {
-  console.log("in getArchivedSessionsByProject", projectId);
   return new Promise(async (resolve) => {
     const doc = await Session.findAll({ where: {projectId: projectId, archived: true}});
     if (!doc) return resolve([]);
@@ -80,7 +77,6 @@ export const getArchivedSessionsByProject = async (projectId: number) => {
 };
 
 export const createSession = async (item: Partial<Session>) => {
-  console.log("in createSession", item);
   return new Promise(async (resolve) => {
     const result = await Session.create(item);
     if (!result) return resolve(null);
@@ -96,7 +92,6 @@ export const createSession = async (item: Partial<Session>) => {
 
 export const addDevices = async (sessionId: number, deviceIds: Array<number>) => {
   const configuredHz = 1;
-  console.log("in addDevices funtie", sessionId, deviceIds);
   return new Promise(async (resolve, reject) => {
     const results = [];
     for (const deviceId of deviceIds) {
@@ -121,7 +116,6 @@ export const addDevices = async (sessionId: number, deviceIds: Array<number>) =>
 }
 
 export const updateSession = async (id: number, item: Partial<Session>) => {
-  console.log("in updateSession", id, item);
   return new Promise(async (resolve, reject) => {
     if (!id) return reject(new Error("Session ID not found"));
 
@@ -143,7 +137,6 @@ export const updateSession = async (id: number, item: Partial<Session>) => {
 };
 
 export const deleteSessions = async (ids: Array<number>) => {
-  console.log("in deleteSessions function", ids);
   return new Promise(async (resolve, reject) => {
     const results = [];
     for (const id of ids) {
@@ -159,7 +152,6 @@ export const deleteSessions = async (ids: Array<number>) => {
       await SessionDeviceMapping.destroy({ where: { sessionId: id }});
       const result = await Session.destroy({ where: { sessionId: id }});
 
-      console.log("session deleted");
       results.push(result);
     }
 

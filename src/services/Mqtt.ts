@@ -33,7 +33,7 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
             const options = { qos: 2 };
             mqtt.publish("interface/handshake/requestStatusResult", JSON.stringify(message_out), options);
             console.log("Adding device to database");
-            addDeviceToDatabase(message);
+            addDeviceToDatabase(parsed_message);
         }
         else if (topicParts[0] == "interface" && topicParts[2] == "validateConfigurationResult") {
             sendSampleRate(parsed_message);
@@ -215,8 +215,6 @@ const updateDeviceStatus = async (message: any) => {
             await Device.update({ batteryLevel: unit.batteryLevel, connectStatus: "connected", lastHeartbeat: unit.lastSeen }, { where: { deviceId } });
         }
 
-        // return resolve({ message: "Device status updated" });
-
         // all other devices to non-active
         const allDevices = await Device.findAll({ where: { connectStatus: "connected" } });
         for (const device of allDevices) {
@@ -225,7 +223,6 @@ const updateDeviceStatus = async (message: any) => {
             }
         }
 
-        console.log("Sending list_units event to all clients");
         wss.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify({ event: "list_units", units: message.units }));

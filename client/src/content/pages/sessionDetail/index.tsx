@@ -12,6 +12,18 @@ import { ArchiveOutlined, DeleteOutline, Devices, Inventory,
 import { TreeView, TreeItem } from '@mui/lab';
 import { useNavigate } from 'react-router-dom';
 
+
+import InfoIcon from '@mui/icons-material/Info';
+import Tooltip from '@mui/material/Tooltip';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+
+
 import * as Icons from '@mui/icons-material';
 
 // Imports from functions moved to different files
@@ -127,6 +139,8 @@ const SessionDetail = () => {
   const [sessionStatus, setSessionStatus] = useState('Not started');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isStartDisabled, setIsStartDisabled] = useState(true);
+  const [startRequirements, setStartRequirements] = useState([]);
+
 
   const navigate = useNavigate();
 
@@ -702,9 +716,10 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
 
   const renewAvailableDevices = async () => {
     await listUnits();
+    console.log("listunits gehad")
     await handleAvailableDevices(sessionId, setAvailableDevices);
+    console.log("handle available devices gehad")
     await checkStartingConditions();
-
   }
 
   useEffect(() => {
@@ -724,7 +739,7 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
           id: device.deviceId,
           connected: device.connectStatus,
           battery: device.batteryLevel,
-          sampleRate: sampleRate,
+          sampleRate: sampleRate ? sampleRate + ' Hz' : '-',
           lastSeen: lastSeen,
           lastSeenRaw: lastSeenRaw
         };
@@ -749,36 +764,68 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
 
   const checkStartingConditions = async () => {
     const devices = await fetchDevices(sessionId);
-    const errorTypes: string[] = [];
+    const sampleRates = await Promise.all(
+      devices.map(async (device) => {
+        const sampleRate = await getSampleRate(sessionId, device.deviceId);
+        return {
+          deviceId: device.deviceId,
+          sampleRate,
+        };
+      })
+    );
 
-    // Check if there are any devices connected
-    if (devices.length === 0) {
-      errorTypes.push("no_devices");
-    }
+    const requirements = [
+      {
+        text: "Add at least one device",
+        done: devices.length > 0,
+      },
+      {
+        text: "Charge all devices to at least 10% battery",
+        done: devices.every(device => device.batteryLevel >= 10),
+      },
+      {
+        text: "Make sure all added devices are connected",
+        done: devices.every(device => device.connectStatus === 'connected'),
+      },
+      {
+        text: "Make sure all devices are configured",
+        done: sampleRates.every(device => device.sampleRate !== null),
+      },
+    ];
 
-    // Check if all batteries are above 10%
-    const lowBatteryDevices = devices.filter(device => device.batteryLevel < 10);
-    if (lowBatteryDevices.length > 0) {
-      errorTypes.push("low_battery");
-    }
+    console.log("requirements: ", requirements)
+    // const allPassed = requirements.every(req => req.done);
+    const allPassed = requirements.filter(req => req.text !== "Make sure all devices are configured")
+      .every(req => req.done);
+    console.log("all passed: ", allPassed)
+    setIsStartDisabled(!allPassed);
+    setStartRequirements(requirements);
+  };
 
-    // Check if status of all devices is 'connected'
-    const disconnectedDevices = devices.filter(device => device.connectStatus !== 'connected');
-    if (disconnectedDevices.length > 0) {
-      errorTypes.push("not_connected");
-    }
+  const checkSampleRates = async () => {
+    const devices = await fetchDevices(sessionId);
+    // print sample rates of all devices
+    const sampleRates = await Promise.all(
+      devices.map(async (device) => {
+        const sampleRate = await getSampleRate(sessionId, device.deviceId);
+        return {
+          deviceId: device.deviceId,
+          sampleRate: sampleRate
+        };
+      })
+    );
+    console.log("Sample rates of devices:", sampleRates);
 
 
-    // Set the start button state based on the error types
-    if (errorTypes.length > 0) {
-      setIsStartDisabled(true);
-    }
-    else {
-      setIsStartDisabled(false);
-    }
+    const devicesWithoutSampleRate = devices.filter(device => device.sampleRate === null);
+    console.log("Devices without sample rate:", devicesWithoutSampleRate);
   }
 
   const handleStartSession = async () => {
+    // Check if there are devices without sample rate
+    // console.log("checking here for sample rate")
+    // await checkSampleRates();
+
     startBatch(sessionId);
     setElapsedTime(0);
     setSessionStatus('Running');
@@ -981,14 +1028,52 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
                   Status: {sessionStatus}
                 </Typography>
               </Stack>
-
-              {/* Conditional Buttons */}
               {(sessionStatus === 'Not started' || sessionStatus === 'Stopped') && (
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
-                  <Button variant="contained" color="primary" onClick={handleStartSession} disabled={isStartDisabled}>
-                    Start Session
-                  </Button>
-                </Stack>
+              <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
+                <Tooltip
+                title={
+                  <List dense sx={{ p: 0, m: 0 }}>
+                    {startRequirements.map(({ text, done }) => (
+                      <ListItem key={text} sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 30 }}>
+                          {done ? (
+                            <CheckCircleIcon color="success" fontSize="small" />
+                          ) : (
+                            <RadioButtonUncheckedIcon color="disabled" fontSize="small" />
+                          )}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={text}
+                          sx={{ color: done ? 'text.primary' : 'text.disabled', fontSize: '0.875rem' }}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                }
+                placement="top"
+                arrow
+                componentsProps={{
+                  tooltip: {
+                    sx: (theme) => ({
+                      backgroundColor: theme.palette.background.paper,
+                      color: theme.palette.text.primary,
+                      boxShadow: theme.shadows[3],
+                      maxWidth: 300,
+                    }),
+                  },
+                }}
+              >
+                <InfoIcon color="action" sx={{ cursor: 'pointer' }} />
+              </Tooltip>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleStartSession}
+                disabled={isStartDisabled}
+              >
+                Start Session
+              </Button>
+            </Stack>
               )}
 
               {sessionStatus === 'Running' && (

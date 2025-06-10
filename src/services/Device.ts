@@ -162,19 +162,18 @@ export const getAllAvailableDevicesSession = async (sessionId: number): Promise<
 }
 
 export const getSampleRate = async (sessionId: number, deviceId: string): Promise<any> => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve, _) => {
         const doc = await SessionDeviceMapping.findOne({
             where : { sessionId: sessionId, deviceId: deviceId },
             attributes: ['sampleRate'],
             raw: true,
         });
-        if (!doc) return reject(new Error("Mapping not found"));
 
-        const sampleRate = doc.sampleRate;
-        if (sampleRate === null || sampleRate === undefined) {
-            return reject(new Error("Sample rate not found"));
+        if (!doc || doc.sampleRate === null || doc.sampleRate === undefined) {
+            return resolve(null);
         }
-        return resolve(sampleRate);
+
+        return resolve(doc.sampleRate);
     });
 };
 
@@ -271,6 +270,7 @@ export const getSelectedProperties = async (sessionId: number, deviceId: string)
 
 export const listUnits = async (): Promise<any> => {
     return new Promise(async (resolve, _) => {
+        console.log("in listunits in Device.ts")
         const message = {
             "filterActiveOnly": true,
         }

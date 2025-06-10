@@ -131,8 +131,8 @@ router.get("/getSampleRate/:sessionId/:deviceId", async (req, res) => {
     const deviceId = req.params.deviceId;
 
     const doc = await getSampleRate(sessionId, deviceId);
-    if (doc === null || doc === undefined) {
-        return res.status(404).json({ message: "Failed to fetch sample rate" });
+    if (doc === null) {
+        return res.json(null)
     }
     return res.json(doc);
 });

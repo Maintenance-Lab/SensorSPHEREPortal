@@ -921,6 +921,11 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
     if (devicesWithoutSampleRate.length > 0) {
       setDialogOpen3(true);
     }
+    else {
+      startBatch(sessionId);
+      setElapsedTime(0);
+      setSessionStatus('Running');
+    }
   }
 
   const handleStartSession = async (devices) => {
@@ -964,6 +969,7 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
         setElapsedTime(0);
         setSessionStatus('Running');
         handleCloseDialog3();
+        checkStartingConditions();
       } else {
         setDefaultConfigStep(0);
         step = 0;

@@ -119,6 +119,7 @@ const SessionDetail = () => {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [isDialogOpen2, setDialogOpen2] = useState(false);
+  const [isDialogOpen3, setDialogOpen3] = useState(false);
   const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
   const [selectedAddDeviceIds, setSelectedAddDeviceIds] = useState([]);
   const [devices, setDevices] = useState([]);
@@ -131,9 +132,12 @@ const SessionDetail = () => {
   const [loading, setLoading] = useState(false);
 
 
-  const [activeStep, setActiveStep] = React.useState(0);
-  const [sampleRate, setSampleRate] = React.useState(null);
+  const [activeStep, setActiveStep] = useState(0);
+  const [defaultConfigStep, setDefaultConfigStep] = useState(0);
+  const [sampleRate, setSampleRate] = useState(null);
+  const [sampleRates, setSampleRates] = useState([]);
   const steps = ['Select Properties', 'Find sample rate', 'Save configuration'];
+  const [devicesWithoutSampleRate, setDevicesWithoutSampleRate] = useState([]);
 
   const [progress, setProgress] = useState(0);
   const [sessionStatus, setSessionStatus] = useState('Not started');
@@ -294,6 +298,12 @@ const SessionDetail = () => {
     setSampleRate(null);
   };
 
+    const handleCloseDialog3 = async () => {
+    setDialogOpen3(false);
+    setDefaultConfigStep(0);
+    setSampleRates([]);
+  };
+
   const handleNext = async (sessionId, selectedDevice) => {
     if (activeStep === steps.length - 1) {
       if (sampleRate !== null) {
@@ -320,7 +330,7 @@ const SessionDetail = () => {
     }
   };
 
-  const stepTitle = (index: number) => {
+  const deviceConfigTitle = (index: number) => {
     switch (index) {
       case 0:
         return 'Select properties to include in data collection';
@@ -340,7 +350,7 @@ const SessionDetail = () => {
     }
   };
 
-  const stepContent = (index: number) => {
+  const deviceConfigContent = (index: number) => {
     switch (index) {
       case 0:
         return (
@@ -370,6 +380,58 @@ const SessionDetail = () => {
         )
     }
   }
+
+  const defaultConfigContent = (index: number) => {
+    // console.log("DEFAULT CONFIG STEP: ", index)
+    switch (index) {
+      case 0:
+        return (
+          <Box>
+          <Typography variant="h5" align="center">
+            Some Devices Are Not Configured
+          </Typography>
+
+          <Typography variant="body1" align="center" sx={{ mb: 2 }}>
+            There {devices.length === 1 ? "is" : "are"} <strong>{devices.length}</strong> device
+            {devices.length === 1 ? "" : "s"} without a sample rate configuration.
+          </Typography>
+
+          <Typography variant="body2" align="center" sx={{ mt: 1 }}>
+            Proceeding will initiate the sample rate detection process. This step may take a few seconds to complete
+          </Typography>
+          </Box>
+      );
+      case 1:
+        return (
+          <CircularProgress size={100}/>
+        )
+      case 2:
+        if (sampleRates.length === devices.length && sampleRates.every(rate => rate !== null)) {
+          return (
+            <Box>
+              <Typography variant="h5" align="center" sx={{ mt: 2 }}>
+                The following sample rates were found?returned?:
+              </Typography>
+              {devices.map((device, index) => (
+                <Typography key={device.deviceId || index} align="center" sx={{ mt: 1 }}>
+                  <strong>{device.deviceId || `Device ${index + 1}`}:</strong> {sampleRates[index]} Hz
+                </Typography>
+              ))}
+              <Typography variant="h6" align="center" sx={{ mt: 3 }}>
+                Click 'Start Session' to proceed with these sample rates.
+              </Typography>
+            </Box>
+          );
+          // return (
+          //   <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>{sampleRate} Hz</Typography>)
+        }
+        return (
+          <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>No sample rate found</Typography>
+        )
+    }
+  }
+
+
 
   const handleRowClick = async (deviceId: string, event) => {
     event.stopPropagation();
@@ -411,14 +473,14 @@ const SessionDetail = () => {
             })}
           </Stepper>
           <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>
-            {stepTitle(activeStep)}
+            {deviceConfigTitle(activeStep)}
           </Typography>
         </Box>
         <Box sx={{ flexGrow: 1, overflowY: "auto", padding: 2, display: "flex", justifyContent: activeStep === 0 ? "flex-start" : "center",
             alignItems: activeStep === 0 ? "flex-start" : "center" }}>
           <Box sx={{ display: "flex", justifyContent: activeStep === 0 ? "flex-start" : "center",
             alignItems: activeStep === 0 ? "flex-start" : "center" }}>
-            {stepContent(activeStep)}
+            {deviceConfigContent(activeStep)}
           </Box>
         </Box>
         <Box sx={{ position: "sticky", bottom: 0, backgroundColor: "white", borderTop: "1px solid #ddd",
@@ -468,6 +530,47 @@ const SessionDetail = () => {
       </DialogContent>
     </Dialog>
   )
+};
+
+const DefaultConfigurationDialog = ({ devices, open }) => {
+  return (
+    <Dialog
+      open={open}
+      maxWidth="sm"
+      fullWidth
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <DialogContent
+        sx={{
+          height: "auto",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          gap: 2,
+        }}
+      >
+
+      <Box sx={{ display: "flex", justifyContent: defaultConfigStep === 0 ? "flex-start" : "center",
+        alignItems: "center" }}>
+        {defaultConfigContent(defaultConfigStep)}
+      </Box>
+
+
+        {defaultConfigStep !== 1 && (
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+              <Button onClick={handleCloseDialog3}>Cancel</Button>
+              <Button variant="contained" onClick={() => handleStartSession(devices, defaultConfigStep)}>
+                {defaultConfigStep === 0 ? "Continue" : "Start Session"}
+              </Button>
+          </Box>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 const isValidDate = (dateString: any) => {
@@ -804,7 +907,6 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
 
   const checkSampleRates = async () => {
     const devices = await fetchDevices(sessionId);
-    // print sample rates of all devices
     const sampleRates = await Promise.all(
       devices.map(async (device) => {
         const sampleRate = await getSampleRate(sessionId, device.deviceId);
@@ -814,21 +916,50 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
         };
       })
     );
-    console.log("Sample rates of devices:", sampleRates);
 
-
-    const devicesWithoutSampleRate = devices.filter(device => device.sampleRate === null);
-    console.log("Devices without sample rate:", devicesWithoutSampleRate);
+    const devicesWithoutSampleRate = sampleRates.filter(device => device.sampleRate === null).map(device => device.deviceId);
+    setDevicesWithoutSampleRate(devicesWithoutSampleRate)
+    return devicesWithoutSampleRate
   }
 
-  const handleStartSession = async () => {
+  const handleOpenDialog3 = async () => {
     // Check if there are devices without sample rate
-    // console.log("checking here for sample rate")
-    // await checkSampleRates();
+    const devicesWithoutSampleRate = await checkSampleRates();
 
-    startBatch(sessionId);
-    setElapsedTime(0);
-    setSessionStatus('Running');
+    if (devicesWithoutSampleRate.length > 0) {
+      setDialogOpen3(true);
+    }
+  }
+
+  const handleStartSession = async (devices, defaultConfigStep) => {
+    var startStep = defaultConfigStep
+    const sampleRates = []
+
+    if (startStep === 0) {
+      setDefaultConfigStep((prev) => prev + 1);
+      for (const device of devices) {
+        console.log("////////////////////////DEVICE: ", device)
+        const sampleRate = await sendConfiguration(sessionId, device);
+        if (sampleRate !== null) {
+          sampleRates.push(sampleRate)
+          setSampleRates(sampleRates);
+        }
+      }
+
+      startStep = startStep + 1
+      await setDefaultConfigStep((prev) => prev + 1);
+    }
+
+    // console.log("TESTING IS DONE ", sampleRates);
+
+    if (startStep === 2) {
+      // TODO: save samplerates
+      // startBatch(sessionId);
+      // setElapsedTime(0);
+      // setSessionStatus('Running');
+      handleCloseDialog3();
+    }
+
   }
 
   // const handlePauseSession = async () => {
@@ -1068,11 +1199,15 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={handleStartSession}
+                onClick={handleOpenDialog3}
                 disabled={isStartDisabled}
               >
                 Start Session
               </Button>
+              <DefaultConfigurationDialog
+                devices={devicesWithoutSampleRate}
+                open={isDialogOpen3}
+              />
             </Stack>
               )}
 

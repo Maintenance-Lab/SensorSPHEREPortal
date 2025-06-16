@@ -27,7 +27,7 @@ export const removeDevicesFromSession = async (sessionId: number, selectedDevice
     });
 };
 
-export const sendConfiguration = async (sessionId: number, selectedDeviceId: number) => {
+export const sendConfiguration = async (sessionId: number, selectedDeviceId: string) => {
     return apiRequest("/api/devices/sendConfiguration", "PUT", {
       sessionId,
       selectedDevice: selectedDeviceId,

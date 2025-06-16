@@ -410,7 +410,7 @@ const SessionDetail = () => {
           return (
             <Box>
               <Typography variant="h5" align="center" sx={{ mt: 2 }}>
-                The following sample rates were found?returned?:
+                The following sample rates were found:
               </Typography>
               {devices.map((device, index) => (
                 <Typography key={device.deviceId || index} align="center" sx={{ mt: 1 }}>
@@ -422,11 +422,11 @@ const SessionDetail = () => {
               </Typography>
             </Box>
           );
-          // return (
-          //   <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>{sampleRate} Hz</Typography>)
         }
         return (
-          <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>No sample rate found</Typography>
+          <Box>
+            <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>Something went wrong</Typography>
+          </Box>
         )
     }
   }
@@ -533,6 +533,7 @@ const SessionDetail = () => {
 };
 
 const DefaultConfigurationDialog = ({ devices, open }) => {
+  const allSampleRatesValid = sampleRates.length === devices.length && sampleRates.every(rate => rate !== null);
   return (
     <Dialog
       open={open}
@@ -558,13 +559,11 @@ const DefaultConfigurationDialog = ({ devices, open }) => {
         alignItems: "center" }}>
         {defaultConfigContent(defaultConfigStep)}
       </Box>
-
-
         {defaultConfigStep !== 1 && (
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
               <Button onClick={handleCloseDialog3}>Cancel</Button>
-              <Button variant="contained" onClick={() => handleStartSession(devices, defaultConfigStep)}>
-                {defaultConfigStep === 0 ? "Continue" : "Start Session"}
+              <Button variant="contained" onClick={() => handleStartSession(devices)}>
+                {defaultConfigStep === 0 ? "Continue" : allSampleRatesValid ? "Start Session" : "Try Again"}
               </Button>
           </Box>
         )}
@@ -931,40 +930,64 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
     }
   }
 
-  const handleStartSession = async (devices, defaultConfigStep) => {
-    var startStep = defaultConfigStep
-    const sampleRates = []
+  const handleStartSession = async (devices) => {
+    let step = defaultConfigStep;
 
-    if (startStep === 0) {
-      setDefaultConfigStep((prev) => prev + 1);
+    if (step === 0) {
+      console.log("IN 0");
+      step = 1;
+      setDefaultConfigStep(1);
+    }
+
+    if (step === 1) {
+      console.log("IN 1");
+      const newSampleRates = [];
+
       for (const device of devices) {
-        console.log("////////////////////////DEVICE: ", device)
+        console.log("getting for device: ", device);
         const sampleRate = await sendConfiguration(sessionId, device);
-        if (sampleRate !== null) {
-          sampleRates.push(sampleRate)
-          setSampleRates(sampleRates);
+        console.log("sample rate: ", sampleRate);
+
+        if (!sampleRate) {
+          step = 2;
+          setDefaultConfigStep(2);
+          return;
         }
+
+        newSampleRates.push(sampleRate);
+
+        // Save new default sampleRate
+        // await saveSampleRate(sessionId, device, sampleRate);
       }
 
-      startStep = startStep + 1
-      await setDefaultConfigStep((prev) => prev + 1);
+      setSampleRates(newSampleRates);
+      step = 2;
+      setDefaultConfigStep(2);
+      return;
     }
 
-    // console.log("TESTING IS DONE ", sampleRates);
+    if (step === 2) {
+      console.log("IN 2");
+      const allValid = sampleRates.length === devices.length &&
+                      sampleRates.every(rate => rate !== null && rate !== 0);
 
-    if (startStep === 2) {
-      // TODO: save samplerates
-      // startBatch(sessionId);
-      // setElapsedTime(0);
-      // setSessionStatus('Running');
-      handleCloseDialog3();
+      if (allValid) {
+        handleCloseDialog3();
+
+        // TODO: save samplerates
+        // startBatch(sessionId);
+        // setElapsedTime(0);
+        // setSessionStatus('Running');
+      } else {
+        setDefaultConfigStep(0);
+        step = 0;
+        // setSampleRates([]);
+        return;
+      }
     }
+  };
 
-  }
 
-  // const handlePauseSession = async () => {
-  //   // continue doing nothing
-  // }
 
   const handleStopSession = async () => {
     stopBatch(sessionId);

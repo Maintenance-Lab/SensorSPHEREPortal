@@ -21,7 +21,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+
 
 
 import * as Icons from '@mui/icons-material';
@@ -33,6 +33,8 @@ import { fetchDevices, removeDevicesFromSession, sendConfiguration, updateSessio
   getDeviceProperties, getSelectedProperties, updateSelectedProperties, fetchAvailableDevices, fetchSession, projectData,
   listUnits, getSampleRate, saveSampleRate, startBatch, stopBatch
  } from "./api";
+ import ConfirmationDialog from './confirmationDialog';
+import { renderBatteryCell, calculateLastSeen, formatLastSeen } from './startSessionHelpers'
 
 //  Api calls in api.tsx
  const handleAvailableDevices = async (sessionId, setAvailableDevices) => {
@@ -568,104 +570,104 @@ const DefaultConfigurationDialog = ({ devices, open }) => {
   );
 };
 
-const isValidDate = (dateString: any) => {
-  const date = new Date(dateString);
-  return !isNaN(date.getTime());
-};
+// const isValidDate = (dateString: any) => {
+//   const date = new Date(dateString);
+//   return !isNaN(date.getTime());
+// };
 
-const calculateLastSeen = (device) => {
-  const timestamp = device.lastHeartbeat;
-  if (!timestamp || typeof timestamp !== 'string') return Infinity;
+// const calculateLastSeen = (device) => {
+//   const timestamp = device.lastHeartbeat;
+//   if (!timestamp || typeof timestamp !== 'string') return Infinity;
 
-  if (device.connectStatus === 'connected') {
-    return 0;
-  }
+//   if (device.connectStatus === 'connected') {
+//     return 0;
+//   }
 
-  // Format the timestamp into a valid ISO string
-  const iso = timestamp
-    .replace(' ', 'T')
-    .replace(/ ([+-]\d{2}:\d{2})$/, '$1')
-    .replace(/ ([+-]\d{4})$/, (_, offset) => {
-      return offset.slice(0, 3) + ':' + offset.slice(3);
-    });
+//   // Format the timestamp into a valid ISO string
+//   const iso = timestamp
+//     .replace(' ', 'T')
+//     .replace(/ ([+-]\d{2}:\d{2})$/, '$1')
+//     .replace(/ ([+-]\d{4})$/, (_, offset) => {
+//       return offset.slice(0, 3) + ':' + offset.slice(3);
+//     });
 
-  const date = new Date(iso);
+//   const date = new Date(iso);
 
-  // If it's an invalid date, return Infinity
-    if (!isValidDate(date)) return Infinity;
+//   // If it's an invalid date, return Infinity
+//     if (!isValidDate(date)) return Infinity;
 
-  const now = new Date();
-  if (now.getTime() - date.getTime()) {
-    return now.getTime() - date.getTime();
-  }
-  return Infinity;
-};
+//   const now = new Date();
+//   if (now.getTime() - date.getTime()) {
+//     return now.getTime() - date.getTime();
+//   }
+//   return Infinity;
+// };
 
-const formatLastSeen = (device): string => {
-  const timestamp = device.lastHeartbeat;
-  if (!timestamp || typeof timestamp !== 'string') return 'Unknown';
-  if (device.connectStatus === 'connected') {
-    return 'Now';
-  }
-  const diffInSeconds = Math.floor(calculateLastSeen(device) / 1000);
+// const formatLastSeen = (device): string => {
+//   const timestamp = device.lastHeartbeat;
+//   if (!timestamp || typeof timestamp !== 'string') return 'Unknown';
+//   if (device.connectStatus === 'connected') {
+//     return 'Now';
+//   }
+//   const diffInSeconds = Math.floor(calculateLastSeen(device) / 1000);
 
-  if (diffInSeconds === Infinity) return 'A long time ago';
+//   if (diffInSeconds === Infinity) return 'A long time ago';
 
-  if (diffInSeconds < 60) {
-    return `${diffInSeconds} second${diffInSeconds === 1 ? '' : 's'} ago`;
-  }
+//   if (diffInSeconds < 60) {
+//     return `${diffInSeconds} second${diffInSeconds === 1 ? '' : 's'} ago`;
+//   }
 
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;
-  }
+//   const diffInMinutes = Math.floor(diffInSeconds / 60);
+//   if (diffInMinutes < 60) {
+//     return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;
+//   }
 
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) {
-    return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
-  }
+//   const diffInHours = Math.floor(diffInMinutes / 60);
+//   if (diffInHours < 24) {
+//     return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
+//   }
 
-  const diffInDays = Math.floor(diffInHours / 24);
-  return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
-};
+//   const diffInDays = Math.floor(diffInHours / 24);
+//   return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
+// };
 
-const renderBatteryCell = (params) => {
-  const level = params.value;
-  let IconComponent = Icons.BatteryAlert;
-  let color = 'error.main';
+// const renderBatteryCell = (params) => {
+//   const level = params.value;
+//   let IconComponent = Icons.BatteryAlert;
+//   let color = 'error.main';
 
-  if (level === null || level === undefined) {
-    IconComponent = Icons.BatteryAlert;
-    color = 'gray';
-  } else if (level > 90) {
-    IconComponent = Icons.BatteryFull;
-    color = 'success.main';
-  } else if (level > 75) {
-    IconComponent = Icons.Battery80;
-    color = 'success.main';
-  } else if (level > 50) {
-    IconComponent = Icons.Battery60;
-    color = 'warning.main';
-  } else if (level > 30) {
-    IconComponent = Icons.Battery50;
-    color = 'warning.main';
-  } else if (level > 15) {
-    IconComponent = Icons.Battery30;
-    color = 'error.main';
-  } else {
-    IconComponent = Icons.Battery20;
-    color = 'error.main';
-  }
+//   if (level === null || level === undefined) {
+//     IconComponent = Icons.BatteryAlert;
+//     color = 'gray';
+//   } else if (level > 90) {
+//     IconComponent = Icons.BatteryFull;
+//     color = 'success.main';
+//   } else if (level > 75) {
+//     IconComponent = Icons.Battery80;
+//     color = 'success.main';
+//   } else if (level > 50) {
+//     IconComponent = Icons.Battery60;
+//     color = 'warning.main';
+//   } else if (level > 30) {
+//     IconComponent = Icons.Battery50;
+//     color = 'warning.main';
+//   } else if (level > 15) {
+//     IconComponent = Icons.Battery30;
+//     color = 'error.main';
+//   } else {
+//     IconComponent = Icons.Battery20;
+//     color = 'error.main';
+//   }
 
-  return (
-    <Stack direction="row" alignItems="center" sx={{ color, fontWeight: 500 }}>
-      <IconComponent fontSize="small" />
-      <Typography variant="inherit" sx={{ ml: 0.5 }}>
-        {level != null ? `${level}%` : '?'}
-      </Typography>
-    </Stack>
-  );
-};
+//   return (
+//     <Stack direction="row" alignItems="center" sx={{ color, fontWeight: 500 }}>
+//       <IconComponent fontSize="small" />
+//       <Typography variant="inherit" sx={{ ml: 0.5 }}>
+//         {level != null ? `${level}%` : '?'}
+//       </Typography>
+//     </Stack>
+//   );
+// };
 
 const renderConnectedCell = (params) => {
   const status = params.value;
@@ -984,32 +986,6 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
     stopBatch(sessionId);
     setSessionStatus('Stopped');
   }
-
-  const ConfirmationDialog = ({ open, onClose, onConfirm, sessionId }) => (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Confirm Deletion</DialogTitle>
-      <DialogContent>
-        <Typography>
-          Are you sure you want to delete this session? This action cannot be undone.
-        </Typography>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color="primary">
-          Cancel
-        </Button>
-        <Button
-          onClick={() => {
-            onConfirm(sessionId);
-            onClose();
-          }}
-          color="error"
-          variant="contained"
-        >
-          Delete
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
 
   return (
     <div>

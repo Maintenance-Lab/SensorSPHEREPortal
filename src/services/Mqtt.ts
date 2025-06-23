@@ -35,7 +35,8 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
             console.log("Adding device to database");
             addDeviceToDatabase(parsed_message);
         }
-        else if (topicParts[0] == "interface" && topicParts[2] == "validateConfigurationResult") {
+        else if (topic === 'interface/validateConfigurationResult') {
+        // else if (topicParts[0] == "interface" && topicParts[2] == "validateConfigurationResult") {
             sendSampleRate(parsed_message);
         }
         else {

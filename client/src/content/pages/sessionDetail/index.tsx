@@ -33,8 +33,9 @@ import { fetchDevices, removeDevicesFromSession, sendConfiguration, updateSessio
   getDeviceProperties, getSelectedProperties, updateSelectedProperties, fetchAvailableDevices, fetchSession, projectData,
   listUnits, getSampleRate, saveSampleRate, startBatch, stopBatch
  } from "./api";
- import ConfirmationDialog from './confirmationDialog';
-import { renderBatteryCell, calculateLastSeen, formatLastSeen } from './startSessionHelpers'
+import ConfirmationDialog from './confirmationDialog';
+import DeviceConfigDialog from './deviceConfigDialog';
+import { renderBatteryCell, calculateLastSeen, formatLastSeen, renderConnectedCell } from './startSessionHelpers'
 
 //  Api calls in api.tsx
  const handleAvailableDevices = async (sessionId, setAvailableDevices) => {
@@ -42,24 +43,6 @@ import { renderBatteryCell, calculateLastSeen, formatLastSeen } from './startSes
     setAvailableDevices(availableDevicesData);
     return availableDevicesData;
  };
-
-// const handleRemoveDevices = async (sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices) => {
-//   const success = await removeDevicesFromSession(sessionId, selectedDeviceIds);
-
-//   if (success) {
-//     await fetchSessionDevices(sessionId, setDevices);
-//     await handleAvailableDevices(sessionId, setAvailableDevices);
-//   }
-// };
-
-// const handleAddDevices = async (sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices) => {
-//   const success = await addDevices(sessionId, selectedAddDeviceIds);
-
-//   if (success) {
-//     await fetchSessionDevices(sessionId, setDevices);
-//     await handleAvailableDevices(sessionId, setAvailableDevices);
-//   }
-// }
 
 const handleFetchSession = async (sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived) => {
   const sessionData = await fetchSession(sessionId);
@@ -82,33 +65,6 @@ const fetchSessionDevices = async (sessionId, setDevices) => {
 
   return devices;
 };
-
-
-// function ConnectedDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDevices, setAvailableDevices, setDevices }) {
-//   const activeSelection = selectedDeviceIds.length > 0;
-
-//   return (
-//     <GridToolbarContainer sx={{ padding: 1 }}>
-//       <Stack direction="row" spacing={1}>
-//         <GridToolbarQuickFilter variant="outlined" size='small' justify-content="space-between" sx={{ padding: 0 }} />
-//           <Button
-//             variant="outlined"
-//             size="medium"
-//             color="error"
-//             startIcon={<Icons.DeleteOutlineOutlined />}
-//             disabled={!activeSelection}
-//             // onClick={() => removeDevicesFromSession(sessionId, selectedDeviceIds, fetchSessionDevices, fetchAvailableDevices)}
-//             onClick={() => handleRemoveDevices(sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices)}
-
-//           >
-//             Remove Devices from Session
-//           </Button>
-//       </Stack>
-//     </GridToolbarContainer>
-//   );
-// }
-
-
 
 const SessionDetail = () => {
   const sessionId = Number(useParams().sessionId);
@@ -261,6 +217,51 @@ const SessionDetail = () => {
     );
   }, [selectedProperties, getOnChange]);
 
+  // Device Configurtion Dialog
+  const handleCloseDialog2 = async () => {
+  if (activeStep === 2 && sampleRate !== null) {
+    await saveSampleRate(sessionId, selectedDevice, sampleRate);
+  }
+  setDialogOpen2(false);
+  setActiveStep(0);
+  setSampleRate(null);
+};
+
+const handleReconfigure = async () => {
+  setActiveStep(0);
+  setSampleRate(null);
+};
+
+const handleNext = async () => {
+  if (activeStep === steps.length - 1) {
+    if (sampleRate !== null) {
+      handleCloseDialog2();
+      return;
+    } else {
+      setActiveStep(0);
+      return;
+    }
+  }
+
+  const newStep = activeStep + 1;
+  setActiveStep(newStep);
+
+  if (newStep === 1) {
+    await updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
+    const sr = await sendConfiguration(sessionId, selectedDevice);
+    if (sr !== null) {
+      setSampleRate(sr);
+    }
+    setActiveStep((prev) => prev + 1);
+  }
+};
+
+
+
+
+
+
+
   const handleSelectedProperties = async (deviceId:string) => {
     const properties = await getSelectedProperties(deviceId, sessionId);
     const selectedPropertiesIds = properties.map((property) => {
@@ -284,104 +285,11 @@ const SessionDetail = () => {
     setDialogOpen2(true);
   };
 
-  const handleReconfigure = async () => {
-    setActiveStep(0);
-    setSampleRate(null);
-  }
-
-  const handleCloseDialog2 = async (step) => {
-    if (step === 2 && sampleRate !== null) {
-      await saveSampleRate(sessionId, selectedDevice, sampleRate);
-      // await updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
-    }
-
-    setDialogOpen2(false);
-    setActiveStep(0);
-    setSampleRate(null);
-  };
-
-    const handleCloseDialog3 = async () => {
+  const handleCloseDialog3 = async () => {
     setDialogOpen3(false);
     setDefaultConfigStep(0);
     setSampleRates([]);
   };
-
-  const handleNext = async (sessionId, selectedDevice) => {
-    if (activeStep === steps.length - 1) {
-      if (sampleRate !== null) {
-        handleCloseDialog2(activeStep);
-        return;
-      }
-      else {
-        setActiveStep(0);
-        return;
-      }
-    }
-
-    const newStep = activeStep + 1;
-    setActiveStep(newStep);
-
-    if (newStep === 1) {
-      await updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
-      const sampleRate = await sendConfiguration(sessionId, selectedDevice);
-      if (sampleRate !== null) {
-        setSampleRate(sampleRate);
-      }
-
-      setActiveStep((prev) => prev + 1);
-    }
-  };
-
-  const deviceConfigTitle = (index: number) => {
-    switch (index) {
-      case 0:
-        return 'Select properties to include in data collection';
-      case 1:
-        return (
-          <>
-            Testing for sample rate
-            <br />
-            <Typography variant="caption" color="textSecondary">
-              This may take a few seconds.
-            </Typography>
-          </>
-      );
-        // return 'Finding maximum sample rate';
-      case 2:
-        return 'Maximum sample rate of this device with selected properties';
-    }
-  };
-
-  const deviceConfigContent = (index: number) => {
-    switch (index) {
-      case 0:
-        return (
-          <TreeView
-            multiSelect={true}
-            defaultExpandIcon={<Icons.ChevronRight/>}
-            defaultCollapseIcon={<Icons.ExpandMore/>}
-            defaultSelected={selectedProperties}
-            expanded={expandedNodes}
-            onNodeToggle={(e, nodeIds) => {
-              setExpandedNodes(nodeIds);
-            }}>
-            {allProperties && renderTree(allProperties)}
-          </TreeView>
-      );
-      case 1:
-        return (
-          <CircularProgress size={100}/>
-        )
-      case 2:
-        if (sampleRate !== null) {
-          return (
-            <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>{sampleRate} Hz</Typography>)
-          }
-        return (
-          <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>No sample rate found</Typography>
-        )
-    }
-  }
 
   const defaultConfigContent = (index: number, devices) => {
     switch (index) {
@@ -442,95 +350,7 @@ const SessionDetail = () => {
     }
   };
 
-  const DeviceConfigDialog = ({ device, open }) => {
-    return (
-    <Dialog
-      open={open}
-      maxWidth={false}
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <DialogContent
-        sx={{width: "50vw", height: "90vh", display: "flex", flexDirection: "column",
-          "& .MuiDialog-paper": { width: "50vw", height: "90vh" }}}
-      >
-        <Box sx={{ position: "sticky", top: 0, backgroundColor: "white", zIndex: 10 }}>
-          <Stepper activeStep={activeStep}>
-            {steps.map((label, index) => {
-              const stepProps: { completed?: boolean } = {};
-              const labelProps: { optional?: React.ReactNode } = {};
-              return (
-                <Step key={label} {...stepProps}>
-                  <StepLabel {...labelProps}>{label}</StepLabel>
-                </Step>
-              );
-            })}
-          </Stepper>
-          <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>
-            {deviceConfigTitle(activeStep)}
-          </Typography>
-        </Box>
-        <Box sx={{ flexGrow: 1, overflowY: "auto", padding: 2, display: "flex", justifyContent: activeStep === 0 ? "flex-start" : "center",
-            alignItems: activeStep === 0 ? "flex-start" : "center" }}>
-          <Box sx={{ display: "flex", justifyContent: activeStep === 0 ? "flex-start" : "center",
-            alignItems: activeStep === 0 ? "flex-start" : "center" }}>
-            {deviceConfigContent(activeStep)}
-          </Box>
-        </Box>
-        <Box sx={{ position: "sticky", bottom: 0, backgroundColor: "white", borderTop: "1px solid #ddd",
-            padding: "8px", display: "flex", flexDirection: "column", zIndex: 5 }}>
-          {activeStep === 0 && (
-            <Typography
-              variant="caption"
-              color="textSecondary"
-              align="center"
-              sx={{ mt: 1 }}
-            >
-              Proceeding will start testing for sample rate. <br />
-              This may take a few seconds.
-            </Typography>
-          )}
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-            {activeStep !== 1 && (
-              <Button color="inherit" onClick={handleCloseDialog2} sx={{ ml: 1 }}>
-                Cancel
-              </Button>
-            )}
-
-            {activeStep === 2 && (
-              <Button
-                onClick={() => {
-                  handleReconfigure();
-                }}
-                sx={{ mr: 1 }}
-              >
-                Reconfigure
-              </Button>
-            )}
-
-            {activeStep !== 1 && (
-              <Button
-                onClick={() => {
-                  handleNext(sessionId, device);
-                }}
-                sx={{ mr: 1 }}
-                disabled={activeStep === steps.length - 1 && sampleRate == null}
-              >
-                {activeStep === steps.length - 1 ? "Save" : "Next"}
-              </Button>
-            )}
-          </Box>
-        </Box>
-      </DialogContent>
-    </Dialog>
-  )
-};
-
 const DefaultConfigurationDialog = ({ devices, open }) => {
-  // const allSampleRatesValid = sampleRates.length === devices.length && sampleRates.every(rate => rate !== null);
   const allSampleRatesValid = devices.length === 0 && sampleRates.every(rate => rate !== null);
   return (
     <Dialog
@@ -567,122 +387,6 @@ const DefaultConfigurationDialog = ({ devices, open }) => {
         )}
       </DialogContent>
     </Dialog>
-  );
-};
-
-// const isValidDate = (dateString: any) => {
-//   const date = new Date(dateString);
-//   return !isNaN(date.getTime());
-// };
-
-// const calculateLastSeen = (device) => {
-//   const timestamp = device.lastHeartbeat;
-//   if (!timestamp || typeof timestamp !== 'string') return Infinity;
-
-//   if (device.connectStatus === 'connected') {
-//     return 0;
-//   }
-
-//   // Format the timestamp into a valid ISO string
-//   const iso = timestamp
-//     .replace(' ', 'T')
-//     .replace(/ ([+-]\d{2}:\d{2})$/, '$1')
-//     .replace(/ ([+-]\d{4})$/, (_, offset) => {
-//       return offset.slice(0, 3) + ':' + offset.slice(3);
-//     });
-
-//   const date = new Date(iso);
-
-//   // If it's an invalid date, return Infinity
-//     if (!isValidDate(date)) return Infinity;
-
-//   const now = new Date();
-//   if (now.getTime() - date.getTime()) {
-//     return now.getTime() - date.getTime();
-//   }
-//   return Infinity;
-// };
-
-// const formatLastSeen = (device): string => {
-//   const timestamp = device.lastHeartbeat;
-//   if (!timestamp || typeof timestamp !== 'string') return 'Unknown';
-//   if (device.connectStatus === 'connected') {
-//     return 'Now';
-//   }
-//   const diffInSeconds = Math.floor(calculateLastSeen(device) / 1000);
-
-//   if (diffInSeconds === Infinity) return 'A long time ago';
-
-//   if (diffInSeconds < 60) {
-//     return `${diffInSeconds} second${diffInSeconds === 1 ? '' : 's'} ago`;
-//   }
-
-//   const diffInMinutes = Math.floor(diffInSeconds / 60);
-//   if (diffInMinutes < 60) {
-//     return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;
-//   }
-
-//   const diffInHours = Math.floor(diffInMinutes / 60);
-//   if (diffInHours < 24) {
-//     return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
-//   }
-
-//   const diffInDays = Math.floor(diffInHours / 24);
-//   return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
-// };
-
-// const renderBatteryCell = (params) => {
-//   const level = params.value;
-//   let IconComponent = Icons.BatteryAlert;
-//   let color = 'error.main';
-
-//   if (level === null || level === undefined) {
-//     IconComponent = Icons.BatteryAlert;
-//     color = 'gray';
-//   } else if (level > 90) {
-//     IconComponent = Icons.BatteryFull;
-//     color = 'success.main';
-//   } else if (level > 75) {
-//     IconComponent = Icons.Battery80;
-//     color = 'success.main';
-//   } else if (level > 50) {
-//     IconComponent = Icons.Battery60;
-//     color = 'warning.main';
-//   } else if (level > 30) {
-//     IconComponent = Icons.Battery50;
-//     color = 'warning.main';
-//   } else if (level > 15) {
-//     IconComponent = Icons.Battery30;
-//     color = 'error.main';
-//   } else {
-//     IconComponent = Icons.Battery20;
-//     color = 'error.main';
-//   }
-
-//   return (
-//     <Stack direction="row" alignItems="center" sx={{ color, fontWeight: 500 }}>
-//       <IconComponent fontSize="small" />
-//       <Typography variant="inherit" sx={{ ml: 0.5 }}>
-//         {level != null ? `${level}%` : '?'}
-//       </Typography>
-//     </Stack>
-//   );
-// };
-
-const renderConnectedCell = (params) => {
-  const status = params.value;
-
-  let Icon = null;
-  if (status === 'connected') {
-    Icon =  <Icons.Sensors sx={{ color: 'success.main' }} />;
-  } else if (status === 'disconnected') {
-    Icon = <Icons.SensorsOff sx={{ color: 'error.main' }} />;
-  }
-
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%' }}>
-      {Icon}
-    </Box>
   );
 };
 
@@ -746,7 +450,22 @@ const devicesColumns: GridColDef[] = [
             <Icons.Settings />
           </Button>
           {selectedDevice === params.row.id && open && loading === false && (
-            <DeviceConfigDialog open={isDialogOpen2} device={selectedDevice} />
+            // <DeviceConfigDialog open={isDialogOpen2} device={selectedDevice} />
+            <DeviceConfigDialog
+              open={isDialogOpen2}
+              device={selectedDevice}
+              activeStep={activeStep}
+              steps={steps}
+              sampleRate={sampleRate}
+              selectedProperties={selectedProperties}
+              expandedNodes={expandedNodes}
+              allProperties={allProperties}
+              renderTree={renderTree}
+              handleClose={handleCloseDialog2}
+              handleNext={handleNext}
+              handleReconfigure={handleReconfigure}
+              setExpandedNodes={setExpandedNodes}
+            />
           )}
         </div>
       </Box>

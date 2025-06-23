@@ -1,5 +1,5 @@
 import * as Icons from '@mui/icons-material';
-import {  Typography, Stack } from '@mui/material';
+import {  Typography, Stack, Box } from '@mui/material';
 
 
 
@@ -102,7 +102,22 @@ export const renderBatteryCell = (params) => {
   );
 };
 
+export const renderConnectedCell = (params) => {
+  const status = params.value;
 
+  let Icon = null;
+  if (status === 'connected') {
+    Icon =  <Icons.Sensors sx={{ color: 'success.main' }} />;
+  } else if (status === 'disconnected') {
+    Icon = <Icons.SensorsOff sx={{ color: 'error.main' }} />;
+  }
+
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%' }}>
+      {Icon}
+    </Box>
+  );
+};
 
 
 

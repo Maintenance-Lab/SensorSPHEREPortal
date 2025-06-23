@@ -1,14 +1,14 @@
 import React from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
 
-interface ConfirmationDialogProps {
+interface Props {
   open: boolean;
   onClose: () => void;
   onConfirm: (sessionId: number) => void;
   sessionId: number;
 }
 
-const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ open, onClose, onConfirm, sessionId }) => (
+const ConfirmationDialog: React.FC<Props> = ({ open, onClose, onConfirm, sessionId }) => (
   <Dialog open={open} onClose={onClose}>
     <DialogTitle>Confirm Deletion</DialogTitle>
     <DialogContent>

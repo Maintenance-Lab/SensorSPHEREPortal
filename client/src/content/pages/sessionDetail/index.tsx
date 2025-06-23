@@ -1,54 +1,41 @@
-import { Helmet } from 'react-helmet-async';
-import PageTitleWrapper from 'src/Components/PageTitleWrapper';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
-import { Button, TextField, Link, Typography, Container, Box, Paper, Dialog,
-  DialogActions, DialogContent, DialogTitle, Stack, Checkbox, FormControlLabel,
-  Stepper, Step, StepLabel, CircularProgress } from '@mui/material';
-import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer,
-  GridToolbarQuickFilter } from '@mui/x-data-grid';
-import { ArchiveOutlined, DeleteOutline, Devices, Inventory,
-  UnarchiveOutlined, DesignServicesOutlined } from '@mui/icons-material';
-import { TreeView, TreeItem } from '@mui/lab';
-import { useNavigate } from 'react-router-dom';
+// React & Routing
+import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
+// MUI Components
+import {
+  Box, Button, Checkbox, Container, FormControlLabel, Link, List, ListItem,
+  ListItemIcon, ListItemText, Paper, Stack, TextField, Tooltip, Typography
+} from '@mui/material';
 
-import InfoIcon from '@mui/icons-material/Info';
-import Tooltip from '@mui/material/Tooltip';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-
-
-
+import { DataGrid, GridRowsProp } from '@mui/x-data-grid';
+import { TreeItem } from '@mui/lab';
 import * as Icons from '@mui/icons-material';
 
-// Imports from functions moved to different files
-import { RenderTree } from "./types";
-import { loadRows, getOnChange, updateSelection } from "./treeView";
-import { fetchDevices, removeDevicesFromSession, sendConfiguration, updateSession, deleteSession, addDevices,
-  getDeviceProperties, getSelectedProperties, updateSelectedProperties, fetchAvailableDevices, fetchSession, projectData,
-  listUnits, getSampleRate, saveSampleRate, startBatch, stopBatch
- } from "./api";
+// Utilities
+import { Helmet } from 'react-helmet-async';
+
+// Local Components & Helpers
+import PageTitleWrapper from '../../../Components/PageTitleWrapper';
 import ConfirmationDialog from './confirmationDialog';
-import DeviceConfigDialog from './deviceConfigDialog';
-import DefaultConfigurationDialog from './defaultConfigDialog'
-import { AvailableDevicesToolbar, ConnectedDevicesToolbar, getAvailableDevicesRows, availableDevicesColumns, getDevicesColumns } from './toolbar';
-import { renderBatteryCell, calculateLastSeen, formatLastSeen, renderConnectedCell, checkStartingConditions
-} from './startSessionHelpers'
+import DefaultConfigurationDialog from './defaultConfigDialog';
+
+import { RenderTree } from './types';
+import { calculateLastSeen, checkStartingConditions, formatLastSeen } from './startSessionHelpers';
+import * as api from './api';
+import * as toolbar from './toolbar';
+import { getOnChange, loadRows, updateSelection } from './treeView';
+
 
 //  Api calls in api.tsx
  const handleAvailableDevices = async (sessionId, setAvailableDevices) => {
-    const availableDevicesData = await fetchAvailableDevices(sessionId);
+    const availableDevicesData = await api.fetchAvailableDevices(sessionId);
     setAvailableDevices(availableDevicesData);
     return availableDevicesData;
  };
 
 const handleFetchSession = async (sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived) => {
-  const sessionData = await fetchSession(sessionId);
+  const sessionData = await api.fetchSession(sessionId);
   setProjectId(sessionData.projectId);
   setSessionName(sessionData.name);
   setIsArchived(sessionData.archived);
@@ -58,12 +45,12 @@ const handleFetchSession = async (sessionId, setSessionName, setSessionDescripti
 }
 
 const handleProjectData = async (projectId, setProjectName) => {
-  const data = await projectData(projectId);
+  const data = await api.projectData(projectId);
   setProjectName(data.name);
 }
 
 const fetchSessionDevices = async (sessionId, setDevices) => {
-  const devices = await fetchDevices(sessionId);
+  const devices = await api.fetchDevices(sessionId);
   setDevices(devices);
 
   return devices;
@@ -99,13 +86,10 @@ const SessionDetail = () => {
   const [sampleRates, setSampleRates] = useState([]);
   const steps = ['Select Properties', 'Find sample rate', 'Save configuration'];
   const [devicesWithoutSampleRate, setDevicesWithoutSampleRate] = useState([]);
-
-  const [progress, setProgress] = useState(0);
   const [sessionStatus, setSessionStatus] = useState('Not started');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isStartDisabled, setIsStartDisabled] = useState(true);
   const [startRequirements, setStartRequirements] = useState([]);
-
 
   const navigate = useNavigate();
 
@@ -147,7 +131,7 @@ const SessionDetail = () => {
   // Device Configurtion Dialog
   const handleCloseDialog2 = async () => {
   if (activeStep === 2 && sampleRate !== null) {
-    await saveSampleRate(sessionId, selectedDevice, sampleRate);
+    await api.saveSampleRate(sessionId, selectedDevice, sampleRate);
   }
   setDialogOpen2(false);
   setActiveStep(0);
@@ -181,8 +165,8 @@ const handleNext = async () => {
   setActiveStep(newStep);
 
   if (newStep === 1) {
-    await updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
-    const sr = await sendConfiguration(sessionId, selectedDevice);
+    await api.updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
+    const sr = await api.sendConfiguration(sessionId, selectedDevice);
 
     if (sr !== null) {
       setSampleRate(sr);
@@ -192,18 +176,16 @@ const handleNext = async () => {
 };
 
   const handleSelectedProperties = async (deviceId:string) => {
-    const properties = await getSelectedProperties(deviceId, sessionId);
+    const properties = await api.getSelectedProperties(deviceId, sessionId);
     const selectedPropertiesIds = properties.map((property) => {
       return `${property.moduleManufacturer}:${property.moduleName}:${property.sensorType}:${property.propertyName}`;
     });
 
-    const allProperties = await loadRows( await getDeviceProperties(deviceId), setAllProperties);
+    const allProperties = await loadRows( await api.getDeviceProperties(deviceId), setAllProperties);
     const updatedSelection = updateSelection(selectedPropertiesIds, allProperties);
     setSelectedProperties(updatedSelection);
 
     setLoading(false);
-
-    // return updatedSelection;
     return selectedPropertiesIds;
   }
 
@@ -233,19 +215,19 @@ const handleNext = async () => {
   };
 
   const handleNameChange = async (event) => {
-    await updateSession(sessionId, event.target.value, sessionDescription, isArchived);
+    await api.updateSession(sessionId, event.target.value, sessionDescription, isArchived);
     setIsEditingName(false);
     handleFetchSession(sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived);
   };
 
   const handleDescriptionChange = async (event) => {
-    await updateSession(sessionId, sessionName, event.target.value, isArchived);
+    await api.updateSession(sessionId, sessionName, event.target.value, isArchived);
     setIsEditingDescription(false);
     handleFetchSession(sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived);
   };
 
   const handleArchiveSession = async (archive) => {
-    await updateSession(sessionId, sessionName, sessionDescription, archive);
+    await api.updateSession(sessionId, sessionName, sessionDescription, archive);
     handleFetchSession(sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived);
   };
 
@@ -253,7 +235,7 @@ const handleNext = async () => {
     if (!projectId) {
       await handleFetchSession(sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived);
     }
-    await deleteSession(sessionId);
+    await api.deleteSession(sessionId);
     navigate('/projects/detail/' + projectId);
   };
 
@@ -264,7 +246,7 @@ const handleNext = async () => {
   }, [sessionId]);
 
   const renewAvailableDevices = async () => {
-    await listUnits();
+    await api.listUnits();
     console.log("listunits gehad")
     await handleAvailableDevices(sessionId, setAvailableDevices);
     console.log("handle available devices gehad")
@@ -279,7 +261,7 @@ const handleNext = async () => {
   const fetchSampleRates = async () => {
     const rows = await Promise.all(
       devices.map(async (device) => {
-        const sampleRate = await getSampleRate(sessionId, device.deviceId);
+        const sampleRate = await api.getSampleRate(sessionId, device.deviceId);
         const lastSeenRaw = calculateLastSeen(device);
         const lastSeen = formatLastSeen(device);
 
@@ -318,10 +300,10 @@ const handleCheckStartingConditions = async () => {
   };
 
   const checkSampleRates = async () => {
-    const devices = await fetchDevices(sessionId);
+    const devices = await api.fetchDevices(sessionId);
     const sampleRates = await Promise.all(
       devices.map(async (device) => {
-        const sampleRate = await getSampleRate(sessionId, device.deviceId);
+        const sampleRate = await api.getSampleRate(sessionId, device.deviceId);
         return {
           deviceId: device.deviceId,
           sampleRate: sampleRate
@@ -342,7 +324,7 @@ const handleCheckStartingConditions = async () => {
       setDialogOpen3(true);
     }
     else {
-      startBatch(sessionId);
+      api.startBatch(sessionId);
       setElapsedTime(0);
       setSessionStatus('Running');
     }
@@ -361,7 +343,7 @@ const handleCheckStartingConditions = async () => {
       newSampleRates = [];
 
       for (const device of devices) {
-        const sampleRate = await sendConfiguration(sessionId, device);
+        const sampleRate = await api.sendConfiguration(sessionId, device);
 
         if (!sampleRate) {
           step = 2;
@@ -371,7 +353,7 @@ const handleCheckStartingConditions = async () => {
         newSampleRates.push(sampleRate);
 
         // Save new default sampleRate
-        await saveSampleRate(sessionId, device, sampleRate);
+        await api.saveSampleRate(sessionId, device, sampleRate);
         setDevicesWithoutSampleRate(devices.filter(d => d !== device))
       }
 
@@ -385,7 +367,7 @@ const handleCheckStartingConditions = async () => {
       const allValid = devices.length === 0 && newSampleRates.every(rate => rate !== null && rate !== 0);
 
       if (allValid) {
-        startBatch(sessionId);
+        api.startBatch(sessionId);
         setElapsedTime(0);
         setSessionStatus('Running');
         handleCloseDialog3();
@@ -398,30 +380,10 @@ const handleCheckStartingConditions = async () => {
     }
   };
 
-
-
   const handleStopSession = async () => {
-    stopBatch(sessionId);
+    api.stopBatch(sessionId);
     setSessionStatus('Stopped');
   }
-
-  const devicesColumns = getDevicesColumns({
-      handleRowClick,
-      selectedDevice,
-      loading,
-      isDialogOpen2,
-      activeStep,
-      steps,
-      sampleRate,
-      selectedProperties,
-      expandedNodes,
-      allProperties,
-      renderTree,
-      handleCloseDialog2,
-      handleNext,
-      handleReconfigure,
-      setExpandedNodes
-  })
 
   return (
     <div>
@@ -466,7 +428,7 @@ const handleCheckStartingConditions = async () => {
           <Stack direction="row" spacing={1}>
             <Link color="primary" underline="hover" variant="body1" href={"../../projects/detail/" + projectId}>
               <Stack direction="row" spacing={1} alignItems="center">
-                <DesignServicesOutlined fontSize="small" />
+                <Icons.DesignServicesOutlined fontSize="small" />
                 <Typography variant="body1">{projectName}</Typography>
               </Stack>
             </Link>
@@ -514,7 +476,7 @@ const handleCheckStartingConditions = async () => {
               alignItems: "center"
             }}>
               <Stack direction="row" spacing={1} alignItems="center">
-                <Inventory />
+                <Icons.Inventory />
                 <Typography variant="body1" fontWeight="bold">
                   Archived
                 </Typography>
@@ -525,7 +487,7 @@ const handleCheckStartingConditions = async () => {
             {!isArchived &&
               <Button
                 variant="outlined"
-                startIcon={<ArchiveOutlined />}
+                startIcon={<Icons.ArchiveOutlined />}
                 onClick={() => handleArchiveSession(true)}
               >
                 Archive Session
@@ -534,7 +496,7 @@ const handleCheckStartingConditions = async () => {
             {isArchived &&
               <Button
                 variant="outlined"
-                startIcon={<UnarchiveOutlined />}
+                startIcon={<Icons.UnarchiveOutlined />}
                 onClick={() => handleArchiveSession(false)}
               >
                 Unarchive Session
@@ -542,7 +504,7 @@ const handleCheckStartingConditions = async () => {
             }
             <Button
               variant="outlined"
-              startIcon={<DeleteOutline />}
+              startIcon={<Icons.DeleteOutline />}
               sx={{
                 '&:hover': {
                   color: 'white',
@@ -565,8 +527,6 @@ const handleCheckStartingConditions = async () => {
           </Stack>
         </Stack>
       </PageTitleWrapper>
-
-
 
       <Container>
         <Stack spacing={2}>
@@ -594,9 +554,9 @@ const handleCheckStartingConditions = async () => {
                       <ListItem key={text} sx={{ py: 0.5 }}>
                         <ListItemIcon sx={{ minWidth: 30 }}>
                           {done ? (
-                            <CheckCircleIcon color="success" fontSize="small" />
+                            <Icons.CheckCircle color="success" fontSize="small" />
                           ) : (
-                            <RadioButtonUncheckedIcon color="disabled" fontSize="small" />
+                            <Icons.RadioButtonUnchecked color="disabled" fontSize="small" />
                           )}
                         </ListItemIcon>
                         <ListItemText
@@ -620,7 +580,7 @@ const handleCheckStartingConditions = async () => {
                   },
                 }}
               >
-                <InfoIcon color="action" sx={{ cursor: 'pointer' }} />
+                <Icons.Info color="action" sx={{ cursor: 'pointer' }} />
               </Tooltip>
               <Button
                 variant="contained"
@@ -659,7 +619,23 @@ const handleCheckStartingConditions = async () => {
           <Paper>
             <DataGrid
               rows={devicesRows}
-              columns={devicesColumns}
+              columns={toolbar.getDevicesColumns({
+                  handleRowClick,
+                  selectedDevice,
+                  loading,
+                  isDialogOpen2,
+                  activeStep,
+                  steps,
+                  sampleRate,
+                  selectedProperties,
+                  expandedNodes,
+                  allProperties,
+                  renderTree,
+                  handleCloseDialog2,
+                  handleNext,
+                  handleReconfigure,
+                  setExpandedNodes
+              })}
               sortingOrder={['asc']}
               density='compact'
               autoHeight
@@ -678,7 +654,7 @@ const handleCheckStartingConditions = async () => {
               checkboxSelection
               onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
               slots={{
-                toolbar: () => <ConnectedDevicesToolbar
+                toolbar: () => <toolbar.ConnectedDevicesToolbar
                   selectedDeviceIds={selectedDeviceIds}
                   sessionId={sessionId}
                   fetchSessionDevices={() => fetchSessionDevices(sessionId, setDevices)}
@@ -704,8 +680,8 @@ const handleCheckStartingConditions = async () => {
           <Typography variant="h2">Available Devices to Add</Typography>
           <Paper>
             <DataGrid
-              rows={getAvailableDevicesRows(availableDevices)}
-              columns={availableDevicesColumns}
+              rows={toolbar.getAvailableDevicesRows(availableDevices)}
+              columns={toolbar.availableDevicesColumns}
               sortModel={[{ field: 'lastSeenRaw', sort: 'asc' }]}
               columnVisibilityModel={{
                 lastSeenRaw: false,
@@ -717,7 +693,7 @@ const handleCheckStartingConditions = async () => {
               checkboxSelection
               onRowSelectionModelChange={(newSelection) => setSelectedAddDeviceIds(newSelection)}
               slots={{
-                toolbar: () => <AvailableDevicesToolbar
+                toolbar: () => <toolbar.AvailableDevicesToolbar
                   selectedAddDeviceIds={selectedAddDeviceIds}
                   sessionId={sessionId}
                   fetchSessionDevices={() => fetchSessionDevices(sessionId, setDevices)}

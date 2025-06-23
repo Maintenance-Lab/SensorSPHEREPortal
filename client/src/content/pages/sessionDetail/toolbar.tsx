@@ -4,7 +4,7 @@ import { Button, Link, Typography, Box, Stack } from '@mui/material';
 
 import { addDevices, removeDevicesFromSession } from "./api";
 import {renderBatteryCell, renderConnectedCell, calculateLastSeen, formatLastSeen } from './startSessionHelpers'
-import { DeviceConfigDialog } from './deviceConfigDialog';
+import { CustomConfigDialog } from './customConfigDialog';
 
 const commonColumns: GridColDef[] = [
   { field: 'id', headerName: 'MAC Address', flex: 2, sortable: false,
@@ -49,7 +49,7 @@ export const getDevicesColumns = (props: {
   handleRowClick: (id: string, event: React.MouseEvent) => void;
   selectedDevice: string;
   loading: boolean;
-  isDialogOpen2: boolean;
+  customConfigDialogOpen: boolean;
   activeStep: number;
   steps: string[];
   sampleRate: number;
@@ -63,7 +63,7 @@ export const getDevicesColumns = (props: {
   setExpandedNodes: (nodes: string[]) => void;
 }): GridColDef[] => {
   const {
-    handleRowClick, selectedDevice, loading, isDialogOpen2,
+    handleRowClick, selectedDevice, loading, customConfigDialogOpen,
     activeStep, steps, sampleRate, selectedProperties,
     expandedNodes, allProperties, renderTree,
     handleCloseDialog2, handleNext, handleReconfigure,
@@ -92,8 +92,8 @@ export const getDevicesColumns = (props: {
               <Icons.Settings />
             </Button>
             {selectedDevice === params.row.id && !loading && (
-              <DeviceConfigDialog
-                open={isDialogOpen2}
+              <CustomConfigDialog
+                open={customConfigDialogOpen}
                 device={selectedDevice}
                 activeStep={activeStep}
                 steps={steps}

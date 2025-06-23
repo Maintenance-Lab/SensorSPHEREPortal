@@ -20,7 +20,7 @@ interface Props {
   setExpandedNodes: (nodes: string[]) => void;
 }
 
-export const DeviceConfigDialog: React.FC<Props> = ({
+export const CustomConfigDialog: React.FC<Props> = ({
   open,
   device,
   activeStep,
@@ -171,7 +171,7 @@ export const DeviceConfigDialog: React.FC<Props> = ({
   );
 };
 
-export default DeviceConfigDialog;
+export default CustomConfigDialog;
 
 
 

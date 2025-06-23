@@ -57,6 +57,7 @@ const fetchSessionDevices = async (sessionId, setDevices) => {
 };
 
 const SessionDetail = () => {
+  // Session Info
   const sessionId = Number(useParams().sessionId);
   const [sessionName, setSessionName] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
@@ -65,9 +66,13 @@ const SessionDetail = () => {
   const [isArchived, setIsArchived] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [isDialogOpen, setDialogOpen] = useState(false);
-  const [isDialogOpen2, setDialogOpen2] = useState(false);
-  const [isDialogOpen3, setDialogOpen3] = useState(false);
+
+  // Dialogs
+  const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
+  const [customConfigDialogOpen, setCustomConfigDialogOpen] = useState(false);
+  const [defaultConfigDialogOpen, setDefaultConfigDialogOpen] = useState(false);
+
+
   const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
   const [selectedAddDeviceIds, setSelectedAddDeviceIds] = useState([]);
   const [devices, setDevices] = useState([]);
@@ -93,8 +98,8 @@ const SessionDetail = () => {
 
   const navigate = useNavigate();
 
-  const handleOpenDialog = () => setDialogOpen(true);
-  const handleCloseDialog = () => setDialogOpen(false);
+  const handleOpenDialog = () => setConfirmationDialogOpen(true);
+  const  Dialog = () => setConfirmationDialogOpen(false);
 
   const MemoizedTreeItem = React.memo(TreeItem);
   const renderTree = useCallback((nodes: RenderTree) => {
@@ -133,7 +138,7 @@ const SessionDetail = () => {
   if (activeStep === 2 && sampleRate !== null) {
     await api.saveSampleRate(sessionId, selectedDevice, sampleRate);
   }
-  setDialogOpen2(false);
+  setCustomConfigDialogOpen(false);
   setActiveStep(0);
   setSampleRate(null);
 };
@@ -193,11 +198,11 @@ const handleNext = async () => {
     setLoading(true);
     setSelectedDevice(deviceId);
     await handleSelectedProperties(deviceId);
-    setDialogOpen2(true);
+    setCustomConfigDialogOpen(true);
   };
 
   const handleCloseDialog3 = async () => {
-    setDialogOpen3(false);
+    setDefaultConfigDialogOpen(false);
     setDefaultConfigStep(0);
     setSampleRates([]);
   };
@@ -321,7 +326,7 @@ const handleCheckStartingConditions = async () => {
     const devicesWithoutSampleRate = await checkSampleRates();
 
     if (devicesWithoutSampleRate.length > 0) {
-      setDialogOpen3(true);
+      setDefaultConfigDialogOpen(true);
     }
     else {
       api.startBatch(sessionId);
@@ -517,7 +522,7 @@ const handleCheckStartingConditions = async () => {
               Delete Session
             </Button>
             <ConfirmationDialog
-              open={isDialogOpen}
+              open={confirmationDialogOpen}
               onClose={handleCloseDialog}
               onConfirm={async (sessionId) => {
                 await handleDeleteSession(sessionId);
@@ -591,7 +596,7 @@ const handleCheckStartingConditions = async () => {
                 Start Session
               </Button>
               <DefaultConfigurationDialog
-                open={isDialogOpen3}
+                open={defaultConfigDialogOpen}
                 devices={devicesWithoutSampleRate}
                 defaultConfigStep={defaultConfigStep}
                 sampleRates={sampleRates}
@@ -623,7 +628,7 @@ const handleCheckStartingConditions = async () => {
                   handleRowClick,
                   selectedDevice,
                   loading,
-                  isDialogOpen2,
+                  customConfigDialogOpen,
                   activeStep,
                   steps,
                   sampleRate,

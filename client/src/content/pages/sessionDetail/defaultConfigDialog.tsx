@@ -55,7 +55,7 @@ const defaultConfigContent = (index: number, devices, sampleRates) => {
     }
   }
 
-const DefaultConfigurationDialog: React.FC<DefaultConfigurationDialogProps> = ({
+const DefaultConfigDialog: React.FC<DefaultConfigurationDialogProps> = ({
   devices, open, defaultConfigStep, sampleRates, handleStartSession, handleCloseDialog3,
 }) => {
     const allSampleRatesValid = sampleRates.length > 0 && sampleRates.every(rate => rate !== null);
@@ -98,7 +98,7 @@ const DefaultConfigurationDialog: React.FC<DefaultConfigurationDialogProps> = ({
   );
 };
 
-export default DefaultConfigurationDialog;
+export default DefaultConfigDialog;
 
 
 

@@ -35,7 +35,10 @@ import { fetchDevices, removeDevicesFromSession, sendConfiguration, updateSessio
  } from "./api";
 import ConfirmationDialog from './confirmationDialog';
 import DeviceConfigDialog from './deviceConfigDialog';
-import { renderBatteryCell, calculateLastSeen, formatLastSeen, renderConnectedCell } from './startSessionHelpers'
+import DefaultConfigurationDialog from './defaultConfigDialog'
+import { AvailableDevicesToolbar, ConnectedDevicesToolbar, getAvailableDevicesRows, availableDevicesColumns, getDevicesColumns } from './toolbar';
+import { renderBatteryCell, calculateLastSeen, formatLastSeen, renderConnectedCell, checkStartingConditions
+} from './startSessionHelpers'
 
 //  Api calls in api.tsx
  const handleAvailableDevices = async (sessionId, setAvailableDevices) => {
@@ -106,84 +109,8 @@ const SessionDetail = () => {
 
   const navigate = useNavigate();
 
-
-  // New rows when new devices added from mqtt
-  // const [newDevices, setNewDevices] = useState([]);
-
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
-
-  const handleAddDevices = async (sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices) => {
-    const success = await addDevices(sessionId, selectedAddDeviceIds);
-
-    if (success) {
-      await fetchSessionDevices(sessionId, setDevices);
-      await handleAvailableDevices(sessionId, setAvailableDevices);
-      await checkStartingConditions();
-    }
-  }
-
-  const handleRemoveDevices = async (sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices) => {
-    const success = await removeDevicesFromSession(sessionId, selectedDeviceIds);
-
-    if (success) {
-      await fetchSessionDevices(sessionId, setDevices);
-      await handleAvailableDevices(sessionId, setAvailableDevices);
-      await checkStartingConditions();
-    }
-  };
-
-  function AvailableDevicesToolbar({ selectedAddDeviceIds, sessionId, fetchSessionDevices,  setAvailableDevices, setDevices}) {
-    const activeSelection = selectedAddDeviceIds.length > 0;
-
-    return (
-      <GridToolbarContainer sx={{ padding: 1 }}>
-        <Stack direction="row" spacing={1}>
-        <GridToolbarQuickFilter variant="outlined" size="small" sx={{ padding: 0 }} />
-          <Button
-            variant="outlined"
-            startIcon={<Devices />}
-            onClick={() =>  handleAddDevices(sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices)}
-            disabled={!activeSelection}
-          >
-            Add Devices to Session
-          </Button>
-        </Stack>
-      </GridToolbarContainer>
-    );
-  }
-
-  function ConnectedDevicesToolbar({ selectedDeviceIds, sessionId, fetchSessionDevices, setAvailableDevices, setDevices }) {
-    const activeSelection = selectedDeviceIds.length > 0;
-
-    return (
-      <GridToolbarContainer sx={{ padding: 1 }}>
-        <Stack direction="row" spacing={1}>
-          <GridToolbarQuickFilter variant="outlined" size='small' justify-content="space-between" sx={{ padding: 0 }} />
-            <Button
-              variant="outlined"
-              size="medium"
-              color="error"
-              startIcon={<Icons.DeleteOutlineOutlined />}
-              disabled={!activeSelection}
-              // onClick={() => removeDevicesFromSession(sessionId, selectedDeviceIds, fetchSessionDevices, fetchAvailableDevices)}
-              onClick={() => handleRemoveDevices(sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices)}
-
-            >
-              Remove Devices from Session
-            </Button>
-        </Stack>
-      </GridToolbarContainer>
-    );
-  }
-
-  const formatTime = (seconds) => {
-    if (!seconds && seconds !== 0) return '00:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  };
-
 
   const MemoizedTreeItem = React.memo(TreeItem);
   const renderTree = useCallback((nodes: RenderTree) => {
@@ -232,6 +159,13 @@ const handleReconfigure = async () => {
   setSampleRate(null);
 };
 
+const formatTime = (seconds) => {
+    if (!seconds && seconds !== 0) return '00:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+};
+
 const handleNext = async () => {
   if (activeStep === steps.length - 1) {
     if (sampleRate !== null) {
@@ -249,18 +183,13 @@ const handleNext = async () => {
   if (newStep === 1) {
     await updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
     const sr = await sendConfiguration(sessionId, selectedDevice);
+
     if (sr !== null) {
       setSampleRate(sr);
     }
     setActiveStep((prev) => prev + 1);
   }
 };
-
-
-
-
-
-
 
   const handleSelectedProperties = async (deviceId:string) => {
     const properties = await getSelectedProperties(deviceId, sessionId);
@@ -291,53 +220,6 @@ const handleNext = async () => {
     setSampleRates([]);
   };
 
-  const defaultConfigContent = (index: number, devices) => {
-    switch (index) {
-      case 0:
-        return (
-          <Box>
-          <Typography variant="h5" align="center">
-            Some Devices Are Not Configured
-          </Typography>
-
-          <Typography variant="body1" align="center" sx={{ mb: 2 }}>
-            There {devices.length === 1 ? "is" : "are"} <strong>{devices.length}</strong> device
-            {devices.length === 1 ? "" : "s"} without a sample rate configuration.
-          </Typography>
-
-          <Typography variant="body2" align="center" sx={{ mt: 1 }}>
-            Proceeding will initiate the sample rate detection process. This step may take a few seconds to complete
-          </Typography>
-          </Box>
-      );
-      case 1:
-        return (
-          <CircularProgress size={100}/>
-        )
-      case 2:
-        if (devices.length === 0 && sampleRates.every(rate => rate !== null)) {
-        // if (sampleRates.length === devices.length && sampleRates.every(rate => rate !== null)) {
-          return (
-            <Box>
-              <Typography variant="h5" align="center" sx={{ mt: 2 }}>
-                All devices have been successfully configured.
-              </Typography>
-              <Typography variant="h6" align="center" sx={{ mt: 3 }}>
-                Please click ‘Start Session’ to continue.
-              </Typography>
-            </Box>
-          );
-        }
-        return (
-          <Box>
-            <Typography variant="h4" align="center" sx={{ mt: 2, mb: 1 }}>Something went wrong</Typography>
-          </Box>
-        )
-    }
-  }
-
-
-
   const handleRowClick = async (deviceId: string, event) => {
     event.stopPropagation();
     setLoading(true);
@@ -349,158 +231,6 @@ const handleNext = async () => {
       setLoading(false);
     }
   };
-
-const DefaultConfigurationDialog = ({ devices, open }) => {
-  const allSampleRatesValid = devices.length === 0 && sampleRates.every(rate => rate !== null);
-  return (
-    <Dialog
-      open={open}
-      maxWidth="sm"
-      fullWidth
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <DialogContent
-        sx={{
-          height: "auto",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          gap: 2,
-        }}
-      >
-
-      <Box sx={{ display: "flex", justifyContent: defaultConfigStep === 0 ? "flex-start" : "center",
-        alignItems: "center" }}>
-        {defaultConfigContent(defaultConfigStep, devices)}
-      </Box>
-        {defaultConfigStep !== 1 && (
-          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-              <Button onClick={handleCloseDialog3}>Cancel</Button>
-              <Button variant="contained" onClick={() => handleStartSession(devices)}>
-                {defaultConfigStep === 0 ? "Continue" : allSampleRatesValid ? "Start Session" : "Try Again"}
-              </Button>
-          </Box>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-const commonColumns: GridColDef[] = [
-  { field: 'id', headerName: 'MAC Address', flex: 2, sortable: false,
-    renderCell: (params) => (
-      <Link
-        href={`/devices/detail/${params.id}`}
-        sx={{ padding: 1, marginX: -1 }}
-        onClick={(event) => event.stopPropagation()}
-      >
-        {params.value}
-      </Link>
-    ),
-  },
-  { field: 'lastSeen', headerName: 'Last Seen', flex: 1, sortable: false,
-    renderCell: (params) => (
-      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%' }}>
-        <Typography variant="body2" color="text.secondary">
-          {params.value}
-        </Typography>
-      </Box>
-    ),
-  },
-  { field: 'battery', headerName: 'Battery', flex: 1, sortable: false, renderCell: renderBatteryCell },
-  { field: 'connected', headerName: 'Connected',flex: 1, sortable: false,
-    renderCell: renderConnectedCell
-  },
-  {
-    field: 'lastSeenRaw',
-    headerName: 'Last Seen Raw',
-    sortable:true,
-    renderCell: (params) => (
-      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%' }}>
-        <Typography variant="body2" color="text.secondary">
-          {params.value}
-        </Typography>
-      </Box>
-    ),
-  }
-];
-
-const devicesColumns: GridColDef[] = [
-  ...commonColumns,
-  { field: 'sampleRate', headerName: 'Sample Rate', flex: 1, sortable: false},
-  {field: 'configureButton', headerName: 'Configure', flex: 1, sortable: false, align: 'center', headerAlign: 'center',
-    renderCell: (params) => (
-      <Box
-        sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "95%",
-          width: "100%" }}>
-        <div>
-          <Button
-            color="primary"
-            size="small"
-            onClick={(event) => {
-              event.stopPropagation();
-              handleRowClick(params.row.id, event);
-            }}
-            sx={{ textTransform: "none", fontWeight: "bold", display: "flex", alignItems: "center",
-              height: "auto", margin: "auto"}}>
-            <Icons.Settings />
-          </Button>
-          {selectedDevice === params.row.id && open && loading === false && (
-            // <DeviceConfigDialog open={isDialogOpen2} device={selectedDevice} />
-            <DeviceConfigDialog
-              open={isDialogOpen2}
-              device={selectedDevice}
-              activeStep={activeStep}
-              steps={steps}
-              sampleRate={sampleRate}
-              selectedProperties={selectedProperties}
-              expandedNodes={expandedNodes}
-              allProperties={allProperties}
-              renderTree={renderTree}
-              handleClose={handleCloseDialog2}
-              handleNext={handleNext}
-              handleReconfigure={handleReconfigure}
-              setExpandedNodes={setExpandedNodes}
-            />
-          )}
-        </div>
-      </Box>
-    ),
-  },
-];
-
-const availableDevicesColumns: GridColDef[] = [
-  ...commonColumns,
-  {
-    field: 'sampleRatePadding', headerName: '', flex: 1,sortable: false,
-    renderCell: () => null, disableColumnMenu: true,
-  },
-  {
-    field: 'configurePadding', headerName: '', flex: 1, sortable: false,
-    renderCell: () => null, disableColumnMenu: true,
-  },
-];
-
-const availableDevicesRows: GridRowsProp = useMemo(() => {
-  const rows = availableDevices.map((device) => {
-    const lastSeenRaw = calculateLastSeen(device);
-    const lastSeen = formatLastSeen(device);;
-      return {
-        name:     device.manufacturer,
-        id:       device.deviceId,
-        connected:   device.connectStatus,
-        battery:  device.batteryLevel,
-        lastSeen: lastSeen,
-        lastSeenRaw: lastSeenRaw,
-      }
-  });
-
-  return rows;
-}, [availableDevices]);
 
   const handleNameChange = async (event) => {
     await updateSession(sessionId, event.target.value, sessionDescription, isArchived);
@@ -538,7 +268,7 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
     console.log("listunits gehad")
     await handleAvailableDevices(sessionId, setAvailableDevices);
     console.log("handle available devices gehad")
-    await checkStartingConditions();
+    await handleCheckStartingConditions();
   }
 
   useEffect(() => {
@@ -581,41 +311,10 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
     return () => clearInterval(interval);
   }, [sessionStatus]);
 
-  const checkStartingConditions = async () => {
-    const devices = await fetchDevices(sessionId);
-    const sampleRates = await Promise.all(
-      devices.map(async (device) => {
-        const sampleRate = await getSampleRate(sessionId, device.deviceId);
-        return {
-          deviceId: device.deviceId,
-          sampleRate,
-        };
-      })
-    );
-
-    const requirements = [
-      {
-        text: "Add at least one device",
-        done: devices.length > 0,
-      },
-      {
-        text: "Charge all devices to at least 10% battery",
-        done: devices.every(device => device.batteryLevel >= 10),
-      },
-      {
-        text: "Make sure all added devices are connected",
-        done: devices.every(device => device.connectStatus === 'connected'),
-      },
-      {
-        text: "Make sure all devices are configured",
-        done: sampleRates.every(device => device.sampleRate !== null),
-      },
-    ];
-
-    const allPassed = requirements.filter(req => req.text !== "Make sure all devices are configured")
-      .every(req => req.done);
-    setIsStartDisabled(!allPassed);
-    setStartRequirements(requirements);
+const handleCheckStartingConditions = async () => {
+    const data = await checkStartingConditions(sessionId);
+    setIsStartDisabled(!data.allPassed);
+    setStartRequirements(data.requirements);
   };
 
   const checkSampleRates = async () => {
@@ -690,7 +389,7 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
         setElapsedTime(0);
         setSessionStatus('Running');
         handleCloseDialog3();
-        checkStartingConditions();
+        handleCheckStartingConditions();
       } else {
         setDefaultConfigStep(0);
         step = 0;
@@ -705,6 +404,24 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
     stopBatch(sessionId);
     setSessionStatus('Stopped');
   }
+
+  const devicesColumns = getDevicesColumns({
+      handleRowClick,
+      selectedDevice,
+      loading,
+      isDialogOpen2,
+      activeStep,
+      steps,
+      sampleRate,
+      selectedProperties,
+      expandedNodes,
+      allProperties,
+      renderTree,
+      handleCloseDialog2,
+      handleNext,
+      handleReconfigure,
+      setExpandedNodes
+  })
 
   return (
     <div>
@@ -914,8 +631,12 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
                 Start Session
               </Button>
               <DefaultConfigurationDialog
-                devices={devicesWithoutSampleRate}
                 open={isDialogOpen3}
+                devices={devicesWithoutSampleRate}
+                defaultConfigStep={defaultConfigStep}
+                sampleRates={sampleRates}
+                handleStartSession={handleStartSession}
+                handleCloseDialog3={handleCloseDialog3}
               />
             </Stack>
               )}
@@ -960,9 +681,11 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
                 toolbar: () => <ConnectedDevicesToolbar
                   selectedDeviceIds={selectedDeviceIds}
                   sessionId={sessionId}
-                  fetchSessionDevices={fetchSessionDevices}
+                  fetchSessionDevices={() => fetchSessionDevices(sessionId, setDevices)}
                   setAvailableDevices={setAvailableDevices}
                   setDevices={setDevices}
+                  handleAvailableDevices={() => handleAvailableDevices(sessionId, setAvailableDevices)}
+                  handleCheckStartingConditions={handleCheckStartingConditions}
                 />}}
               sx={{
                 "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {
@@ -981,7 +704,7 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
           <Typography variant="h2">Available Devices to Add</Typography>
           <Paper>
             <DataGrid
-              rows={availableDevicesRows}
+              rows={getAvailableDevicesRows(availableDevices)}
               columns={availableDevicesColumns}
               sortModel={[{ field: 'lastSeenRaw', sort: 'asc' }]}
               columnVisibilityModel={{
@@ -997,9 +720,11 @@ const availableDevicesRows: GridRowsProp = useMemo(() => {
                 toolbar: () => <AvailableDevicesToolbar
                   selectedAddDeviceIds={selectedAddDeviceIds}
                   sessionId={sessionId}
-                  fetchSessionDevices={fetchSessionDevices}
+                  fetchSessionDevices={() => fetchSessionDevices(sessionId, setDevices)}
                   setAvailableDevices={setAvailableDevices}
                   setDevices={setDevices}
+                  handleAvailableDevices={() => handleAvailableDevices(sessionId, setAvailableDevices)}
+                  handleCheckStartingConditions={handleCheckStartingConditions}
                 />}}
                 sx={{
                 "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {

@@ -1,7 +1,49 @@
 import * as Icons from '@mui/icons-material';
 import {  Typography, Stack, Box } from '@mui/material';
+import { fetchDevices, getSampleRate } from "./api";
 
 
+
+
+
+export const checkStartingConditions = async (sessionId) => {
+    const devices = await fetchDevices(sessionId);
+    const sampleRates = await Promise.all(
+      devices.map(async (device) => {
+        const sampleRate = await getSampleRate(sessionId, device.deviceId);
+        return {
+          deviceId: device.deviceId,
+          sampleRate,
+        };
+      })
+    );
+
+    const requirements = [
+      {
+        text: "Add at least one device",
+        done: devices.length > 0,
+      },
+      {
+        text: "Charge all devices to at least 10% battery",
+        done: devices.every(device => device.batteryLevel >= 10),
+      },
+      {
+        text: "Make sure all added devices are connected",
+        done: devices.every(device => device.connectStatus === 'connected'),
+      },
+      {
+        text: "Make sure all devices are configured",
+        done: sampleRates.every(device => device.sampleRate !== null),
+      },
+    ];
+
+    const allPassed = requirements.filter(req => req.text !== "Make sure all devices are configured")
+      .every(req => req.done);
+
+    return { allPassed, requirements }
+    // setIsStartDisabled(!allPassed);
+    // setStartRequirements(requirements);
+};
 
 export const isValidDate = (dateString: any) => {
   const date = new Date(dateString);

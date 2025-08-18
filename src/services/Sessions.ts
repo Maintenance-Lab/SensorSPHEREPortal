@@ -26,31 +26,25 @@ const updateProjectLastActive = async (projectId: number) => {
 
 
 export const getSessionById = async (id: number): Promise<Session> => {
-  return new Promise(async (resolve, reject) => {
     const doc = await Session.findByPk(id);
-    if (!doc) return reject(new Error("Session not found"));
+    if (!doc) throw new Error("Session not found");
     const returnDoc = doc.toJSON();
 
-    return resolve(returnDoc);
-  });
+    return returnDoc;
 };
 
 export const getSessionsByProject = async (projectId: number) => {
-  return new Promise(async (resolve) => {
     const doc = await Session.findAll({ where: { projectId: projectId }});
-    if (!doc) return resolve([]);
+    if (!doc) return [];
 
-    return resolve(doc);
-  });
+    return doc;
 };
 
 export const getActiveSessionsByProject = async (projectId: number) => {
-  return new Promise(async (resolve) => {
     const doc = await Session.findAll({where: {projectId: projectId, archived: false}});
     // const projects = await Session.findAll({ where: {projectId: projectId, archived: false}});
-    if (!doc) return resolve([]);
-    return resolve(doc);
-  });
+    if (!doc) return [];
+    return doc;
 };
 
 // export const getActiveSessionsByProject = async (projectId: number) => {
@@ -68,94 +62,82 @@ export const getActiveSessionsByProject = async (projectId: number) => {
 // };
 
 export const getArchivedSessionsByProject = async (projectId: number) => {
-  return new Promise(async (resolve) => {
     const doc = await Session.findAll({ where: {projectId: projectId, archived: true}});
-    if (!doc) return resolve([]);
+    if (!doc) return [];
 
-    return resolve(doc);
-  });
+    return doc;
 };
 
 export const createSession = async (item: Partial<Session>) => {
-  return new Promise(async (resolve) => {
     const result = await Session.create(item);
-    if (!result) return resolve(null);
+    if (!result) return null;
 
     // update the lastActive field of the project
     const project = await Project.findByPk(result.projectId);
-    if (!project) return resolve(null);
+    if (!project) return null;
     updateProjectLastActive(project.projectId);
 
-    return resolve(result);
-  });
+    return result;
 };
 
 export const addDevices = async (sessionId: number, deviceIds: Array<number>) => {
   const configuredHz = 1;
-  return new Promise(async (resolve, reject) => {
-    const results = [];
-    for (const deviceId of deviceIds) {
-      try {
-        const mapping = await SessionDeviceMapping.findOne({ where: { sessionId: sessionId, deviceId: deviceId }});
-        // if (mapping) return reject(new Error("Device already added to session"));
-        if (!mapping) {
-          const result = await SessionDeviceMapping.create({ sessionId: sessionId, deviceId: deviceId, configuredHz: configuredHz });
-          if (!result) return reject(new Error("Failed to add device to session"));
-          results.push(result);
-        }
+  const results = [];
+  for (const deviceId of deviceIds) {
+    try {
+      const mapping = await SessionDeviceMapping.findOne({ where: { sessionId: sessionId, deviceId: deviceId }});
+      if (!mapping) {
+        const result = await SessionDeviceMapping.create({ sessionId: sessionId, deviceId: deviceId, configuredHz: configuredHz });
+        if (!result) throw new Error("Failed to add device to session");
+        results.push(result);
       }
-      catch (error) {
-        console.error("Error in addDevices:", error);
-        return reject(error);
-      }
-      // const result = await SessionDeviceMapping.create({ sessionId: sessionId, deviceId: deviceId, configuredHz: configuredHz });
     }
+    catch (error) {
+      console.error("Error in addDevices:", error);
+      throw error;
+    }
+  }
 
-    return resolve(results);
-  });
-}
+  return results;
+};
 
 export const updateSession = async (id: number, item: Partial<Session>) => {
-  return new Promise(async (resolve, reject) => {
-    if (!id) return reject(new Error("Session ID not found"));
+  if (!id) throw new Error("Session ID not found");
 
-    const { sessionId, ...rest } = item;
-    const newItem = { ...rest };
-    newItem.lastActive = new Date();
+  const { sessionId, ...rest } = item;
+  const newItem = { ...rest };
+  newItem.lastActive = new Date();
 
-    const result = await Session.findOne({ where: { SessionId: id }});
-    if (!result) return reject(new Error("Session not found"));
-    result.update(newItem);
+  const result = await Session.findOne({ where: { SessionId: id }});
+  if (!result) throw new Error("Session not found");
+  result.update(newItem);
 
-    // update the lastActive field of the project too;
-    const project = await Project.findByPk(result.projectId);
-    if (!project) return reject(new Error("Project not found"));
-    updateProjectLastActive(project.projectId);
+  // update the lastActive field of the project too;
+  const project = await Project.findByPk(result.projectId);
+  if (!project) throw new Error("Project not found");
+  updateProjectLastActive(project.projectId);
 
-    return resolve(result);
-  });
+  return result;
 };
 
 export const deleteSessions = async (ids: Array<number>) => {
-  return new Promise(async (resolve, reject) => {
-    const results = [];
-    for (const id of ids) {
-      const session = await Session.findByPk(id);
-      if (!session) return reject(new Error("Session not found"));
+  const results = [];
+  for (const id of ids) {
+    const session = await Session.findByPk(id);
+    if (!session) throw new Error("Session not found");
 
-      const project = await Project.findByPk(session.projectId);
-      if (!project) return reject(new Error("Project not found"));
-      await updateProjectLastActive(project.projectId);
+    const project = await Project.findByPk(session.projectId);
+    if (!project) throw new Error("Project not found");
+    await updateProjectLastActive(project.projectId);
 
 
-      await DeviceSensorConfiguration.destroy({ where: { sessionId: id }});
-      await SessionDeviceMapping.destroy({ where: { sessionId: id }});
-      const result = await Session.destroy({ where: { sessionId: id }});
+    await DeviceSensorConfiguration.destroy({ where: { sessionId: id }});
+    await SessionDeviceMapping.destroy({ where: { sessionId: id }});
+    const result = await Session.destroy({ where: { sessionId: id }});
 
-      results.push(result);
-    }
+    results.push(result);
+  }
 
-    return resolve(results);
-  });
+  return results;
 };
 

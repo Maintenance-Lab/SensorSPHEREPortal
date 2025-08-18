@@ -26,25 +26,25 @@ const updateProjectLastActive = async (projectId: number) => {
 
 
 export const getSessionById = async (id: number): Promise<Session> => {
-    const doc = await Session.findByPk(id);
-    if (!doc) throw new Error("Session not found");
-    const returnDoc = doc.toJSON();
+  const doc = await Session.findByPk(id);
+  if (!doc) throw new Error("Session not found");
+  const returnDoc = doc.toJSON();
 
-    return returnDoc;
+  return returnDoc;
 };
 
 export const getSessionsByProject = async (projectId: number) => {
-    const doc = await Session.findAll({ where: { projectId: projectId }});
-    if (!doc) return [];
+  const doc = await Session.findAll({ where: { projectId: projectId }});
+  if (!doc) return [];
 
-    return doc;
+  return doc;
 };
 
 export const getActiveSessionsByProject = async (projectId: number) => {
-    const doc = await Session.findAll({where: {projectId: projectId, archived: false}});
-    // const projects = await Session.findAll({ where: {projectId: projectId, archived: false}});
-    if (!doc) return [];
-    return doc;
+  const doc = await Session.findAll({where: {projectId: projectId, archived: false}});
+  // const projects = await Session.findAll({ where: {projectId: projectId, archived: false}});
+  if (!doc) return [];
+  return doc;
 };
 
 // export const getActiveSessionsByProject = async (projectId: number) => {
@@ -62,22 +62,22 @@ export const getActiveSessionsByProject = async (projectId: number) => {
 // };
 
 export const getArchivedSessionsByProject = async (projectId: number) => {
-    const doc = await Session.findAll({ where: {projectId: projectId, archived: true}});
-    if (!doc) return [];
+  const doc = await Session.findAll({ where: {projectId: projectId, archived: true}});
+  if (!doc) return [];
 
-    return doc;
+  return doc;
 };
 
 export const createSession = async (item: Partial<Session>) => {
-    const result = await Session.create(item);
-    if (!result) return null;
+  const result = await Session.create(item);
+  if (!result) return null;
 
-    // update the lastActive field of the project
-    const project = await Project.findByPk(result.projectId);
-    if (!project) return null;
-    updateProjectLastActive(project.projectId);
+  // update the lastActive field of the project
+  const project = await Project.findByPk(result.projectId);
+  if (!project) return null;
+  updateProjectLastActive(project.projectId);
 
-    return result;
+  return result;
 };
 
 export const addDevices = async (sessionId: number, deviceIds: Array<number>) => {

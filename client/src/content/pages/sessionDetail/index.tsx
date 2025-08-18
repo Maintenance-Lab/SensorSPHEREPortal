@@ -28,13 +28,20 @@ import { getOnChange, loadRows, updateSelection } from './treeView';
 
 
 //  Api calls in api.tsx
- const handleAvailableDevices = async (sessionId, setAvailableDevices) => {
+ const handleAvailableDevices = async (sessionId: number, setAvailableDevices: Function) => {
     const availableDevicesData = await api.fetchAvailableDevices(sessionId);
     setAvailableDevices(availableDevicesData);
     return availableDevicesData;
  };
 
-const handleFetchSession = async (sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived) => {
+const handleFetchSession = async(
+  sessionId: number,
+  setSessionName: Function,
+  setSessionDescription: Function,
+  setProjectId: Function,
+  setProjectName: Function,
+  setIsArchived: Function
+) => {
   const sessionData = await api.fetchSession(sessionId);
   setProjectId(sessionData.projectId);
   setSessionName(sessionData.name);
@@ -44,12 +51,12 @@ const handleFetchSession = async (sessionId, setSessionName, setSessionDescripti
   await handleProjectData(sessionData.projectId, setProjectName);
 }
 
-const handleProjectData = async (projectId, setProjectName) => {
+const handleProjectData = async (projectId: number, setProjectName: Function) => {
   const data = await api.projectData(projectId);
   setProjectName(data.name);
 }
 
-const fetchSessionDevices = async (sessionId, setDevices) => {
+const fetchSessionDevices = async (sessionId: number, setDevices: Function) => {
   const devices = await api.fetchDevices(sessionId);
   setDevices(devices);
 
@@ -67,30 +74,34 @@ const SessionDetail = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
 
-  // Dialogs
+  // Dialog States
   const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
   const [customConfigDialogOpen, setCustomConfigDialogOpen] = useState(false);
   const [defaultConfigDialogOpen, setDefaultConfigDialogOpen] = useState(false);
 
-
+  // Device Selection and Properties
+  const [devices, setDevices] = useState([]);
+  const [availableDevices, setAvailableDevices] = useState([]);
+  const [devicesRows, setDevicesRows] = useState<GridRowsProp>([]);
   const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
   const [selectedAddDeviceIds, setSelectedAddDeviceIds] = useState([]);
-  const [devices, setDevices] = useState([]);
-  const [devicesRows, setDevicesRows] = useState<GridRowsProp>([]);
-  const [availableDevices, setAvailableDevices] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState(null);
+
+  // Tree Properties
   const [allProperties, setAllProperties] = useState<RenderTree>();
   const [selectedProperties, setSelectedProperties] = useState(['root']);
   const [expandedNodes, setExpandedNodes] = useState<string[]>(['root']);
   const [loading, setLoading] = useState(false);
 
-
+  // Config and Setup
   const [activeStep, setActiveStep] = useState(0);
   const [defaultConfigStep, setDefaultConfigStep] = useState(0);
   const [sampleRate, setSampleRate] = useState(null);
   const [sampleRates, setSampleRates] = useState([]);
-  const steps = ['Select Properties', 'Find sample rate', 'Save configuration'];
   const [devicesWithoutSampleRate, setDevicesWithoutSampleRate] = useState([]);
+  const steps = ['Select Properties', 'Find sample rate', 'Save configuration'];
+
+  // Session Status
   const [sessionStatus, setSessionStatus] = useState('Not started');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isStartDisabled, setIsStartDisabled] = useState(true);
@@ -99,7 +110,7 @@ const SessionDetail = () => {
   const navigate = useNavigate();
 
   const handleOpenDialog = () => setConfirmationDialogOpen(true);
-  const  Dialog = () => setConfirmationDialogOpen(false);
+  const handleCloseDialog = () => setConfirmationDialogOpen(false);
 
   const MemoizedTreeItem = React.memo(TreeItem);
   const renderTree = useCallback((nodes: RenderTree) => {
@@ -133,7 +144,7 @@ const SessionDetail = () => {
     );
   }, [selectedProperties, getOnChange]);
 
-  // Device Configurtion Dialog
+  // Device Configuration Dialog
   const handleCloseDialog2 = async () => {
   if (activeStep === 2 && sampleRate !== null) {
     await api.saveSampleRate(sessionId, selectedDevice, sampleRate);
@@ -143,44 +154,44 @@ const SessionDetail = () => {
   setSampleRate(null);
 };
 
-const handleReconfigure = async () => {
-  setActiveStep(0);
-  setSampleRate(null);
-};
+  const handleReconfigure = async () => {
+    setActiveStep(0);
+    setSampleRate(null);
+  };
 
-const formatTime = (seconds) => {
-    if (!seconds && seconds !== 0) return '00:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-};
-
-const handleNext = async () => {
-  if (activeStep === steps.length - 1) {
-    if (sampleRate !== null) {
-      handleCloseDialog2();
-      return;
-    } else {
-      setActiveStep(0);
-      return;
+  const handleNext = async () => {
+    if (activeStep === steps.length - 1) {
+      if (sampleRate !== null) {
+        handleCloseDialog2();
+        return;
+      } else {
+        setActiveStep(0);
+        return;
+      }
     }
-  }
 
-  const newStep = activeStep + 1;
-  setActiveStep(newStep);
+    const newStep = activeStep + 1;
+    setActiveStep(newStep);
 
-  if (newStep === 1) {
-    await api.updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
-    const sr = await api.sendConfiguration(sessionId, selectedDevice);
+    if (newStep === 1) {
+      await api.updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
+      const sr = await api.sendConfiguration(sessionId, selectedDevice);
 
-    if (sr !== null) {
-      setSampleRate(sr);
+      if (sr !== null) {
+        setSampleRate(sr);
+      }
+      setActiveStep((prev) => prev + 1);
     }
-    setActiveStep((prev) => prev + 1);
-  }
-};
+  };
 
-  const handleSelectedProperties = async (deviceId:string) => {
+  const formatTime = (seconds) => {
+      if (!seconds && seconds !== 0) return '00:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
+
+  const handleSelectedProperties = async (deviceId: string) => {
     const properties = await api.getSelectedProperties(deviceId, sessionId);
     const selectedPropertiesIds = properties.map((property) => {
       return `${property.moduleManufacturer}:${property.moduleName}:${property.sensorType}:${property.propertyName}`;
@@ -194,7 +205,7 @@ const handleNext = async () => {
     return selectedPropertiesIds;
   }
 
-  const handleOpenDialog2 = async (deviceId) => {
+  const handleOpenConfigurationDialog = async (deviceId) => {
     setLoading(true);
     setSelectedDevice(deviceId);
     await handleSelectedProperties(deviceId);
@@ -211,7 +222,7 @@ const handleNext = async () => {
     event.stopPropagation();
     setLoading(true);
     try {
-      await handleOpenDialog2(deviceId);
+      await handleOpenConfigurationDialog(deviceId);
     } catch (error) {
       console.error("Error opening dialog:", error);
     } finally {
@@ -321,7 +332,7 @@ const handleCheckStartingConditions = async () => {
     return devicesWithoutSampleRate
   }
 
-  const handleOpenDialog3 = async () => {
+  const handleOpenStartSessionDialog = async () => {
     // Check if there are devices without sample rate
     const devicesWithoutSampleRate = await checkSampleRates();
 
@@ -590,7 +601,7 @@ const handleCheckStartingConditions = async () => {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={handleOpenDialog3}
+                onClick={handleOpenStartSessionDialog}
                 disabled={isStartDisabled}
               >
                 Start Session

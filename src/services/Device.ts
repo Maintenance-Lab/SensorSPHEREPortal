@@ -1,16 +1,10 @@
 import Device from "../models/Device.js";
 import SessionDeviceMapping from "../models/mappings/SessionDeviceMapping.js";
 import DeviceModuleMapping from "../models/mappings/DeviceModuleMapping.js";
-import Property from "../models/Property.js";
 import DeviceSensorConfiguration from "../models/DeviceSensorConfiguration.js";
-import { Op } from "sequelize";
 import mqtt from '../index.js';
 import WebSocket from 'ws';
-import Sensor from "../models/Sensor.js";
-
 import { FIRMWARE } from '../config.js';
-import Session from "src/models/Session.js";
-import { get } from "http";
 
 const socket = new WebSocket('ws://localhost:8080');
 
@@ -119,297 +113,268 @@ const createPropertyDict = (properties: any, deviceId: string) => {
 
 // Geen hulp functies -----------------------------------------------------------
 export const getAllDevices = async (): Promise<Device[]> => {
-    return new Promise(async (resolve) => {
-        const results = await Device.findAll();
-        if (!results) return resolve([]);
-        return resolve(results);
-    });
+    const results = await Device.findAll();
+    if (!results) return [];
+    return results;
 }
 
 // Devices mapped to session
 export const getDevicesMappedToSession = async (sessionId: number): Promise<Device[]> => {
-    return new Promise(async (resolve) => {
-        const result = await Device.findAll({
-            include: {
-                model: SessionDeviceMapping,
-                where: { sessionId: sessionId },
-                required: true
-            }
-        });
-        if (!result) return resolve([]);
-        return resolve(result);
+    const result = await Device.findAll({
+        include: {
+            model: SessionDeviceMapping,
+            where: { sessionId: sessionId },
+            required: true
+        }
     });
+    if (!result) return [];
+    return result;
 }
 
 // Devices not mapped to session
 // ***TODO?: BETTER DESCRIPTIVE FUNCTION NAME***
 export const getAllAvailableDevicesSession = async (sessionId: number): Promise<Device[]> => {
-    return new Promise(async (resolve) => {
-        // Left join with null check(to minus the inner join)
-        const result = await Device.findAll({
-            include: [{
-                model: SessionDeviceMapping,
-                where: { sessionId: sessionId },
-                required: false
-            }],
-            where: {
-                '$sessionDeviceMappings.sessionId$': null
-            }
-        });
-        if (!result) return resolve([]);
-        return resolve(result);
-      });
+    // Left join with null check(to minus the inner join)
+    const result = await Device.findAll({
+        include: [{
+            model: SessionDeviceMapping,
+            where: { sessionId: sessionId },
+            required: false
+        }],
+        where: {
+            '$sessionDeviceMappings.sessionId$': null
+        }
+    });
+    if (!result) return [];
+    return result;
 }
 
 export const getSampleRate = async (sessionId: number, deviceId: string): Promise<any> => {
-    return new Promise(async (resolve, _) => {
-        const doc = await SessionDeviceMapping.findOne({
-            where : { sessionId: sessionId, deviceId: deviceId },
-            attributes: ['sampleRate'],
-            raw: true,
-        });
-
-        if (!doc || doc.sampleRate === null || doc.sampleRate === undefined) {
-            return resolve(null);
-        }
-
-        return resolve(doc.sampleRate);
+    const doc = await SessionDeviceMapping.findOne({
+        where : { sessionId: sessionId, deviceId: deviceId },
+        attributes: ['sampleRate'],
+        raw: true,
     });
+
+    if (!doc || doc.sampleRate === null || doc.sampleRate === undefined) {
+        return null;
+    }
+
+    return doc.sampleRate;
 };
 
 export const getDeviceById = async (id: string): Promise<Device> => {
-    return new Promise(async (resolve, reject) => {
-        const doc = await Device.findByPk(id);
-        if (!doc) return reject(new Error("Device not found"));
-        return resolve(doc.toJSON());
-    });
+    const doc = await Device.findByPk(id);
+    if (!doc) throw new Error("Device not found");
+    return doc.toJSON();
 }
 
 export const getDeviceProperties = async (deviceId: string) => {
-    return new Promise(async (resolve, reject) => {
-        const configEntries = await DeviceSensorConfiguration.findAll({
-            where: { deviceId },
-            attributes: ['sensorProperty', 'sensorType', 'active'],
-            raw: true
-        });
+    const configEntries = await DeviceSensorConfiguration.findAll({
+        where: { deviceId },
+        attributes: ['sensorProperty', 'sensorType', 'active'],
+        raw: true
+    });
 
-        if (!configEntries.length) return reject(new Error("No config entries"));
+    if (!configEntries.length) throw new Error("No config entries");
 
-        // Get module mappings
-        const moduleMappings = await DeviceModuleMapping.findAll({
-            where: { deviceId },
-            attributes: ['moduleName', 'moduleManufacturer', 'sensorType'],
-            raw: true
-        });
+    // Get module mappings
+    const moduleMappings = await DeviceModuleMapping.findAll({
+        where: { deviceId },
+        attributes: ['moduleName', 'moduleManufacturer', 'sensorType'],
+        raw: true
+    });
 
-        if (!moduleMappings.length) return reject(new Error("No module mappings"));
+    if (!moduleMappings.length) throw new Error("No module mappings");
 
-        // Now match properties with module mappings based on sensorType
-        const result = [];
+    // Now match properties with module mappings based on sensorType
+    const result = [];
 
-        for (const config of configEntries) {
-            const mapping = moduleMappings.find(
-              map => map.sensorType === config.sensorType
-            );
+    for (const config of configEntries) {
+        const mapping = moduleMappings.find(
+            map => map.sensorType === config.sensorType
+        );
 
-            if (mapping) {
-              result.push({
-                moduleManufacturer: mapping.moduleManufacturer,
-                moduleName: mapping.moduleName,
-                sensorType: config.sensorType,
-                propertyName: config.sensorProperty,
-                active: config.active
-              });
-            }
-          }
+        if (mapping) {
+            result.push({
+            moduleManufacturer: mapping.moduleManufacturer,
+            moduleName: mapping.moduleName,
+            sensorType: config.sensorType,
+            propertyName: config.sensorProperty,
+            active: config.active
+            });
+        }
+        }
 
-        if (!result) return reject(new Error("No properties found"));
-        return resolve(result)
-    });;
-};
+    if (!result) throw new Error("No properties found");
+    return result;
+}
 
 export const getSelectedProperties = async (sessionId: number, deviceId: string): Promise<any> => {
-    return new Promise(async (resolve, _) => {
-        const configEntries = await DeviceSensorConfiguration.findAll({
-            where: { sessionId: sessionId, deviceId: deviceId, active: true },
-            attributes: ['sensorProperty', 'sensorType'],
-            raw: true
-        });
+    const configEntries = await DeviceSensorConfiguration.findAll({
+        where: { sessionId: sessionId, deviceId: deviceId, active: true },
+        attributes: ['sensorProperty', 'sensorType'],
+        raw: true
+    });
 
-        if (!configEntries.length) return resolve([]);
+    if (!configEntries.length) return [];
 
-        // Get module mappings
-        const moduleMappings = await DeviceModuleMapping.findAll({
-            where: { deviceId },
-            attributes: ['moduleName', 'moduleManufacturer', 'sensorType'],
-            raw: true
-        });
+    // Get module mappings
+    const moduleMappings = await DeviceModuleMapping.findAll({
+        where: { deviceId },
+        attributes: ['moduleName', 'moduleManufacturer', 'sensorType'],
+        raw: true
+    });
 
-        // Now match properties with module mappings based on sensorType
-        const result = [];
+    // Now match properties with module mappings based on sensorType
+    const result = [];
 
-        for (const config of configEntries) {
-            const mapping = moduleMappings.find(
-              map => map.sensorType === config.sensorType
-            );
+    for (const config of configEntries) {
+        const mapping = moduleMappings.find(
+            map => map.sensorType === config.sensorType
+        );
 
-            if (mapping) {
-              result.push({
-                moduleManufacturer: mapping.moduleManufacturer,
-                moduleName: mapping.moduleName,
-                sensorType: config.sensorType,
-                propertyName: config.sensorProperty
-              });
-            }
-          }
+        if (mapping) {
+            result.push({
+            moduleManufacturer: mapping.moduleManufacturer,
+            moduleName: mapping.moduleName,
+            sensorType: config.sensorType,
+            propertyName: config.sensorProperty
+            });
+        }
+        }
 
-        if (!result) return resolve([]);
-        return resolve(result)
-    });;
+    if (!result) return [];
+    return result
 }
 
 export const listUnits = async (): Promise<any> => {
-    return new Promise(async (resolve, _) => {
-        console.log("in listunits in Device.ts")
-        const message = {
-            "filterActiveOnly": true,
-        }
-        const options = { qos: 2 };
-        mqtt.publish("interface/listUnits", JSON.stringify(message), options);
+    console.log("in listunits in Device.ts HALLO HALLO HLLO ")
+    const message = {
+        "filterActiveOnly": true,
+    }
+    const options = { qos: 2 };
+    mqtt.publish("interface/listUnits", JSON.stringify(message), options);
 
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data.toString());
-            if (data.event === "list_units") {
-                return resolve(data.units);
-            }
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data.toString());
+        if (data.event === "list_units") {
+            return data.units;
         }
-    });
+    }
 }
 
 
 export const sendConfigurationToDevice = async (sessionId: number, deviceId: any): Promise<any> => {
-    return new Promise(async (resolve, reject) => {
-        console.log("Sending configuration to device: ", sessionId, deviceId);
+    console.log("Sending configuration to device: ", sessionId, deviceId);
 
-        // Get all properties for the device
-        const properties = await getDeviceProperties(deviceId);
-        console.log("allProperties: ", properties);
-        if (!properties) return reject(new Error("Failed to fetch all properties"));
+    // Get all properties for the device
+    const properties = await getDeviceProperties(deviceId);
+    console.log("allProperties: ", properties);
+    if (!properties) throw new Error("Failed to fetch all properties");
 
-        const deviceProperties = await createPropertyDict(properties, deviceId);
-        if (!deviceProperties) return reject(new Error("Failed to create property dictionary"));
+    const deviceProperties = await createPropertyDict(properties, deviceId);
+    if (!deviceProperties) throw new Error("Failed to create property dictionary");
 
-        const message = await createConfigMessage(deviceProperties);
-        console.log("MESSAGE");
-        console.dir(message, { depth: null, colors: true });
+    const message = await createConfigMessage(deviceProperties);
+    console.log("MESSAGE");
+    console.dir(message, { depth: null, colors: true });
 
-        // Send configuration (selected properties) to gateway
-        const options = { qos: 2 };
-        mqtt.publish("interface/validateConfiguration", JSON.stringify(message), options);
+    // Send configuration (selected properties) to gateway
+    const options = { qos: 2 };
+    mqtt.publish("interface/validateConfiguration", JSON.stringify(message), options);
 
-        const timeout = setTimeout(() => {
-            resolve(null);
-        }, 5000);
+    const timeout = setTimeout(() => {
+        null;
+    }, 5000);
 
-        socket.onmessage = async (event) => {
-            console.log("Received message from server: ", event.data);
-            const data = JSON.parse(event.data.toString());
+    socket.onmessage = async (event) => {
+        console.log("Received message from server: ", event.data);
+        const data = JSON.parse(event.data.toString());
 
-            if (data.event === "sampleRate" && data.deviceId === deviceId) {
-                console.log("sample rate updated for device: ", data.sampleRate, data.deviceId);
+        if (data.event === "sampleRate" && data.deviceId === deviceId) {
+            console.log("sample rate updated for device: ", data.sampleRate, data.deviceId);
 
-                // const doc = await SessionDeviceMapping.update(
-                //     { sampleRate: data.sampleRate },
-                //     { where: { sessionId: sessionId, deviceId: deviceId } }
-                // );
-                // if (!doc) return reject(new Error("Failed to update sample rate"));
+            // const doc = await SessionDeviceMapping.update(
+            //     { sampleRate: data.sampleRate },
+            //     { where: { sessionId: sessionId, deviceId: deviceId } }
+            // );
+            // if (!doc) return reject(new Error("Failed to update sample rate"));
 
-                clearTimeout(timeout);
-                return resolve(data.sampleRate);
-            }
-        };
-    });
+            clearTimeout(timeout);
+            return data.sampleRate;
+        }
+    };
 }
 
 const getBatchUnits = async (sessionId: number) => {
-    return new Promise(async (resolve, reject) => {
-        // Get all devices for the session
-        const devices = await SessionDeviceMapping.findAll({
-            where: { sessionId: sessionId },
-            attributes: ['deviceId'],
-            raw: true
-        });
-        if (!devices) return reject(new Error("Failed to fetch devices"));
-
-        const units = devices.map(device => device.deviceId);
-        const message = {
-            "units": units
-        }
-
-        return resolve(message);
+    // Get all devices for the session
+    const devices = await SessionDeviceMapping.findAll({
+        where: { sessionId: sessionId },
+        attributes: ['deviceId'],
+        raw: true
     });
+    if (!devices) throw new Error("Failed to fetch devices");
+
+    const units = devices.map(device => device.deviceId);
+    const message = {
+        "units": units
+    }
+
+    return message;
 }
 
 export const sendStartBatch = async (sessionId: number): Promise<any> => {
-    return new Promise(async (_, reject) => {
-        const message = await getBatchUnits(sessionId);
-        if (!message) return reject(new Error("Failed to create batch message"));
+    const message = await getBatchUnits(sessionId);
+    if (!message) throw new Error("Failed to create batch message");
 
-        const options = { qos: 2 };
-        mqtt.publish("interface/startBatch", JSON.stringify(message), options);
-    });
+    const options = { qos: 2 };
+    mqtt.publish("interface/startBatch", JSON.stringify(message), options);
 }
 
 export const sendStopBatch = async (sessionId: number): Promise<any> => {
-    return new Promise(async (_, reject) => {
-        const message = await getBatchUnits(sessionId);
-        if (!message) return reject(new Error("Failed to create batch message"));
+    const message = await getBatchUnits(sessionId);
+    if (!message) throw new Error("Failed to create batch message");
 
-        const options = { qos: 2 };
-        mqtt.publish("interface/stopBatch", JSON.stringify(message), options);
-    });
+    const options = { qos: 2 };
+    mqtt.publish("interface/stopBatch", JSON.stringify(message), options);
 }
 
 export const saveSampleRate = async (sessionId: number, deviceId: string, sampleRate: number): Promise<any> => {
-    return new Promise(async (resolve, reject) => {
-        const doc = await SessionDeviceMapping.update(
-            { sampleRate: sampleRate },
-            { where: { sessionId: sessionId, deviceId: deviceId } }
-        );
-        if (!doc) return reject(new Error("Failed to update sample rate"));
-        return resolve(doc);
-    });
+    const doc = await SessionDeviceMapping.update(
+        { sampleRate: sampleRate },
+        { where: { sessionId: sessionId, deviceId: deviceId } }
+    );
+    if (!doc) throw new Error("Failed to update sample rate");
+    return doc;
 }
 
 export const updateSelectedProperties = async (sessionId: number, deviceId: string, selectedProperties: any): Promise<any> => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            // set all properties from device and session to inactive
-            const updatedPropertiesFalse = await DeviceSensorConfiguration.update(
-                { active: false },
-                { where: { sessionId: sessionId, deviceId: deviceId } }
-            );
-            if (!updatedPropertiesFalse) return reject(new Error("Failed to update properties"));
+    try {
+        // set all properties from device and session to inactive
+        const updatedPropertiesFalse = await DeviceSensorConfiguration.update(
+            { active: false },
+            { where: { sessionId: sessionId, deviceId: deviceId } }
+        );
+        if (!updatedPropertiesFalse) throw new Error("Failed to update properties");
 
-            for (const p of selectedProperties) {
-                if (p.split(":").length === 4) {
-                    const { sensorType, sensorProperty } = splitProperty(p);
+        for (const p of selectedProperties) {
+            if (p.split(":").length === 4) {
+                const { sensorType, sensorProperty } = splitProperty(p);
 
-                    // set all selected properties to active
-                    const updatedPropertyTrue = await DeviceSensorConfiguration.update(
-                        { active: true },
-                        { where: { sessionId: sessionId, deviceId: deviceId, sensorType: sensorType, sensorProperty: sensorProperty } }
-                    );
-                    if (!updatedPropertyTrue) return reject(new Error("Failed to update properties"));
-                }
+                // set all selected properties to active
+                const updatedPropertyTrue = await DeviceSensorConfiguration.update(
+                    { active: true },
+                    { where: { sessionId: sessionId, deviceId: deviceId, sensorType: sensorType, sensorProperty: sensorProperty } }
+                );
+                if (!updatedPropertyTrue) throw new Error("Failed to update properties");
             }
-            return resolve("Properties updated successfully");
-        }   catch (error) {
-            console.error("Database query failed:", error);
-            return resolve("Failed to update properties");
         }
-    });
-
+        return "Properties updated successfully";
+    }   catch (error) {
+        console.error("Database query failed:", error);
+        return "Failed to update properties";
+    }
 }
 
 

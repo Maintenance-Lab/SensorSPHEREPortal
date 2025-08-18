@@ -17,11 +17,12 @@ import { Helmet } from 'react-helmet-async';
 
 // Local Components & Helpers
 import PageTitleWrapper from '../../../Components/PageTitleWrapper';
-import ConfirmationDialog from './confirmationDialog';
-import DefaultConfigurationDialog from './defaultConfigDialog';
+import ConfirmationDialog from './dialogs/confirmationDialog';
+import StartSessionDialog from './dialogs/startSessionDialog';
 
 import { RenderTree } from './types';
-import { calculateLastSeen, checkStartingConditions, formatLastSeen } from './startSessionHelpers';
+import { checkStartingConditions, formatTime } from './startSessionHelpers';
+import { formatDeviceRow, fetchDevicesWithSampleRates } from './utils';
 import * as api from './api';
 import * as toolbar from './toolbar';
 import { getOnChange, loadRows, updateSelection } from './treeView';
@@ -76,8 +77,8 @@ const SessionDetail = () => {
 
   // Dialog States
   const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
-  const [customConfigDialogOpen, setCustomConfigDialogOpen] = useState(false);
-  const [defaultConfigDialogOpen, setDefaultConfigDialogOpen] = useState(false);
+  const [configurationDialogOpen, setConfigurationDialogOpen] = useState(false);
+  const [StartSessionDialogOpen, setStartSessionDialogOpen] = useState(false);
 
   // Device Selection and Properties
   const [devices, setDevices] = useState([]);
@@ -145,11 +146,11 @@ const SessionDetail = () => {
   }, [selectedProperties, getOnChange]);
 
   // Device Configuration Dialog
-  const handleCloseDialog2 = async () => {
+  const handleCloseConfigurationDialog = async () => {
   if (activeStep === 2 && sampleRate !== null) {
     await api.saveSampleRate(sessionId, selectedDevice, sampleRate);
   }
-  setCustomConfigDialogOpen(false);
+  setConfigurationDialogOpen(false);
   setActiveStep(0);
   setSampleRate(null);
 };
@@ -162,7 +163,7 @@ const SessionDetail = () => {
   const handleNext = async () => {
     if (activeStep === steps.length - 1) {
       if (sampleRate !== null) {
-        handleCloseDialog2();
+        handleCloseConfigurationDialog();
         return;
       } else {
         setActiveStep(0);
@@ -184,13 +185,6 @@ const SessionDetail = () => {
     }
   };
 
-  const formatTime = (seconds) => {
-      if (!seconds && seconds !== 0) return '00:00';
-      const mins = Math.floor(seconds / 60);
-      const secs = Math.floor(seconds % 60);
-      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  };
-
   const handleSelectedProperties = async (deviceId: string) => {
     const properties = await api.getSelectedProperties(deviceId, sessionId);
     const selectedPropertiesIds = properties.map((property) => {
@@ -209,11 +203,11 @@ const SessionDetail = () => {
     setLoading(true);
     setSelectedDevice(deviceId);
     await handleSelectedProperties(deviceId);
-    setCustomConfigDialogOpen(true);
+    setConfigurationDialogOpen(true);
   };
 
-  const handleCloseDialog3 = async () => {
-    setDefaultConfigDialogOpen(false);
+  const handleCloseStartSessionDialog = async () => {
+    setStartSessionDialogOpen(false);
     setDefaultConfigStep(0);
     setSampleRates([]);
   };
@@ -273,23 +267,11 @@ const SessionDetail = () => {
     renewAvailableDevices();
   }, []);
 
-
   const fetchSampleRates = async () => {
     const rows = await Promise.all(
       devices.map(async (device) => {
         const sampleRate = await api.getSampleRate(sessionId, device.deviceId);
-        const lastSeenRaw = calculateLastSeen(device);
-        const lastSeen = formatLastSeen(device);
-
-        return {
-          name: device.manufacturer,
-          id: device.deviceId,
-          connected: device.connectStatus,
-          battery: device.batteryLevel,
-          sampleRate: sampleRate ? sampleRate + ' Hz' : '-',
-          lastSeen: lastSeen,
-          lastSeenRaw: lastSeenRaw
-        };
+        return formatDeviceRow(device, sampleRate);
       })
     );
     setDevicesRows(rows);
@@ -315,29 +297,21 @@ const handleCheckStartingConditions = async () => {
     setStartRequirements(data.requirements);
   };
 
-  const checkSampleRates = async () => {
-    const devices = await api.fetchDevices(sessionId);
-    const sampleRates = await Promise.all(
-      devices.map(async (device) => {
-        const sampleRate = await api.getSampleRate(sessionId, device.deviceId);
-        return {
-          deviceId: device.deviceId,
-          sampleRate: sampleRate
-        };
-      })
-    );
-
-    const devicesWithoutSampleRate = sampleRates.filter(device => device.sampleRate === null).map(device => device.deviceId);
+  const fetchDevicesWithoutSampleRates = async () => {
+    const sampleRates = await fetchDevicesWithSampleRates(api, sessionId);
+    const devicesWithoutSampleRate = sampleRates
+      .filter(device => device.sampleRate === null)
+      .map(device => device.deviceId);
     setDevicesWithoutSampleRate(devicesWithoutSampleRate)
     return devicesWithoutSampleRate
   }
 
   const handleOpenStartSessionDialog = async () => {
     // Check if there are devices without sample rate
-    const devicesWithoutSampleRate = await checkSampleRates();
+    const devicesWithoutSampleRate = await fetchDevicesWithoutSampleRates();
 
     if (devicesWithoutSampleRate.length > 0) {
-      setDefaultConfigDialogOpen(true);
+      setStartSessionDialogOpen(true);
     }
     else {
       api.startBatch(sessionId);
@@ -386,7 +360,7 @@ const handleCheckStartingConditions = async () => {
         api.startBatch(sessionId);
         setElapsedTime(0);
         setSessionStatus('Running');
-        handleCloseDialog3();
+        handleCloseStartSessionDialog();
         handleCheckStartingConditions();
       } else {
         setDefaultConfigStep(0);
@@ -606,13 +580,13 @@ const handleCheckStartingConditions = async () => {
               >
                 Start Session
               </Button>
-              <DefaultConfigurationDialog
-                open={defaultConfigDialogOpen}
+              <StartSessionDialog
+                open={StartSessionDialogOpen}
                 devices={devicesWithoutSampleRate}
                 defaultConfigStep={defaultConfigStep}
                 sampleRates={sampleRates}
                 handleStartSession={handleStartSession}
-                handleCloseDialog3={handleCloseDialog3}
+                handleCloseDialog3={handleCloseStartSessionDialog}
               />
             </Stack>
               )}
@@ -639,7 +613,7 @@ const handleCheckStartingConditions = async () => {
                   handleRowClick,
                   selectedDevice,
                   loading,
-                  customConfigDialogOpen,
+                  configurationDialogOpen,
                   activeStep,
                   steps,
                   sampleRate,
@@ -647,7 +621,7 @@ const handleCheckStartingConditions = async () => {
                   expandedNodes,
                   allProperties,
                   renderTree,
-                  handleCloseDialog2,
+                  handleCloseConfigurationDialog,
                   handleNext,
                   handleReconfigure,
                   setExpandedNodes

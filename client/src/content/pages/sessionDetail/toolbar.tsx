@@ -4,7 +4,7 @@ import { Button, Link, Typography, Box, Stack } from '@mui/material';
 
 import { addDevices, removeDevicesFromSession } from "./api";
 import {renderBatteryCell, renderConnectedCell, calculateLastSeen, formatLastSeen } from './startSessionHelpers'
-import { CustomConfigDialog } from './customConfigDialog';
+import { ConfigurationDialog } from './dialogs/configurationDialog';
 
 const commonColumns: GridColDef[] = [
   { field: 'id', headerName: 'MAC Address', flex: 2, sortable: false,
@@ -49,7 +49,7 @@ export const getDevicesColumns = (props: {
   handleRowClick: (id: string, event: React.MouseEvent) => void;
   selectedDevice: string;
   loading: boolean;
-  customConfigDialogOpen: boolean;
+  configurationDialogOpen: boolean;
   activeStep: number;
   steps: string[];
   sampleRate: number;
@@ -57,16 +57,16 @@ export const getDevicesColumns = (props: {
   expandedNodes: string[];
   allProperties: any;
   renderTree: (data: any) => React.ReactNode;
-  handleCloseDialog2: () => void;
+  handleCloseConfigurationDialog: () => void;
   handleNext: () => void;
   handleReconfigure: () => void;
   setExpandedNodes: (nodes: string[]) => void;
 }): GridColDef[] => {
   const {
-    handleRowClick, selectedDevice, loading, customConfigDialogOpen,
+    handleRowClick, selectedDevice, loading, configurationDialogOpen,
     activeStep, steps, sampleRate, selectedProperties,
     expandedNodes, allProperties, renderTree,
-    handleCloseDialog2, handleNext, handleReconfigure,
+    handleCloseConfigurationDialog, handleNext, handleReconfigure,
     setExpandedNodes,
   } = props;
 
@@ -92,8 +92,8 @@ export const getDevicesColumns = (props: {
               <Icons.Settings />
             </Button>
             {selectedDevice === params.row.id && !loading && (
-              <CustomConfigDialog
-                open={customConfigDialogOpen}
+              <ConfigurationDialog
+                open={configurationDialogOpen}
                 device={selectedDevice}
                 activeStep={activeStep}
                 steps={steps}
@@ -102,7 +102,7 @@ export const getDevicesColumns = (props: {
                 expandedNodes={expandedNodes}
                 allProperties={allProperties}
                 renderTree={renderTree}
-                handleClose={handleCloseDialog2}
+                handleClose={handleCloseConfigurationDialog}
                 handleNext={handleNext}
                 handleReconfigure={handleReconfigure}
                 setExpandedNodes={setExpandedNodes}

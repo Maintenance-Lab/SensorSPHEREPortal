@@ -11,7 +11,7 @@ interface DefaultConfigurationDialogProps {
   handleCloseDialog3: () => void;
 }
 
-const defaultConfigContent = (index: number, devices, sampleRates) => {
+const startSessionContent = (index: number, devices, sampleRates) => {
     switch (index) {
       case 0:
         return (
@@ -55,7 +55,7 @@ const defaultConfigContent = (index: number, devices, sampleRates) => {
     }
   }
 
-const DefaultConfigDialog: React.FC<DefaultConfigurationDialogProps> = ({
+const StartSessionDialog: React.FC<DefaultConfigurationDialogProps> = ({
   devices, open, defaultConfigStep, sampleRates, handleStartSession, handleCloseDialog3,
 }) => {
     const allSampleRatesValid = sampleRates.length > 0 && sampleRates.every(rate => rate !== null);
@@ -83,7 +83,7 @@ const DefaultConfigDialog: React.FC<DefaultConfigurationDialogProps> = ({
 
       <Box sx={{ display: "flex", justifyContent: defaultConfigStep === 0 ? "flex-start" : "center",
         alignItems: "center" }}>
-        {defaultConfigContent(defaultConfigStep, devices, sampleRates)}
+        {startSessionContent(defaultConfigStep, devices, sampleRates)}
       </Box>
         {defaultConfigStep !== 1 && (
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
@@ -98,7 +98,7 @@ const DefaultConfigDialog: React.FC<DefaultConfigurationDialogProps> = ({
   );
 };
 
-export default DefaultConfigDialog;
+export default StartSessionDialog;
 
 
 

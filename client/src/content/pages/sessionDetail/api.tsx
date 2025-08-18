@@ -3,8 +3,8 @@ const apiRequest = async (url: string, method: string, body?: object) => {
       method,
       headers: {
         'Content-Type': 'application/json',
-        credentials: 'include',
       },
+      credentials: 'include',
       body: body ? JSON.stringify(body) : undefined,
     });
 

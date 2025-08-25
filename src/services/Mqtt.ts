@@ -139,21 +139,15 @@ const addDeviceToDatabase = async (message: any) => {
         try {
             for (const sensor of module.sensors) {
                 await addNewEntryToTable(Sensor, { type: sensor.sensorType })
-                console.log("manufacturer !!!!!!!!!!!!!!!!!!!!!!! ", module.manufacturer);
                 await addNewEntryToTable(Module, { name: module.moduleName, manufacturer: module.manufacturer, sensorType: sensor.sensorType })
 
                 // Add deviceModuleMapping to database if it does not exist
                 await addNewEntryToTable(DeviceModuleMapping, { deviceId: deviceId, moduleName: module.moduleName, moduleManufacturer: module.manufacturer, sensorType: sensor.sensorType })
 
                 for (const measurement of sensor.measurements) {
-                    // Parse range [min, max] to rangeMin and rangeMax
-                    const rangeMin = measurement.range[0];
-                    const rangeMax = measurement.range[1];
-
                     // Accuracy is "±0.05", needs to be float
                     const accuracy = parseFloat(measurement.accuracy.replace("±", "").replace(",", ".").trim());
-                    console.log("new accuracy: ", accuracy);
-                    await addNewEntryToTable(Property, { name: measurement.type , sensorType: sensor.sensorType, unit: measurement.unit, accuracy: accuracy, rangeMin: rangeMin, rangeMax: rangeMax })
+                    await addNewEntryToTable(Property, { name: measurement.type , sensorType: sensor.sensorType, unit: measurement.unit, accuracy: accuracy, rangeMin: measurement.minValue, rangeMax: measurement.maxValue })
                 }
             }
         } catch (e) {

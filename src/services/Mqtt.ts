@@ -192,7 +192,8 @@ const updateDeviceStatus = async (message: any) => {
             return { message: "Device does not exist in database yet" };
         }
 
-        await Device.update({ batteryLevel: unit.batteryLevel, connectStatus: "connected", lastHeartbeat: unit.lastSeen }, { where: { deviceId } });
+        unit.batteryLevel = 50;
+        await Device.update({ batteryLevel: unit.batteryLevel, connectStatus: "connected", lastHeartbeat: unit.last_seen }, { where: { deviceId } });
     }
 
     // all other devices to non-active

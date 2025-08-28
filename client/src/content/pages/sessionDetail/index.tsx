@@ -103,7 +103,7 @@ const SessionDetail = () => {
   const steps = ['Select Properties', 'Find sample rate', 'Save configuration'];
 
   // Session Status
-  const [sessionStatus, setSessionStatus] = useState('Not started');
+  const [sessionStatus, setSessionStatus] = useState('Idle');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isStartDisabled, setIsStartDisabled] = useState(true);
   const [startRequirements, setStartRequirements] = useState([]);
@@ -479,6 +479,7 @@ const handleCheckStartingConditions = async () => {
                 variant="outlined"
                 startIcon={<Icons.ArchiveOutlined />}
                 onClick={() => handleArchiveSession(true)}
+                disabled={sessionStatus === 'Running'}
               >
                 Archive Session
               </Button>
@@ -488,6 +489,7 @@ const handleCheckStartingConditions = async () => {
                 variant="outlined"
                 startIcon={<Icons.UnarchiveOutlined />}
                 onClick={() => handleArchiveSession(false)}
+                disabled={sessionStatus === 'Running'}
               >
                 Unarchive Session
               </Button>
@@ -495,6 +497,7 @@ const handleCheckStartingConditions = async () => {
             <Button
               variant="outlined"
               startIcon={<Icons.DeleteOutline />}
+              disabled={sessionStatus === 'Running'}
               sx={{
                 '&:hover': {
                   color: 'white',
@@ -535,7 +538,7 @@ const handleCheckStartingConditions = async () => {
                   Status: {sessionStatus}
                 </Typography>
               </Stack>
-              {(sessionStatus === 'Not started' || sessionStatus === 'Stopped') && (
+              {(sessionStatus === 'Idle' || sessionStatus === 'Stopped') && (
               <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
                 <Tooltip
                 title={

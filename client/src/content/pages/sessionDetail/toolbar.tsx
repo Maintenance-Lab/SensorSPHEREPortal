@@ -151,6 +151,7 @@ interface AvailableDevicesToolbarProps {
   fetchSessionDevices: () => Promise<void>;
   setAvailableDevices: React.Dispatch<React.SetStateAction<any[]>>;
   setDevices: React.Dispatch<React.SetStateAction<any[]>>;
+  sessionStatus: string;
   handleAvailableDevices: (sessionId, setAvailableDevices) => Promise<void>;
   handleCheckStartingConditions: () => Promise<void>;
 }
@@ -161,11 +162,12 @@ export const AvailableDevicesToolbar: React.FC<AvailableDevicesToolbarProps> = (
   fetchSessionDevices,
   setAvailableDevices,
   setDevices,
+  sessionStatus,
   handleAvailableDevices,
   handleCheckStartingConditions,
 }) => {
 
-    const handleAddDevices = async (sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices) => {
+    const handleAddDevices = async (sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices, sessionStatus) => {
         const success = await addDevices(sessionId, selectedAddDeviceIds);
 
         if (success) {
@@ -190,10 +192,11 @@ export const AvailableDevicesToolbar: React.FC<AvailableDevicesToolbarProps> = (
               selectedAddDeviceIds,
               fetchSessionDevices,
               setAvailableDevices,
-              setDevices
+              setDevices,
+              sessionStatus,
             )
           }
-          disabled={!activeSelection}
+          disabled={!activeSelection || sessionStatus === 'Running'}
         >
           Add Devices to Session
         </Button>
@@ -208,6 +211,7 @@ interface ConnectedDevicesToolbarProps {
   fetchSessionDevices: () => Promise<void>;
   setAvailableDevices: React.Dispatch<React.SetStateAction<any[]>>;
   setDevices: React.Dispatch<React.SetStateAction<any[]>>;
+  sessionStatus: string;
   handleAvailableDevices: (sessionId, setAvailableDevices) => Promise<void>;
   handleCheckStartingConditions: () => Promise<void>;
 }
@@ -218,11 +222,12 @@ export const ConnectedDevicesToolbar: React.FC<ConnectedDevicesToolbarProps> = (
   fetchSessionDevices,
   setAvailableDevices,
   setDevices,
+  sessionStatus,
   handleAvailableDevices,
   handleCheckStartingConditions,
 }) => {
 
-  const handleRemoveDevices = async (sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices) => {
+  const handleRemoveDevices = async (sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices, sessionStatus) => {
     const success = await removeDevicesFromSession(sessionId, selectedDeviceIds);
 
     if (success) {
@@ -243,14 +248,15 @@ export const ConnectedDevicesToolbar: React.FC<ConnectedDevicesToolbarProps> = (
           size="medium"
           color="error"
           startIcon={<Icons.DeleteOutlineOutlined />}
-          disabled={!activeSelection}
+          disabled={!activeSelection || sessionStatus === 'Running'}
           onClick={() =>
             handleRemoveDevices(
               sessionId,
               selectedDeviceIds,
               fetchSessionDevices,
               setAvailableDevices,
-              setDevices
+              setDevices,
+              sessionStatus,
             )
           }
         >

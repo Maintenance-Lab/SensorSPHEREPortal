@@ -653,6 +653,7 @@ const handleCheckStartingConditions = async () => {
                   fetchSessionDevices={() => fetchSessionDevices(sessionId, setDevices)}
                   setAvailableDevices={setAvailableDevices}
                   setDevices={setDevices}
+                  sessionStatus={sessionStatus}
                   handleAvailableDevices={() => handleAvailableDevices(sessionId, setAvailableDevices)}
                   handleCheckStartingConditions={handleCheckStartingConditions}
                 />}}
@@ -692,6 +693,7 @@ const handleCheckStartingConditions = async () => {
                   fetchSessionDevices={() => fetchSessionDevices(sessionId, setDevices)}
                   setAvailableDevices={setAvailableDevices}
                   setDevices={setDevices}
+                  sessionStatus={sessionStatus}
                   handleAvailableDevices={() => handleAvailableDevices(sessionId, setAvailableDevices)}
                   handleCheckStartingConditions={handleCheckStartingConditions}
                 />}}

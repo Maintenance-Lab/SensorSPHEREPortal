@@ -300,6 +300,7 @@ export const sendStartBatch = async (sessionId: number): Promise<any> => {
 
     const options = { qos: 2 };
     mqtt.publish("interface/startBatch", JSON.stringify(message), options);
+    return { message: "Batch started" };
 }
 
 export const sendStopBatch = async (sessionId: number): Promise<any> => {
@@ -308,6 +309,7 @@ export const sendStopBatch = async (sessionId: number): Promise<any> => {
 
     const options = { qos: 2 };
     mqtt.publish("interface/stopBatch", JSON.stringify(message), options);
+    return { message: "Batch stopped" };
 }
 
 export const saveSampleRate = async (sessionId: number, deviceId: string, sampleRate: number): Promise<any> => {

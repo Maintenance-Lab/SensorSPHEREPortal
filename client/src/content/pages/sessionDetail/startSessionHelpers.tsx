@@ -33,6 +33,11 @@ export const checkStartingConditions = async (sessionId) => {
       },
     ];
 
+    if (devices.length === 0) {
+      // If no devices, other requirements do not apply
+      return { allPassed: false, requirements: [requirements[0]] };
+    }
+
     const allPassed = requirements.filter(req => req.text !== "Make sure all devices are configured")
       .every(req => req.done);
 

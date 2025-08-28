@@ -56,6 +56,7 @@ export const getDevicesColumns = (props: {
   selectedProperties: any[];
   expandedNodes: string[];
   allProperties: any;
+  sessionStatus: string;
   renderTree: (data: any) => React.ReactNode;
   handleCloseConfigurationDialog: () => void;
   handleNext: () => void;
@@ -65,7 +66,7 @@ export const getDevicesColumns = (props: {
   const {
     handleRowClick, selectedDevice, loading, configurationDialogOpen,
     activeStep, steps, sampleRate, selectedProperties,
-    expandedNodes, allProperties, renderTree,
+    expandedNodes, allProperties, sessionStatus, renderTree,
     handleCloseConfigurationDialog, handleNext, handleReconfigure,
     setExpandedNodes,
   } = props;
@@ -83,6 +84,7 @@ export const getDevicesColumns = (props: {
             <Button
               color="primary"
               size="small"
+              disabled={sessionStatus === 'Running'}
               onClick={(event) => {
                 event.stopPropagation();
                 handleRowClick(params.row.id, event);

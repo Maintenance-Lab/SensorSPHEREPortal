@@ -623,11 +623,12 @@ const handleCheckStartingConditions = async () => {
                   selectedProperties,
                   expandedNodes,
                   allProperties,
+                  sessionStatus,
                   renderTree,
                   handleCloseConfigurationDialog,
                   handleNext,
                   handleReconfigure,
-                  setExpandedNodes
+                  setExpandedNodes,
               })}
               sortingOrder={['asc']}
               density='compact'

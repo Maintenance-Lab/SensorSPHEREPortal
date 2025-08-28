@@ -30,7 +30,7 @@ const createConfigMessage = async (deviceProperties: any) => {
 
 const createPropertyDict = (properties: any, deviceId: string) => {
     const deviceProperties: any = { deviceId };
-    const modules: { [key: string]: any[] } = {}; // Simplified typing for modules
+    const modules: { [key: string]: any[] } = {};
 
     properties.forEach((property: any) => {
         const { moduleManufacturer, moduleName, sensorType, propertyName, active } = property;
@@ -69,47 +69,6 @@ const createPropertyDict = (properties: any, deviceId: string) => {
     console.dir(deviceProperties, { depth: null, colors: true });
     return deviceProperties;
 };
-
-// const createPropertyDict = async (properties: any[], deviceId: string) => {
-//     console.log(" properties in createPropertyDict", properties);
-//     // manufacturers: { M5stack: { ENV3: [Array] }, M5stack5: { ENV35: [Array] } }
-
-//     let deviceProperties: any = { deviceId };
-//     // let manufacturers: any = {};
-//     let models: any = {};
-
-//     properties.forEach((property: any) => {
-//         // const { manufacturer, model, propertyName } = property;
-//         const { moduleManufacturer, moduleName, sensorType, propertyName } = property;
-//         console.log("manufactureer, model, sensorType, propertyName: ", moduleManufacturer, moduleName, sensorType, propertyName);
-
-//         // // If model doesn't exist in the models object, create it
-//         // if (!models[model]) {
-//         //     models[model] = {};
-//         // }
-//         // // If the manufacturer doesn't exist under the model, create it
-//         // if (!models[model][manufacturer]) {
-//         //     models[model][manufacturer] = [];
-//         // }
-//         // models[model][manufacturer].push(propertyName);
-
-//         // // If the manufacturer doesn't exist in the manufacturers object, create it
-//         // if (!manufacturers[manufacturer]) {
-//         //     manufacturers[manufacturer] = {};
-//         // }
-//         // // If the model doesn't exist under the manufacturer, create it
-//         // if (!manufacturers[manufacturer][model]) {
-//         //     manufacturers[manufacturer][model] = [];
-//         // }
-//         // manufacturers[manufacturer][model].push(propertyName);
-//     });
-
-//     deviceProperties.models = models;
-//     // deviceProperties.manufacturers = manufacturers;
-//     console.log("deviceProperties: ", deviceProperties);
-//     return deviceProperties;
-// };
-
 
 // Geen hulp functies -----------------------------------------------------------
 export const getAllDevices = async (): Promise<Device[]> => {
@@ -249,63 +208,74 @@ export const getSelectedProperties = async (sessionId: number, deviceId: string)
 }
 
 export const listUnits = async (): Promise<any> => {
-    console.log("in listunits in Device.ts HALLO HALLO HLLO ")
-    const message = {
-        "filterActiveOnly": true,
-    }
-    const options = { qos: 2 };
+  const message = { filterActiveOnly: true };
+  const options = { qos: 2 };
+
+  return new Promise((resolve, reject) => {
     mqtt.publish("interface/listUnits", JSON.stringify(message), options);
 
-    socket.onmessage = (event) => {
-        const data = JSON.parse(event.data.toString());
+    // Define a handler for incoming WebSocket messages
+    const handler = (raw: WebSocket.RawData) => {
+      try {
+        const data = JSON.parse(raw.toString());
         if (data.event === "list_units") {
-            return data.units;
+          socket.removeListener("message", handler);
+          resolve(data.units);
         }
-    }
-}
+      } catch (err) {
+        reject(err);
+      }
+    };
 
+    // Attach the handler to the WebSocket
+    socket.on("message", handler);
 
-export const sendConfigurationToDevice = async (sessionId: number, deviceId: any): Promise<any> => {
-    console.log("Sending configuration to device: ", sessionId, deviceId);
+    setTimeout(() => {
+      socket.removeListener("message", handler);
+      resolve([]);
+    }, 5000);
+  });
+};
 
-    // Get all properties for the device
-    const properties = await getDeviceProperties(deviceId);
-    console.log("allProperties: ", properties);
-    if (!properties) throw new Error("Failed to fetch all properties");
+export const sendConfigurationToDevice = async (deviceId: any): Promise<any> => {
+  const properties = await getDeviceProperties(deviceId);
+  if (!properties) throw new Error("Failed to fetch all properties");
 
-    const deviceProperties = await createPropertyDict(properties, deviceId);
-    if (!deviceProperties) throw new Error("Failed to create property dictionary");
+  const deviceProperties = await createPropertyDict(properties, deviceId);
+  if (!deviceProperties) throw new Error("Failed to create property dictionary");
 
-    const message = await createConfigMessage(deviceProperties);
-    console.log("MESSAGE");
-    console.dir(message, { depth: null, colors: true });
+  const message = await createConfigMessage(deviceProperties);
+  const options = { qos: 2 };
 
-    // Send configuration (selected properties) to gateway
-    const options = { qos: 2 };
+  return new Promise((resolve, reject) => {
     mqtt.publish("interface/validateConfiguration", JSON.stringify(message), options);
 
-    const timeout = setTimeout(() => {
-        null;
-    }, 5000);
-
-    socket.onmessage = async (event) => {
-        console.log("Received message from server: ", event.data);
-        const data = JSON.parse(event.data.toString());
-
+    // Define a handler for incoming WebSocket messages
+    const handler = (raw: WebSocket.RawData) => {
+      try {
+        const data = JSON.parse(raw.toString());
+        console.log("data received in sendConfigurationToDevice: ", data, deviceId);
         if (data.event === "sampleRate" && data.deviceId === deviceId) {
-            console.log("sample rate updated for device: ", data.sampleRate, data.deviceId);
-
-            // const doc = await SessionDeviceMapping.update(
-            //     { sampleRate: data.sampleRate },
-            //     { where: { sessionId: sessionId, deviceId: deviceId } }
-            // );
-            // if (!doc) return reject(new Error("Failed to update sample rate"));
-
-            clearTimeout(timeout);
-            return data.sampleRate;
+          socket.removeListener("message", handler);
+          clearTimeout(timeout);
+          console.log("resolving sample rate: ", data.sampleRate);
+          resolve(data.sampleRate);
         }
+      } catch (err) {
+        reject(err);
+      }
     };
-}
+
+    // Attach the handler to the WebSocket
+    socket.on("message", handler);
+
+    // Timeout after 5 seconds
+    const timeout = setTimeout(() => {
+      socket.removeListener("message", handler);
+      resolve(null);
+    }, 5000);
+  });
+};
 
 const getBatchUnits = async (sessionId: number) => {
     // Get all devices for the session

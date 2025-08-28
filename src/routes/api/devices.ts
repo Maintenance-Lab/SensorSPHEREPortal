@@ -148,10 +148,9 @@ router.put("/saveSampleRate", async (req, res) => {
 });
 
 router.put("/sendConfiguration", async (req, res) => {
-    const sessionId = req.body.sessionId;
     const deviceId = req.body.selectedDevice;
 
-    await sendConfigurationToDevice(sessionId, deviceId)
+    await sendConfigurationToDevice(deviceId)
     .then((result) => {
         return res.json(result);
     })

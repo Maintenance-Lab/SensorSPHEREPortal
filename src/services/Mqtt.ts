@@ -12,7 +12,6 @@ import mqtt from '../index.js';
 export const wss = new WebSocket.Server({ port: 8080 });
 
 export const MQTTMessage = async (topic: string, message: Buffer) => {
-    const topicParts = topic.split("/");
     const parsed_message = JSON.parse(message.toString());
 
     if (topic == "interface/listUnitsResult") {
@@ -35,7 +34,6 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
         addDeviceToDatabase(parsed_message);
     }
     else if (topic === 'interface/validateConfigurationResult') {
-    // else if (topicParts[0] == "interface" && topicParts[2] == "validateConfigurationResult") {
         sendSampleRate(parsed_message);
     }
     else {
@@ -50,7 +48,6 @@ const sendSampleRate= async (message: any) => {
     const deviceId = message.mac;
     const sampleRate = message.sampleRate;
 
-    console.log("In send sample rate: ", sampleRate, deviceId);
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify({ event: "sampleRate", sampleRate: sampleRate, deviceId: deviceId }));
@@ -198,6 +195,7 @@ const updateDeviceStatus = async (message: any) => {
 
     // all other devices to non-active
     const allDevices = await Device.findAll({ where: { connectStatus: "connected" } });
+    if (!allDevices) return { message: "No devices found" };
     for (const device of allDevices) {
         if (!devices.includes(device.deviceId)) {
             await Device.update({ connectStatus: "disconnected" }, { where: { deviceId: device.deviceId } });

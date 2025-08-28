@@ -176,7 +176,7 @@ const SessionDetail = () => {
 
     if (newStep === 1) {
       await api.updateSelectedProperties(selectedDevice, sessionId, selectedProperties);
-      const sr = await api.sendConfiguration(sessionId, selectedDevice);
+      const sr = await api.sendConfiguration(selectedDevice);
 
       if (sr !== null) {
         setSampleRate(sr);
@@ -333,7 +333,7 @@ const handleCheckStartingConditions = async () => {
       newSampleRates = [];
 
       for (const device of devices) {
-        const sampleRate = await api.sendConfiguration(sessionId, device);
+        const sampleRate = await api.sendConfiguration(device);
 
         if (!sampleRate) {
           step = 2;

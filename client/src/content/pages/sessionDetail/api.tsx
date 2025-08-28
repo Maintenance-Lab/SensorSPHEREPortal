@@ -123,5 +123,14 @@ export const stopBatch = async (sessionId: number) => {
   });
 }
 
+export const updateSessionStatus = async (sessionId: number, status: string) => {
+  return apiRequest("/api/sessions/updateStatus", "PUT", {
+    sessionId,
+    status
+  });
+}
 
+export const getSessionStatus = async (sessionId: number) => {
+  return apiRequest("/api/sessions/getStatus/" + sessionId, "GET");
+}
 

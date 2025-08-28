@@ -144,7 +144,7 @@ const addDeviceToDatabase = async (message: any) => {
                 for (const measurement of sensor.measurements) {
                     // Accuracy is "±0.05", needs to be float
                     const accuracy = parseFloat(measurement.accuracy.replace("±", "").replace(",", ".").trim());
-                    await addNewEntryToTable(Property, { name: measurement.type , sensorType: sensor.sensorType, unit: measurement.unit, accuracy: accuracy, rangeMin: measurement.minValue, rangeMax: measurement.maxValue })
+                    await addNewEntryToTable(Property, { name: measurement.type , sensorType: sensor.sensorType, unit: measurement.unit, accuracy: accuracy, rangeMin: measurement.rangeMin, rangeMax: measurement.rangeMin })
                 }
             }
         } catch (e) {
@@ -152,22 +152,22 @@ const addDeviceToDatabase = async (message: any) => {
         }
     }
 
-    // If sensor category or manufacturer does not exist, add it to database
-        // // Then add sensor to database
-        // for (const sensor of unit.sensorModules) {
+    // // If sensor category or manufacturer does not exist, add it to database
+    //     // Then add sensor to database
+    //     for (const sensor of unit.sensorModules) {
 
-        //     await addNewEntryToTable(Manufacturer, { manufacturer: sensor.manufacturer })
-        //     await addNewEntryToTable(Sensor, { model: sensor.moduleName, manufacturer: sensor.manufacturer })
+    //         await addNewEntryToTable(Manufacturer, { manufacturer: sensor.manufacturer })
+    //         await addNewEntryToTable(Sensor, { model: sensor.moduleName, manufacturer: sensor.manufacturer })
 
 
-        //     // Add device sensor mapping to database if it does not exist
-        //     await addNewEntryToTable(DeviceModuleMapping, { deviceId: deviceId, model: sensor.moduleName, manufacturer: sensor.manufacturer, channel: sensor.channel })
+    //         // Add device sensor mapping to database if it does not exist
+    //         await addNewEntryToTable(DeviceModuleMapping, { deviceId: deviceId, model: sensor.moduleName, manufacturer: sensor.manufacturer, channel: sensor.channel })
 
-        //     // Add sensor properties to database if they do not exist
-        //     for (const property of sensor.properties) {
-        //         await addNewEntryToTable(SensorProperty, { propertyName: property, model: sensor.moduleName, manufacturer: sensor.manufacturer })
-        //     }
-        // }
+    //         // Add sensor properties to database if they do not exist
+    //         for (const property of sensor.properties) {
+    //             await addNewEntryToTable(SensorProperty, { propertyName: property, model: sensor.moduleName, manufacturer: sensor.manufacturer })
+    //         }
+    //     }
     // });
 
     return { message: "Device created" };

@@ -21,7 +21,9 @@ Session.init({
     sessionId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     name: { type: DataTypes.STRING, allowNull: false },
     description: { type: DataTypes.STRING},
-    status: { type: DataTypes.STRING, allowNull: false, validate: { isIn: [['inactive', 'active', 'activeScheduled', 'paused', 'completed', 'error', 'scheduled', 'stopped']] }, defaultValue: 'inactive' },
+    // status: { type: DataTypes.STRING, allowNull: false, validate: { isIn: [['inactive', 'active', 'activeScheduled', 'paused', 'completed', 'error', 'scheduled', 'stopped']] }, defaultValue: 'inactive' },
+    status: { type: DataTypes.STRING, allowNull: true, validate: { isIn: [['Idle', 'Running', 'Paused', 'Error', 'Scheduled']] }, defaultValue: 'Idle' },
+
     scheduledFrom: { type: DataTypes.DATE},
     scheduledTo: { type: DataTypes.DATE},
     projectId: { type: DataTypes.INTEGER, allowNull: false, references: { model: Project, key: 'projectId' } },

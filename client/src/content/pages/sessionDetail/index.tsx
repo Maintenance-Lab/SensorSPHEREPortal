@@ -29,11 +29,11 @@ import { getOnChange, loadRows, updateSelection } from './treeView';
 
 
 //  Api calls in api.tsx
- const handleAvailableDevices = async (sessionId: number, setAvailableDevices: Function) => {
-    const availableDevicesData = await api.fetchAvailableDevices(sessionId);
-    setAvailableDevices(availableDevicesData);
-    return availableDevicesData;
- };
+const handleAvailableDevices = async (sessionId: number, setAvailableDevices: Function) => {
+  const availableDevicesData = await api.fetchAvailableDevices(sessionId);
+  setAvailableDevices(availableDevicesData);
+  return availableDevicesData;
+};
 
 const handleFetchSession = async(
   sessionId: number,
@@ -69,7 +69,7 @@ const SessionDetail = () => {
   const sessionId = Number(useParams().sessionId);
   const [sessionName, setSessionName] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
-  const [projectId, setProjectId] = useState('');
+  const [projectId, setProjectId] = useState(null);
   const [projectName, setProjectName] = useState('');
   const [isArchived, setIsArchived] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -104,6 +104,7 @@ const SessionDetail = () => {
 
   // Session Status
   const [sessionStatus, setSessionStatus] = useState('Idle');
+  // const [sessionStatus, setSessionStatus] = useState<string | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isStartDisabled, setIsStartDisabled] = useState(true);
   const [startRequirements, setStartRequirements] = useState([]);
@@ -249,7 +250,13 @@ const SessionDetail = () => {
     navigate('/projects/detail/' + projectId);
   };
 
+  const handleGetSessionStatus = async () => {
+    const status = await api.getSessionStatus(sessionId);
+    setSessionStatus(status);
+  };
+
   useEffect(() => {
+    handleGetSessionStatus();
     fetchSessionDevices(sessionId, setDevices);
     handleAvailableDevices(sessionId, setAvailableDevices);
     handleFetchSession(sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived);
@@ -288,7 +295,9 @@ const SessionDetail = () => {
         setElapsedTime((prev) => prev + 1);
       }, 1000);
     }
+    api.updateSessionStatus(sessionId, sessionStatus);
     return () => clearInterval(interval);
+
   }, [sessionStatus]);
 
 const handleCheckStartingConditions = async () => {

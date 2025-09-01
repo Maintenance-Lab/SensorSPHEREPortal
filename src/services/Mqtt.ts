@@ -191,15 +191,14 @@ const updateDeviceStatus = async (message: any) => {
         }
 
         unit.batteryLevel = 50;
-        await Device.update({ batteryLevel: unit.batteryLevel, connectStatus: "connected", lastHeartbeat: unit.last_seen }, { where: { deviceId } });
-    }
+        await Device.update({ batteryLevel: unit.batteryLevel, lastHeartbeat: unit.last_seen }, { where: { deviceId } });
 
-    // all other devices to non-active
-    const allDevices = await Device.findAll({ where: { connectStatus: "connected" } });
-    if (!allDevices) return { message: "No devices found" };
-    for (const device of allDevices) {
-        if (!devices.includes(device.deviceId)) {
-            await Device.update({ connectStatus: "disconnected" }, { where: { deviceId: device.deviceId } });
+        // Check if last seen was within last 5 minutes
+        if ((new Date().getTime() - new Date(unit.last_seen).getTime()) > 5 * 60 * 1000) {
+            await Device.update({ connectStatus: "disconnected" }, { where: { deviceId } });
+        }
+        else {
+            await Device.update({ connectStatus: "connected" }, { where: { deviceId } });
         }
     }
 

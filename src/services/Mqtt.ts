@@ -34,6 +34,7 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
         addDeviceToDatabase(parsed_message);
     }
     else if (topic === 'interface/validateConfigurationResult') {
+        console.log("Got message on validateConfigurationResult topic");
         sendSampleRate(parsed_message);
     }
     else {
@@ -144,7 +145,7 @@ const addDeviceToDatabase = async (message: any) => {
                 for (const measurement of sensor.measurements) {
                     // Accuracy is "±0.05", needs to be float
                     const accuracy = parseFloat(measurement.accuracy.replace("±", "").replace(",", ".").trim());
-                    await addNewEntryToTable(Property, { name: measurement.type , sensorType: sensor.sensorType, unit: measurement.unit, accuracy: accuracy, rangeMin: measurement.rangeMin, rangeMax: measurement.rangeMin })
+                    await addNewEntryToTable(Property, { name: measurement.type , sensorType: sensor.sensorType, unit: measurement.unit, accuracy: accuracy, rangeMin: measurement.minValue, rangeMax: measurement.maxValue })
                 }
             }
         } catch (e) {

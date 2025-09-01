@@ -232,7 +232,7 @@ export const listUnits = async (): Promise<any> => {
 
     setTimeout(() => {
       socket.removeListener("message", handler);
-      resolve([]);
+        reject(new Error("Timeout waiting for list_units response"));
     }, 5000);
   });
 };

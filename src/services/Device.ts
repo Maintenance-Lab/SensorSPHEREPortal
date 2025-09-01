@@ -254,11 +254,9 @@ export const sendConfigurationToDevice = async (deviceId: any): Promise<any> => 
     const handler = (raw: WebSocket.RawData) => {
       try {
         const data = JSON.parse(raw.toString());
-        console.log("data received in sendConfigurationToDevice: ", data, deviceId);
         if (data.event === "sampleRate" && data.deviceId === deviceId) {
           socket.removeListener("message", handler);
           clearTimeout(timeout);
-          console.log("resolving sample rate: ", data.sampleRate);
           resolve(data.sampleRate);
         }
       } catch (err) {
@@ -273,7 +271,7 @@ export const sendConfigurationToDevice = async (deviceId: any): Promise<any> => 
     const timeout = setTimeout(() => {
       socket.removeListener("message", handler);
       resolve(null);
-    }, 5000);
+    }, 7500);
   });
 };
 

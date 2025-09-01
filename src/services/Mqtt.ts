@@ -174,43 +174,36 @@ const addDeviceToDatabase = async (message: any) => {
     return { message: "Device created" };
 }
 
-
-
-
 const updateDeviceStatus = async (message: any) => {
-    let devices = [];
+  const now = new Date().getTime();
 
-    for (const unit of message.units) {
-        const deviceId = unit.mac;
-        devices.push(deviceId);
-        console.log("In update device status: ", message, deviceId);
-        const existingDevice = await Device.findOne({ where: { deviceId: deviceId } });
+  // Run all device updates in parallel
+  const updatePromises = message.units.map(async (unit: any) => {
+    const deviceId = unit.mac;
+    unit.batteryLevel = 50;
+    const lastSeenTime = new Date(unit.last_seen).getTime();
+    const isConnected = now - lastSeenTime <= 5 * 60 * 1000;
 
-        if (!existingDevice) {
-            return { message: "Device does not exist in database yet" };
-        }
+    // Update all fields in one go
+    await Device.update(
+      {
+        batteryLevel: unit.batteryLevel,
+        lastHeartbeat: unit.last_seen,
+        connectStatus: isConnected ? "connected" : "disconnected"
+      },
+      { where: { deviceId } }
+    );
+  });
 
-        unit.batteryLevel = 50;
-        await Device.update({ batteryLevel: unit.batteryLevel, lastHeartbeat: unit.last_seen }, { where: { deviceId } });
+  // Wait for all updates to finish
+  await Promise.all(updatePromises);
 
-        // Check if last seen was within last 5 minutes
-        if ((new Date().getTime() - new Date(unit.last_seen).getTime()) > 5 * 60 * 1000) {
-            await Device.update({ connectStatus: "disconnected" }, { where: { deviceId } });
-        }
-        else {
-            await Device.update({ connectStatus: "connected" }, { where: { deviceId } });
-        }
+  // Broadcast updated units to WebSocket clients
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({ event: "list_units", units: message.units }));
     }
+  });
 
-    wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ event: "list_units", units: message.units }));
-        }
-    });
-
-    return { message: "Device status updated" };
-}
-
-
-
-
+  return { message: "Device status updated" };
+};

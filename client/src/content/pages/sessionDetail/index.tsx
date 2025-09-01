@@ -363,7 +363,8 @@ const handleCheckStartingConditions = async () => {
     }
 
     if (step === 2) {
-      const allValid = devices.length === 0 && newSampleRates.every(rate => rate !== null && rate !== 0);
+      const allValid = sampleRates.length > 0 && sampleRates.every(rate => rate !== null && rate !== 0);
+
 
       if (allValid) {
         api.startBatch(sessionId);

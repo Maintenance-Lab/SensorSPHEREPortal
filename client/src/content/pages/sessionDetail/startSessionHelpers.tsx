@@ -104,7 +104,13 @@ export const formatLastSeen = (device): string => {
   }
 
   const diffInDays = Math.floor(diffInHours / 24);
-  return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
+  if (diffInDays < 30) {
+    return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
+  }
+  else {
+    return 'A long time ago';
+  }
+
 };
 
 export const renderBatteryCell = (params) => {

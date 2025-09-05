@@ -208,7 +208,7 @@ export const getSelectedProperties = async (sessionId: number, deviceId: string)
 }
 
 export const listUnits = async (): Promise<any> => {
-  const message = { filterActiveOnly: true };
+  const message = { };
   const options = { qos: 2 };
 
   return new Promise((resolve, reject) => {

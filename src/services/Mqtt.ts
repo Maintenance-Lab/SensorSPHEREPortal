@@ -25,7 +25,7 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
         const deviceId = parsed_message.mac
         // Send handshake response
         const message_out = {
-            "requestStatusResult": "test",
+            "status": "idle",
             "mac": deviceId
         }
         const options = { qos: 2 };

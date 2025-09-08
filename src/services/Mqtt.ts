@@ -5,11 +5,11 @@ import Device from "../models/Device.js";
 import Module from "../models/Module.js";
 import DeviceModel from "../models/DeviceModel.js";
 import Sensor from "../models/Sensor.js";
-import WebSocket from 'ws';
+import { WebSocketServer } from 'ws';
 import mqtt from '../index.js';
 
 // Set up WebSocket server
-export const wss = new WebSocket.Server({ port: 8080 });
+export const wss = new WebSocketServer({ port: 8080 });
 
 export const MQTTMessage = async (topic: string, message: Buffer) => {
     const parsed_message = JSON.parse(message.toString());

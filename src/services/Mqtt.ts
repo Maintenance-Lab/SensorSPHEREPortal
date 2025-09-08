@@ -5,7 +5,7 @@ import Device from "../models/Device.js";
 import Module from "../models/Module.js";
 import DeviceModel from "../models/DeviceModel.js";
 import Sensor from "../models/Sensor.js";
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 import mqtt from '../index.js';
 
 // Set up WebSocket server

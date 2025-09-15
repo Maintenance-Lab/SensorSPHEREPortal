@@ -27,7 +27,6 @@ import * as api from './api';
 import * as toolbar from './toolbar';
 import { getOnChange, loadRows, updateSelection } from './treeView';
 
-
 //  Api calls in api.tsx
 const handleAvailableDevices = async (sessionId: number, setAvailableDevices: Function) => {
   const availableDevicesData = await api.fetchAvailableDevices(sessionId);
@@ -64,6 +63,8 @@ const fetchSessionDevices = async (sessionId: number, setDevices: Function) => {
   return devices;
 };
 
+  setSessionStatus(status);
+  return status;
 const SessionDetail = () => {
   // Session Info
   const sessionId = Number(useParams().sessionId);

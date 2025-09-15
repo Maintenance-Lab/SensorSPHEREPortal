@@ -181,14 +181,13 @@ const updateDeviceStatus = async (message: any) => {
   // Run all device updates in parallel
   const updatePromises = message.units.map(async (unit: any) => {
     const deviceId = unit.mac;
-    unit.batteryLevel = 50;
     const lastSeenTime = new Date(unit.lastSeen).getTime();
     const isConnected = now - lastSeenTime <= 5 * 60 * 1000;
 
     // Update all fields in one go
     await Device.update(
       {
-        batteryLevel: unit.batteryLevel,
+        batteryLevel: unit.battery,
         lastHeartbeat: unit.lastSeen,
         connectStatus: isConnected ? "connected" : "disconnected"
       },

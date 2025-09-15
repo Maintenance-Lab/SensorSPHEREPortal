@@ -103,7 +103,8 @@ const SessionDetail = () => {
   const steps = ['Select Properties', 'Find sample rate', 'Save configuration'];
 
   // Session Status
-  const [sessionStatus, setSessionStatus] = useState('Idle');
+  const [sessionStatus, setSessionStatus] = useState("Idle");
+  // const [sessionStatus, setSessionStatus] = useState(initialSessionStatus);
   // const [sessionStatus, setSessionStatus] = useState<string | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isStartDisabled, setIsStartDisabled] = useState(true);
@@ -290,7 +291,7 @@ const SessionDetail = () => {
 
   useEffect(() => {
     let interval;
-    if (sessionStatus === 'Running') {
+    if (sessionStatus === 'Measuring') {
       interval = setInterval(() => {
         setElapsedTime((prev) => prev + 1);
       }, 1000);
@@ -325,7 +326,7 @@ const handleCheckStartingConditions = async () => {
     else {
       api.startBatch(sessionId);
       setElapsedTime(0);
-      setSessionStatus('Running');
+      setSessionStatus('Measuring');
     }
   }
 
@@ -369,7 +370,7 @@ const handleCheckStartingConditions = async () => {
       if (allValid) {
         api.startBatch(sessionId);
         setElapsedTime(0);
-        setSessionStatus('Running');
+        setSessionStatus('Measuring');
         handleCloseStartSessionDialog();
         handleCheckStartingConditions();
       } else {
@@ -382,7 +383,7 @@ const handleCheckStartingConditions = async () => {
 
   const handleStopSession = async () => {
     api.stopBatch(sessionId);
-    setSessionStatus('Stopped');
+    setSessionStatus('Idle');
   }
 
   return (
@@ -489,7 +490,7 @@ const handleCheckStartingConditions = async () => {
                 variant="outlined"
                 startIcon={<Icons.ArchiveOutlined />}
                 onClick={() => handleArchiveSession(true)}
-                disabled={sessionStatus === 'Running'}
+                disabled={sessionStatus === 'Measuring'}
               >
                 Archive Session
               </Button>
@@ -499,7 +500,7 @@ const handleCheckStartingConditions = async () => {
                 variant="outlined"
                 startIcon={<Icons.UnarchiveOutlined />}
                 onClick={() => handleArchiveSession(false)}
-                disabled={sessionStatus === 'Running'}
+                disabled={sessionStatus === 'Measuring'}
               >
                 Unarchive Session
               </Button>
@@ -507,7 +508,7 @@ const handleCheckStartingConditions = async () => {
             <Button
               variant="outlined"
               startIcon={<Icons.DeleteOutline />}
-              disabled={sessionStatus === 'Running'}
+              disabled={sessionStatus === 'Measuring'}
               sx={{
                 '&:hover': {
                   color: 'white',
@@ -541,14 +542,14 @@ const handleCheckStartingConditions = async () => {
 
               {/* Status and Elapsed Time */}
               <Stack direction="row" spacing={3} justifyContent="space-between" alignItems="center">
-                <Typography variant="body2">
+                {/* <Typography variant="body2">
                   Elapsed Time: {formatTime(elapsedTime)}
-                </Typography>
+                </Typography> */}
                 <Typography variant="body2" color="text.secondary">
                   Status: {sessionStatus}
                 </Typography>
               </Stack>
-              {(sessionStatus === 'Idle' || sessionStatus === 'Stopped') && (
+              {(sessionStatus === 'Idle') && (
               <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
                 <Tooltip
                 title={
@@ -604,7 +605,7 @@ const handleCheckStartingConditions = async () => {
             </Stack>
               )}
 
-              {sessionStatus === 'Running' && (
+              {sessionStatus === 'Measuring' && (
                 <Stack direction="row" spacing={1} justifyContent="flex-end">
                   <Button variant="outlined" color="error" onClick={handleStopSession}>
                     Stop Session

@@ -16,15 +16,12 @@ const splitProperty = (property: string): any => {
     return { sensorType, sensorProperty };
 }
 const createConfigMessage = async (deviceProperties: any) => {
-// const createConfigMessage = async (deviceId: string, properties: any) => {
-    const { deviceId, models } = deviceProperties;
+    const { deviceId, modules } = deviceProperties;
     const message: any = {
         "mac": deviceId,
-        "firmware": FIRMWARE,
-        "sensorModules": deviceProperties.modules,
+        "configurationSettings": modules.sensorModules,
     };
 
-    console.log("message: ", message);
     return message;
 };
 
@@ -44,7 +41,7 @@ const createPropertyDict = (properties: any, deviceId: string) => {
         if (!existingModule) {
             existingModule = {
                 moduleName: moduleName,
-                moduleManufacturer: moduleManufacturer,
+                manufacturer: moduleManufacturer,
                 sensors: []
             };
             modules[groupKey].push(existingModule);

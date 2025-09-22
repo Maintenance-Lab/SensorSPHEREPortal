@@ -33,3 +33,6 @@
 # populate database python file
 database/populate_dummy.py
 *.lock
+
+# To start tracking tsconfig.json again, use:
+# git update-index --no-assume-unchanged tsconfig.json

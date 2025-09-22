@@ -16,15 +16,12 @@ const splitProperty = (property: string): any => {
     return { sensorType, sensorProperty };
 }
 const createConfigMessage = async (deviceProperties: any) => {
-// const createConfigMessage = async (deviceId: string, properties: any) => {
-    const { deviceId, models } = deviceProperties;
+    const { deviceId, modules } = deviceProperties;
     const message: any = {
         "mac": deviceId,
-        "firmware": FIRMWARE,
-        "sensorModules": deviceProperties.modules,
+        "configurationSettings": modules.sensorModules,
     };
 
-    console.log("message: ", message);
     return message;
 };
 
@@ -44,7 +41,7 @@ const createPropertyDict = (properties: any, deviceId: string) => {
         if (!existingModule) {
             existingModule = {
                 moduleName: moduleName,
-                moduleManufacturer: moduleManufacturer,
+                manufacturer: moduleManufacturer,
                 sensors: []
             };
             modules[groupKey].push(existingModule);
@@ -232,7 +229,7 @@ export const listUnits = async (): Promise<any> => {
 
     setTimeout(() => {
       socket.removeListener("message", handler);
-      resolve([]);
+        reject(new Error("Timeout waiting for list_units response"));
     }, 5000);
   });
 };
@@ -254,11 +251,9 @@ export const sendConfigurationToDevice = async (deviceId: any): Promise<any> => 
     const handler = (raw: WebSocket.RawData) => {
       try {
         const data = JSON.parse(raw.toString());
-        console.log("data received in sendConfigurationToDevice: ", data, deviceId);
         if (data.event === "sampleRate" && data.deviceId === deviceId) {
           socket.removeListener("message", handler);
           clearTimeout(timeout);
-          console.log("resolving sample rate: ", data.sampleRate);
           resolve(data.sampleRate);
         }
       } catch (err) {
@@ -273,7 +268,7 @@ export const sendConfigurationToDevice = async (deviceId: any): Promise<any> => 
     const timeout = setTimeout(() => {
       socket.removeListener("message", handler);
       resolve(null);
-    }, 5000);
+    }, 7500);
   });
 };
 

@@ -35,7 +35,7 @@ const startSessionContent = (index: number, devices, sampleRates) => {
           <CircularProgress size={100}/>
         )
       case 2:
-        if (devices.length === 0 && sampleRates.every(rate => rate !== null)) {
+        if (sampleRates.length !== 0 && sampleRates.every(rate => rate !== null)) {
           return (
             <Box>
               <Typography variant="h5" align="center" sx={{ mt: 2 }}>

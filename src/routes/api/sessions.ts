@@ -191,6 +191,25 @@ router.delete("/removeFromSession", async (req, res) => {
 
 });
 
+router.put("/updateStatus", async (req, res) => {
+    const { sessionId, status } = req.body;
+
+    try {
+      await Session.update({ status: status }, { where: { sessionId: sessionId } });
+      return res.status(200).json({ message: "Session status updated successfully" });
+    }
+    catch (error) {
+      console.error("Error updating session status:", error);
+      return res.status(500).json({ message: "Failed to update session status" });
+    }
+});
+
+router.get("/getStatus/:sessionId", async (req, res) => {
+    const sessionId = Number(req.params.sessionId);
+    const doc = await getSessionById(sessionId);
+    if (!doc) return res.status(404).json({ message: "Session not found" });
+    return res.json(doc.status);
+});
 
 export default router;
 

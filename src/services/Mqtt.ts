@@ -5,11 +5,11 @@ import Device from "../models/Device.js";
 import Module from "../models/Module.js";
 import DeviceModel from "../models/DeviceModel.js";
 import Sensor from "../models/Sensor.js";
-import WebSocket from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 import mqtt from '../index.js';
 
 // Set up WebSocket server
-export const wss = new WebSocket.Server({ port: 8080 });
+export const wss = new WebSocketServer({ port: 8080 });
 
 export const MQTTMessage = async (topic: string, message: Buffer) => {
     const parsed_message = JSON.parse(message.toString());
@@ -34,6 +34,7 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
         addDeviceToDatabase(parsed_message);
     }
     else if (topic === 'interface/validateConfigurationResult') {
+        console.log("Got message on validateConfigurationResult topic");
         sendSampleRate(parsed_message);
     }
     else {
@@ -152,65 +153,57 @@ const addDeviceToDatabase = async (message: any) => {
         }
     }
 
-    // If sensor category or manufacturer does not exist, add it to database
-        // // Then add sensor to database
-        // for (const sensor of unit.sensorModules) {
+    // // If sensor category or manufacturer does not exist, add it to database
+    //     // Then add sensor to database
+    //     for (const sensor of unit.sensorModules) {
 
-        //     await addNewEntryToTable(Manufacturer, { manufacturer: sensor.manufacturer })
-        //     await addNewEntryToTable(Sensor, { model: sensor.moduleName, manufacturer: sensor.manufacturer })
+    //         await addNewEntryToTable(Manufacturer, { manufacturer: sensor.manufacturer })
+    //         await addNewEntryToTable(Sensor, { model: sensor.moduleName, manufacturer: sensor.manufacturer })
 
 
-        //     // Add device sensor mapping to database if it does not exist
-        //     await addNewEntryToTable(DeviceModuleMapping, { deviceId: deviceId, model: sensor.moduleName, manufacturer: sensor.manufacturer, channel: sensor.channel })
+    //         // Add device sensor mapping to database if it does not exist
+    //         await addNewEntryToTable(DeviceModuleMapping, { deviceId: deviceId, model: sensor.moduleName, manufacturer: sensor.manufacturer, channel: sensor.channel })
 
-        //     // Add sensor properties to database if they do not exist
-        //     for (const property of sensor.properties) {
-        //         await addNewEntryToTable(SensorProperty, { propertyName: property, model: sensor.moduleName, manufacturer: sensor.manufacturer })
-        //     }
-        // }
+    //         // Add sensor properties to database if they do not exist
+    //         for (const property of sensor.properties) {
+    //             await addNewEntryToTable(SensorProperty, { propertyName: property, model: sensor.moduleName, manufacturer: sensor.manufacturer })
+    //         }
+    //     }
     // });
 
     return { message: "Device created" };
 }
 
-
-
-
 const updateDeviceStatus = async (message: any) => {
-    let devices = [];
+  console.log("IN UPDATE DEVICE STATUS");
+  const now = new Date().getTime();
 
-    for (const unit of message.units) {
-        const deviceId = unit.mac;
-        devices.push(deviceId);
-        console.log("In update device status: ", message, deviceId);
-        const existingDevice = await Device.findOne({ where: { deviceId: deviceId } });
+  // Run all device updates in parallel
+  const updatePromises = message.units.map(async (unit: any) => {
+    const deviceId = unit.mac;
+    const lastSeenTime = new Date(unit.lastSeen).getTime();
+    const isConnected = now - lastSeenTime <= 5 * 60 * 1000;
 
-        if (!existingDevice) {
-            return { message: "Device does not exist in database yet" };
-        }
+    // Update all fields in one go
+    await Device.update(
+      {
+        batteryLevel: unit.battery,
+        lastHeartbeat: unit.lastSeen,
+        connectStatus: isConnected ? "connected" : "disconnected"
+      },
+      { where: { deviceId } }
+    );
+  });
 
-        unit.batteryLevel = 50;
-        await Device.update({ batteryLevel: unit.batteryLevel, connectStatus: "connected", lastHeartbeat: unit.last_seen }, { where: { deviceId } });
+  // Wait for all updates to finish
+  await Promise.all(updatePromises);
+
+  // Broadcast updated units to WebSocket clients
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({ event: "list_units", units: message.units }));
     }
+  });
 
-    // all other devices to non-active
-    const allDevices = await Device.findAll({ where: { connectStatus: "connected" } });
-    if (!allDevices) return { message: "No devices found" };
-    for (const device of allDevices) {
-        if (!devices.includes(device.deviceId)) {
-            await Device.update({ connectStatus: "disconnected" }, { where: { deviceId: device.deviceId } });
-        }
-    }
-
-    wss.clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ event: "list_units", units: message.units }));
-        }
-    });
-
-    return { message: "Device status updated" };
-}
-
-
-
-
+  return { message: "Device status updated" };
+};

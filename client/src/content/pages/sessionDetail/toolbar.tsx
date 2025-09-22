@@ -84,7 +84,7 @@ export const getDevicesColumns = (props: {
             <Button
               color="primary"
               size="small"
-              disabled={sessionStatus === 'Running'}
+              disabled={sessionStatus === 'Measuring'}
               onClick={(event) => {
                 event.stopPropagation();
                 handleRowClick(params.row.id, event);
@@ -198,7 +198,7 @@ export const AvailableDevicesToolbar: React.FC<AvailableDevicesToolbarProps> = (
               sessionStatus,
             )
           }
-          disabled={!activeSelection || sessionStatus === 'Running'}
+          disabled={!activeSelection || sessionStatus === 'Measuring'}
         >
           Add Devices to Session
         </Button>
@@ -250,7 +250,7 @@ export const ConnectedDevicesToolbar: React.FC<ConnectedDevicesToolbarProps> = (
           size="medium"
           color="error"
           startIcon={<Icons.DeleteOutlineOutlined />}
-          disabled={!activeSelection || sessionStatus === 'Running'}
+          disabled={!activeSelection || sessionStatus === 'Measuring'}
           onClick={() =>
             handleRemoveDevices(
               sessionId,

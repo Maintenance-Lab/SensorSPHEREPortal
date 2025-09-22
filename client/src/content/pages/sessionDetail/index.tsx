@@ -27,13 +27,12 @@ import * as api from './api';
 import * as toolbar from './toolbar';
 import { getOnChange, loadRows, updateSelection } from './treeView';
 
-
 //  Api calls in api.tsx
- const handleAvailableDevices = async (sessionId: number, setAvailableDevices: Function) => {
-    const availableDevicesData = await api.fetchAvailableDevices(sessionId);
-    setAvailableDevices(availableDevicesData);
-    return availableDevicesData;
- };
+const handleAvailableDevices = async (sessionId: number, setAvailableDevices: Function) => {
+  const availableDevicesData = await api.fetchAvailableDevices(sessionId);
+  setAvailableDevices(availableDevicesData);
+  return availableDevicesData;
+};
 
 const handleFetchSession = async(
   sessionId: number,
@@ -64,12 +63,17 @@ const fetchSessionDevices = async (sessionId: number, setDevices: Function) => {
   return devices;
 };
 
+const fetchSessionStatus = async (sessionId: number, setSessionStatus: Function) => {
+  const status = await api.getSessionStatus(sessionId);
+  setSessionStatus(status);
+  return status;
+}
 const SessionDetail = () => {
   // Session Info
   const sessionId = Number(useParams().sessionId);
   const [sessionName, setSessionName] = useState('');
   const [sessionDescription, setSessionDescription] = useState('');
-  const [projectId, setProjectId] = useState('');
+  const [projectId, setProjectId] = useState(null);
   const [projectName, setProjectName] = useState('');
   const [isArchived, setIsArchived] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -103,7 +107,8 @@ const SessionDetail = () => {
   const steps = ['Select Properties', 'Find sample rate', 'Save configuration'];
 
   // Session Status
-  const [sessionStatus, setSessionStatus] = useState('Idle');
+  const [sessionStatus, setSessionStatus] = useState("");
+  // const [sessionStatus, setSessionStatus] = useState(initialSessionStatus);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isStartDisabled, setIsStartDisabled] = useState(true);
   const [startRequirements, setStartRequirements] = useState([]);
@@ -249,7 +254,14 @@ const SessionDetail = () => {
     navigate('/projects/detail/' + projectId);
   };
 
+  // const handleGetSessionStatus = async () => {
+  //   const status = await api.getSessionStatus(sessionId);
+  //   setSessionStatus(status);
+  // };
+
   useEffect(() => {
+    // handleGetSessionStatus();
+    fetchSessionStatus(sessionId, setSessionStatus);
     fetchSessionDevices(sessionId, setDevices);
     handleAvailableDevices(sessionId, setAvailableDevices);
     handleFetchSession(sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived);
@@ -281,15 +293,6 @@ const SessionDetail = () => {
     fetchSampleRates();
   }, [devices, sessionId, sampleRate, devicesWithoutSampleRate]);
 
-  useEffect(() => {
-    let interval;
-    if (sessionStatus === 'Running') {
-      interval = setInterval(() => {
-        setElapsedTime((prev) => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [sessionStatus]);
 
 const handleCheckStartingConditions = async () => {
     const data = await checkStartingConditions(sessionId);
@@ -316,7 +319,8 @@ const handleCheckStartingConditions = async () => {
     else {
       api.startBatch(sessionId);
       setElapsedTime(0);
-      setSessionStatus('Running');
+      setSessionStatus('Measuring');
+      api.updateSessionStatus(sessionId, 'Measuring')
     }
   }
 
@@ -354,12 +358,13 @@ const handleCheckStartingConditions = async () => {
     }
 
     if (step === 2) {
-      const allValid = devices.length === 0 && newSampleRates.every(rate => rate !== null && rate !== 0);
+      const allValid = sampleRates.length > 0 && sampleRates.every(rate => rate !== null && rate !== 0);
+
 
       if (allValid) {
         api.startBatch(sessionId);
         setElapsedTime(0);
-        setSessionStatus('Running');
+        setSessionStatus('Measuring');
         handleCloseStartSessionDialog();
         handleCheckStartingConditions();
       } else {
@@ -372,7 +377,8 @@ const handleCheckStartingConditions = async () => {
 
   const handleStopSession = async () => {
     api.stopBatch(sessionId);
-    setSessionStatus('Stopped');
+    setSessionStatus('Idle');
+    api.updateSessionStatus(sessionId, "Idle");
   }
 
   return (
@@ -479,7 +485,7 @@ const handleCheckStartingConditions = async () => {
                 variant="outlined"
                 startIcon={<Icons.ArchiveOutlined />}
                 onClick={() => handleArchiveSession(true)}
-                disabled={sessionStatus === 'Running'}
+                disabled={sessionStatus === 'Measuring'}
               >
                 Archive Session
               </Button>
@@ -489,7 +495,7 @@ const handleCheckStartingConditions = async () => {
                 variant="outlined"
                 startIcon={<Icons.UnarchiveOutlined />}
                 onClick={() => handleArchiveSession(false)}
-                disabled={sessionStatus === 'Running'}
+                disabled={sessionStatus === 'Measuring'}
               >
                 Unarchive Session
               </Button>
@@ -497,7 +503,7 @@ const handleCheckStartingConditions = async () => {
             <Button
               variant="outlined"
               startIcon={<Icons.DeleteOutline />}
-              disabled={sessionStatus === 'Running'}
+              disabled={sessionStatus === 'Measuring'}
               sx={{
                 '&:hover': {
                   color: 'white',
@@ -531,14 +537,14 @@ const handleCheckStartingConditions = async () => {
 
               {/* Status and Elapsed Time */}
               <Stack direction="row" spacing={3} justifyContent="space-between" alignItems="center">
-                <Typography variant="body2">
+                {/* <Typography variant="body2">
                   Elapsed Time: {formatTime(elapsedTime)}
-                </Typography>
+                </Typography> */}
                 <Typography variant="body2" color="text.secondary">
                   Status: {sessionStatus}
                 </Typography>
               </Stack>
-              {(sessionStatus === 'Idle' || sessionStatus === 'Stopped') && (
+              {(sessionStatus === 'Idle') && (
               <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
                 <Tooltip
                 title={
@@ -594,7 +600,7 @@ const handleCheckStartingConditions = async () => {
             </Stack>
               )}
 
-              {sessionStatus === 'Running' && (
+              {sessionStatus === 'Measuring' && (
                 <Stack direction="row" spacing={1} justifyContent="flex-end">
                   <Button variant="outlined" color="error" onClick={handleStopSession}>
                     Stop Session

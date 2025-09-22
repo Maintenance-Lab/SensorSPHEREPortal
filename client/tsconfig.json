@@ -12,6 +12,7 @@
     "noFallthroughCasesInSwitch": false,
     "module": "esnext",
     "moduleResolution": "node",
+    // "ignoreDeprecations": "6.0",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,

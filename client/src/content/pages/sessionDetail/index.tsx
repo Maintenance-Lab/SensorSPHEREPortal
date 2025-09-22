@@ -294,8 +294,6 @@ const SessionDetail = () => {
   }, [devices, sessionId, sampleRate, devicesWithoutSampleRate]);
 
 
-  }, [sessionStatus]);
-
 const handleCheckStartingConditions = async () => {
     const data = await checkStartingConditions(sessionId);
     setIsStartDisabled(!data.allPassed);

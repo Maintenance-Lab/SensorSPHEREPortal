@@ -63,8 +63,11 @@ const fetchSessionDevices = async (sessionId: number, setDevices: Function) => {
   return devices;
 };
 
+const fetchSessionStatus = async (sessionId: number, setSessionStatus: Function) => {
+  const status = await api.getSessionStatus(sessionId);
   setSessionStatus(status);
   return status;
+}
 const SessionDetail = () => {
   // Session Info
   const sessionId = Number(useParams().sessionId);
@@ -104,9 +107,8 @@ const SessionDetail = () => {
   const steps = ['Select Properties', 'Find sample rate', 'Save configuration'];
 
   // Session Status
-  const [sessionStatus, setSessionStatus] = useState("Idle");
+  const [sessionStatus, setSessionStatus] = useState("");
   // const [sessionStatus, setSessionStatus] = useState(initialSessionStatus);
-  // const [sessionStatus, setSessionStatus] = useState<string | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isStartDisabled, setIsStartDisabled] = useState(true);
   const [startRequirements, setStartRequirements] = useState([]);
@@ -252,13 +254,14 @@ const SessionDetail = () => {
     navigate('/projects/detail/' + projectId);
   };
 
-  const handleGetSessionStatus = async () => {
-    const status = await api.getSessionStatus(sessionId);
-    setSessionStatus(status);
-  };
+  // const handleGetSessionStatus = async () => {
+  //   const status = await api.getSessionStatus(sessionId);
+  //   setSessionStatus(status);
+  // };
 
   useEffect(() => {
-    handleGetSessionStatus();
+    // handleGetSessionStatus();
+    fetchSessionStatus(sessionId, setSessionStatus);
     fetchSessionDevices(sessionId, setDevices);
     handleAvailableDevices(sessionId, setAvailableDevices);
     handleFetchSession(sessionId, setSessionName, setSessionDescription, setProjectId, setProjectName, setIsArchived);
@@ -290,15 +293,6 @@ const SessionDetail = () => {
     fetchSampleRates();
   }, [devices, sessionId, sampleRate, devicesWithoutSampleRate]);
 
-  useEffect(() => {
-    let interval;
-    if (sessionStatus === 'Measuring') {
-      interval = setInterval(() => {
-        setElapsedTime((prev) => prev + 1);
-      }, 1000);
-    }
-    api.updateSessionStatus(sessionId, sessionStatus);
-    return () => clearInterval(interval);
 
   }, [sessionStatus]);
 
@@ -328,6 +322,7 @@ const handleCheckStartingConditions = async () => {
       api.startBatch(sessionId);
       setElapsedTime(0);
       setSessionStatus('Measuring');
+      api.updateSessionStatus(sessionId, 'Measuring')
     }
   }
 
@@ -385,6 +380,7 @@ const handleCheckStartingConditions = async () => {
   const handleStopSession = async () => {
     api.stopBatch(sessionId);
     setSessionStatus('Idle');
+    api.updateSessionStatus(sessionId, "Idle");
   }
 
   return (

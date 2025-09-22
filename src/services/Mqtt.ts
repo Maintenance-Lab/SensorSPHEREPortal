@@ -5,6 +5,9 @@ import Device from "../models/Device.js";
 import Module from "../models/Module.js";
 import DeviceModel from "../models/DeviceModel.js";
 import Sensor from "../models/Sensor.js";
+import Session from "../models/Session.js";
+import SessionDeviceMapping from "../models/mappings/SessionDeviceMapping.js";
+import DeviceSensorConfiguration from "../models/DeviceSensorConfiguration.js";
 import { WebSocketServer, WebSocket } from 'ws';
 import mqtt from '../index.js';
 
@@ -21,17 +24,7 @@ export const MQTTMessage = async (topic: string, message: Buffer) => {
     else if (topic == "interface/handshake/requestStatus") {
         console.log("Got message on handshake topic");
         console.log(parsed_message);
-        console.log("Sending handshake response");
-        const deviceId = parsed_message.mac
-        // Send handshake response
-        const message_out = {
-            "status": "idle",
-            "mac": deviceId
-        }
-        const options = { qos: 2 };
-        mqtt.publish("interface/handshake/requestStatusResult", JSON.stringify(message_out), options);
-        console.log("Adding device to database");
-        addDeviceToDatabase(parsed_message);
+        handshakeResponse(parsed_message);
     }
     else if (topic === 'interface/validateConfigurationResult') {
         console.log("Got message on validateConfigurationResult topic");
@@ -207,3 +200,61 @@ const updateDeviceStatus = async (message: any) => {
 
   return { message: "Device status updated" };
 };
+
+
+const handshakeResponse = async (message: any) => {
+    const deviceId = message.mac;
+    let message_out: any = {
+        "mac": deviceId,
+        "status": "idle"
+    }
+
+    const sessions = await Session.findAll({
+        include: [ { model: SessionDeviceMapping, where: { deviceId }, attributes: [] }],attributes: ["status", "sessionId"]});
+    console.log("sessions: ", sessions);
+
+    const measuringSession = sessions.find(s => s.status === "Measuring");
+    const isMeasuring = !!measuringSession;
+
+    if (isMeasuring) {
+        message_out.status = "measuring";
+        const sessionId = measuringSession.sessionId;
+
+        const modules = await DeviceModuleMapping.findAll({
+            where: { deviceId },
+            include: [{
+                model: DeviceSensorConfiguration,
+                where: { sessionId },
+                attributes: ["sensorProperty", "sensorType", "active"],
+            }],
+            attributes: ["moduleName", "moduleManufacturer", "sensorType"],
+        });
+
+        const configurationSettings = modules.map(mod => ({
+            moduleName: mod.moduleName,
+            manufacturer: mod.moduleManufacturer,
+            sensors: [
+                {
+                    sensorType: mod.sensorType,
+                    measurements: (mod as any).DeviceSensorConfigurations.map((cfg: any) => ({
+                        type: cfg.sensorProperty,
+                        active: cfg.active,
+                    })),
+                },
+            ],
+        }));
+        message_out.configurationSettings = configurationSettings;
+    }
+
+   console.log("Handshake response:", JSON.stringify(message_out, null, 2));
+
+    const options = { qos: 2 };
+    mqtt.publish("interface/handshake/requestStatusResult", JSON.stringify(message_out), options);
+
+    const existingDevice = await Device.findOne({ where: { deviceId: deviceId } });
+    if (!existingDevice) {
+        await addDeviceToDatabase(message);
+    }
+
+    return { message: "Handshake response sent" };
+}

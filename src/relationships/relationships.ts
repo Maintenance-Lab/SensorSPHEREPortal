@@ -64,6 +64,12 @@ export const setupRelations = () => {
     DeviceSensorConfiguration.belongsTo(Property, { foreignKey: 'sensorProperty', targetKey: 'name', as: 'property' });
 
     Session.belongsTo(Project, { foreignKey: 'projectId' });
+
+
+
+    //
+    DeviceModuleMapping.hasMany(DeviceSensorConfiguration, { foreignKey: "deviceId", sourceKey: "deviceId" });
+    DeviceSensorConfiguration.belongsTo(DeviceModuleMapping, { foreignKey: "deviceId", targetKey: "deviceId" });
 };
 
 export default setupRelations;

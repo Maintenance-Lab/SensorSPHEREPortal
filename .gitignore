@@ -34,5 +34,8 @@
 database/populate_dummy.py
 *.lock
 
+# Markdown files
+*.md
+
 # To start tracking tsconfig.json again, use:
 # git update-index --no-assume-unchanged tsconfig.json

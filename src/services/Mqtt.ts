@@ -146,24 +146,6 @@ const addDeviceToDatabase = async (message: any) => {
         }
     }
 
-    // // If sensor category or manufacturer does not exist, add it to database
-    //     // Then add sensor to database
-    //     for (const sensor of unit.sensorModules) {
-
-    //         await addNewEntryToTable(Manufacturer, { manufacturer: sensor.manufacturer })
-    //         await addNewEntryToTable(Sensor, { model: sensor.moduleName, manufacturer: sensor.manufacturer })
-
-
-    //         // Add device sensor mapping to database if it does not exist
-    //         await addNewEntryToTable(DeviceModuleMapping, { deviceId: deviceId, model: sensor.moduleName, manufacturer: sensor.manufacturer, channel: sensor.channel })
-
-    //         // Add sensor properties to database if they do not exist
-    //         for (const property of sensor.properties) {
-    //             await addNewEntryToTable(SensorProperty, { propertyName: property, model: sensor.moduleName, manufacturer: sensor.manufacturer })
-    //         }
-    //     }
-    // });
-
     return { message: "Device created" };
 }
 
@@ -180,7 +162,7 @@ const updateDeviceStatus = async (message: any) => {
     // Update all fields in one go
     await Device.update(
       {
-        batteryLevel: unit.battery,
+        batteryLevel: unit.batteryLevel,
         lastHeartbeat: unit.lastSeen,
         connectStatus: isConnected ? "connected" : "disconnected"
       },

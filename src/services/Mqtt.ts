@@ -138,7 +138,7 @@ const addDeviceToDatabase = async (message: any) => {
                 for (const measurement of sensor.measurements) {
                     // Accuracy is "±0.05", needs to be float
                     const accuracy = parseFloat(measurement.accuracy.replace("±", "").replace(",", ".").trim());
-                    await addNewEntryToTable(Property, { name: measurement.type , sensorType: sensor.sensorType, unit: measurement.unit, accuracy: accuracy, rangeMin: measurement.minValue, rangeMax: measurement.maxValue })
+                    await addNewEntryToTable(Property, { name: measurement.type , sensorType: sensor.sensorType, unit: measurement.unit, accuracy: accuracy, rangeMin: measurement.minRange, rangeMax: measurement.maxRange })
                 }
             }
         } catch (e) {

@@ -1,6 +1,6 @@
 import * as Icons from '@mui/icons-material';
 import { GridToolbarContainer, GridToolbarQuickFilter, GridColDef, GridRowsProp } from '@mui/x-data-grid';
-import { Button, Link, Typography, Box, Stack } from '@mui/material';
+import { Button, Link, Typography, Box, Stack, Tooltip } from '@mui/material';
 
 import { addDevices, removeDevicesFromSession } from "./api";
 import {renderBatteryCell, renderConnectedCell, calculateLastSeen, formatLastSeen } from './startSessionHelpers'
@@ -76,43 +76,82 @@ export const getDevicesColumns = (props: {
     {
       field: 'sampleRate', headerName: 'Sample Rate', flex: 1, sortable: false
     },
-    {
-      field: 'configureButton', headerName: 'Configure', flex: 1, sortable: false, align: 'center', headerAlign: 'center',
-      renderCell: (params) => (
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "95%", width: "100%" }}>
-          <div>
-            <Button
-              color="primary"
-              size="small"
-              disabled={sessionStatus === 'Measuring'}
-              onClick={(event) => {
-                event.stopPropagation();
-                handleRowClick(params.row.id, event);
-              }}
-              sx={{ textTransform: "none", fontWeight: "bold", display: "flex", alignItems: "center", height: "auto", margin: "auto" }}
-            >
-              <Icons.Settings />
-            </Button>
-            {selectedDevice === params.row.id && !loading && (
-              <ConfigurationDialog
-                open={configurationDialogOpen}
-                device={selectedDevice}
-                activeStep={activeStep}
-                steps={steps}
-                sampleRate={sampleRate}
-                selectedProperties={selectedProperties}
-                expandedNodes={expandedNodes}
-                allProperties={allProperties}
-                renderTree={renderTree}
-                handleClose={handleCloseConfigurationDialog}
-                handleNext={handleNext}
-                handleReconfigure={handleReconfigure}
-                setExpandedNodes={setExpandedNodes}
-              />
-            )}
-          </div>
-        </Box>
-      )
+    { field: "configureButton", headerName: "Configure", flex: 1, sortable: false, align: "center", headerAlign: "center",
+      renderCell: (params) => {
+        const isConnected = params.row.connected === "connected";
+        const disabled = sessionStatus === "Measuring" || !isConnected;
+
+        const tooltipText = !isConnected
+          ? "Device is not connected"
+          : sessionStatus === "Measuring"
+            ? "Disabled while measuring"
+            : "Configure device";
+
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "95%",
+              width: "100%",
+            }}
+          >
+            <div>
+              <Tooltip
+                title={
+                  !isConnected
+                    ? "Device must be connected to configure"
+                    : sessionStatus === "Measuring"
+                      ? "Cannot configure device while measuring"
+                      : ""
+                }
+                disableHoverListener={isConnected && sessionStatus !== "Measuring"}
+              >
+                <span>
+                  <Button
+                    color="primary"
+                    size="small"
+                    disabled={disabled}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleRowClick(params.row.id, event);
+                    }}
+                    sx={{
+                      textTransform: "none",
+                      fontWeight: "bold",
+                      display: "flex",
+                      alignItems: "center",
+                      height: "auto",
+                      margin: "auto",
+                    }}
+                  >
+                    <Icons.Settings />
+                  </Button>
+                </span>
+              </Tooltip>
+
+              {selectedDevice === params.row.id && !loading && (
+                <ConfigurationDialog
+                  open={configurationDialogOpen}
+                  device={selectedDevice}
+                  activeStep={activeStep}
+                  steps={steps}
+                  sampleRate={sampleRate}
+                  selectedProperties={selectedProperties}
+                  expandedNodes={expandedNodes}
+                  allProperties={allProperties}
+                  renderTree={renderTree}
+                  handleClose={handleCloseConfigurationDialog}
+                  handleNext={handleNext}
+                  handleReconfigure={handleReconfigure}
+                  setExpandedNodes={setExpandedNodes}
+                />
+              )}
+            </div>
+          </Box>
+        );
+      },
     }
   ];
 };

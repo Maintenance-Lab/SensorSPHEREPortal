@@ -1,190 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  Button,
-  TextField,
-  Link,
-  Paper,
-  Tabs,
-  Tab,
-  Typography,
-  Container,
-  Box,
-  Divider,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Snackbar,
-  Alert,
-  Chip,
-  Card,
-  Stepper,
-  Step,
-  StepLabel,
-  List,
-  ListItem
-} from '@mui/material';
+import { Button, TextField, Link, Paper, Tabs, Tab, Typography, Container, Box, Dialog, DialogActions,
+  DialogContent, DialogTitle, Snackbar, Alert } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
-import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
 import { useParams } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter, GridRowSelectionModel } from '@mui/x-data-grid';
-import FaceIcon from '@mui/icons-material/Face';
-import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
 import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import { Add, ArchiveOutlined, Cancel, DeleteOutline, Devices, InfoOutlined, Inventory, Remove, UnarchiveOutlined, Usb } from '@mui/icons-material';
-import { is } from 'date-fns/locale';
-import CreateSessionDialog from './CreateSessionDialog';
-
-const DeviceStatus = ({ status, project }) => {
-  let statusColor = '';
-  let statusLabel = '';
-
-  switch (status) {
-    case 'takenFinished':
-      statusColor = 'success.main';
-      statusLabel = 'Finished Collecting Data';
-      break;
-    case 'takenCollecting':
-      statusColor = 'primary.main';
-      statusLabel = 'Collecting Data';
-      break;
-    case 'takenInactive':
-      statusColor = '';
-      statusLabel = 'Inactive';
-      break;
-    case 'unavailable':
-      statusColor = 'gray';
-      statusLabel = 'Unavailable';
-      break;
-    default:
-      statusColor = '';
-      statusLabel = 'Unknown';
-  }
-
-  return (
-    <Stack spacing={1} sx={{ color: statusColor }}>
-      <Stack direction="row" spacing={1} alignItems="center">
-        {status === 'takenFinished' && (<CheckCircleIcon />)}
-        {status === 'takenCollecting' && (<MoreHorizIcon />)}
-        <Typography variant="inherit" sx={{ fontWeight: 600 }}>
-          {statusLabel}
-        </Typography>
-      </Stack>
-    </Stack>
-  );
-};
-
-const devicesPlaceholder = {
-  '00:00:00:00:00:00': {
-    id: 0,
-    type: 'This Device',
-    macAddress: '00:00:00:00:00:00',
-    battery: '',
-    project: '',
-    sensors: [
-      { id: 1, name: 'microphone' },
-      { id: 2, name: 'camera' }
-    ]
-  },
-  'e4:72:05:0a:fc:66': {
-    id: 1,
-    type: 'M5Stack Core2',
-    macAddress: 'e4:72:05:0a:fc:66',
-    battery: '93',
-    project: '',
-    sensors: [
-      { id: 1, name: 'temperature' },
-      { id: 2, name: 'humidity' }
-    ]
-  },
-  '94:b7:ab:57:d4:75': {
-    id: 2,
-    type: 'M5Stack Core2',
-    macAddress: '94:b7:ab:57:d4:75',
-    battery: '91',
-    project: 'Project 1',
-    sensors: [
-      { id: 1, name: 'gyroX' },
-      { id: 2, name: 'gyroY' },
-      { id: 3, name: 'gyroZ' }
-    ]
-  },
-  '5f:ec:07:db:01:6e': {
-    id: 3,
-    type: 'M5Stack Core2',
-    macAddress: '5f:ec:07:db:01:6e',
-    battery: '',
-    project: 'Building Temperature Research',
-    sensors: []
-  },
-  '1e:e7:31:2e:df:7a': {
-    id: 4,
-    type: 'M5Stack Core2',
-    macAddress: '1e:e7:31:2e:df:7a',
-    battery: '',
-    project: 'Project 3',
-    sensors: []
-  },
-  '95:8e:53:46:7e:6e': {
-    id: 5,
-    type: 'M5Stack Core2',
-    macAddress: '95:8e:53:46:7e:6e',
-    battery: '',
-    project: '',
-    sensors: []
-  }
-};
-
-const deviceColumns: GridColDef[] = [
-  // { field: 'id', headerName: '#' },
-  {
-    field: 'type', headerName: 'Type', flex: 2, renderCell: (params) => (
-      <Stack direction="row" alignItems="center" spacing={1}>
-        {params.value === 'This Device' && (
-          <Devices />
-        )}
-        <Typography variant="inherit">{params.value}</Typography>
-      </Stack>
-    )
-  },
-  { field: 'macAddress', headerName: 'MAC Address', flex: 2 },
-  {
-    field: 'battery', headerName: 'Battery', flex: 1, renderCell: (params) => (
-      <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
-        <BatteryFullIcon fontSize="small" />
-        {params.value ? (
-          <Typography variant="inherit">{params.value}%</Typography>
-        ) : (
-          <Typography variant="inherit">?</Typography>
-        )}
-      </Stack>
-    )
-  },
-  {
-    field: 'sensors',
-    headerName: 'Sensors',
-    flex: 3,
-    renderCell: (params) => (
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ height: "100%" }}>
-        {params.value.map((sensor: { id: number, name: string }) => (
-          <Chip key={sensor.id} label={sensor.name} size="small" />
-        ))}
-        {params.value.length === 0 && (
-          <Typography variant="inherit" color="gray">
-            No sensors found
-          </Typography>
-        )}
-      </Stack>
-    )
-  },
-];
+import { ArchiveOutlined, DeleteOutline, Devices, Inventory, UnarchiveOutlined } from '@mui/icons-material';
 
 const sessionColumns: GridColDef[] = [
   {
@@ -199,48 +24,6 @@ const sessionColumns: GridColDef[] = [
   { field: 'status', headerName: 'Status', flex: 1 },
   { field: 'lastActive', headerName: 'Last Active', flex: 1 }
 ];
-
-const addDevicesColumns: GridColDef[] = [
-  { field: 'type', headerName: 'Type', flex: 2 },
-  { field: 'macAddress', headerName: 'MAC Address', flex: 2 },
-  {
-    field: 'battery', headerName: 'Battery', flex: 1, renderCell: (params) => (
-      <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
-        <BatteryFullIcon fontSize="small" />
-        {params.value ? (
-          <Typography variant="inherit">{params.value}%</Typography>
-        ) : (
-          <Typography variant="inherit">?</Typography>
-        )}
-      </Stack>
-    )
-  },
-  {
-    field: 'sensors',
-    headerName: 'Sensors',
-    flex: 3,
-    renderCell: (params) => (
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ height: "100%" }}>
-        {params.value.map((sensor: { id: number, name: string }) => (
-          <Chip key={sensor.id} label={sensor.name} size="small" />
-        ))}
-        {params.value.length === 0 && (
-          <Typography variant="inherit" color="gray">
-            No sensors found
-          </Typography>
-        )}
-      </Stack>
-    )
-  },
-];
-
-const addDevicesRows: GridRowsProp = Object.keys(devicesPlaceholder).map((macAddress) => ({
-  id: macAddress,
-  type: devicesPlaceholder[macAddress].type,
-  macAddress: macAddress,
-  battery: devicesPlaceholder[macAddress].battery,
-  sensors: devicesPlaceholder[macAddress].sensors,
-}));
 
 const updateProject = async (projectId: number, name: string, description: string, archived: boolean) => {
   const res = await fetch('/api/projects/update/' + projectId, {
@@ -382,7 +165,7 @@ const deleteSessions = async (sessionIds) => {
   return res.json();
 };
 
-function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, projectId, fetchData, fetchProject, tab }) {
+function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, projectId, fetchData, fetchProject, tab, selectionHasMeasuring }) {
   const [open, setOpen] = useState(false);
   const activeSelection = selectedSessionIds.length > 0;
   const [name, setName] = useState(`Session ${new Date().toDateString()}`)
@@ -393,7 +176,7 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, proj
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
 
-    const handleSubmitCreateSession = async () => {
+  const handleSubmitCreateSession = async () => {
     try {
       await createSession(projectId, name, description);
       setOpen(false);
@@ -446,7 +229,8 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, proj
             variant="outlined"
             size="medium"
             startIcon={<ArchiveOutlinedIcon />}
-            disabled={!activeSelection}
+            // disabled={!activeSelection}
+            disabled={!activeSelection || selectionHasMeasuring}
             onClick={handleArchiveProjects}
           >
             {tab === '2' ? "Archive" : "Unarchive"}
@@ -456,8 +240,8 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, proj
             size="medium"
             color="error"
             startIcon={<DeleteOutlineOutlinedIcon />}
-            disabled={!activeSelection}
-            // disabled={!activeSelection || }
+            // disabled={!activeSelection}
+            disabled={!activeSelection || selectionHasMeasuring}
             onClick={handleOpenDialog}
           >
             Delete
@@ -588,7 +372,8 @@ const ProjectDetail = () => {
   const handleOpenDialog2 = () => setDialogOpen(true);
   const handleCloseDialog2 = () => setDialogOpen(false);
 
-  const [measuringSessions, setMeasuringSessions] = useState(false);
+  const [projectHasMeasuring, setProjectHasMeasuring] = useState(false);
+  const [selectionHasMeasuring, setSelectionHasMeasuring] = useState(false);
 
 
   const handleTabChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
@@ -616,7 +401,9 @@ const ProjectDetail = () => {
       // Check if any session is measuring to prevent deletion and archiving
       const allSessions = [...activeSessions, ...archivedSessions];
       const hasMeasuring = allSessions.some(s => s.status === 'Measuring');
-      setMeasuringSessions(hasMeasuring);
+      setProjectHasMeasuring(hasMeasuring);
+
+      return allSessions;
     } catch (error) {
       console.error('Failed to fetch data', error);
     }
@@ -677,6 +464,15 @@ const fetchProject = async () => {
     await deleteProject(projectId);
     window.location.href = '/projects';
   };
+
+  const handleSelection = async (selectedIds) => {
+    setSelectedSessionIds(selectedIds);
+    const allSessions = await fetchData();
+    const selectedSessions = allSessions.filter(session => selectedIds.includes(session.sessionId));
+    const selectedStatuses = selectedSessions.map(session => session.status);
+    const hasMeasuring = selectedStatuses.includes('Measuring');
+    setSelectionHasMeasuring(hasMeasuring);
+  }
 
   // const handleAddCollaborator = async () => {
   //   try {
@@ -823,7 +619,7 @@ const fetchProject = async () => {
                 variant="outlined"
                 startIcon={<ArchiveOutlined />}
                 onClick={() => handleArchiveProject(true)}
-                disabled={measuringSessions}
+                disabled={projectHasMeasuring}
               >
                 Archive Project
               </Button>
@@ -848,7 +644,7 @@ const fetchProject = async () => {
                 }
               }}
               onClick={handleOpenDialog2}
-              disabled={measuringSessions}
+              disabled={projectHasMeasuring}
             >
               Delete Project
             </Button>
@@ -891,7 +687,7 @@ const fetchProject = async () => {
                     },
                   }}
                   checkboxSelection
-                  onRowSelectionModelChange={(newSelection) => setSelectedSessionIds(newSelection)}
+                  onRowSelectionModelChange={(newSelection) => handleSelection(newSelection)}
                   slots={{
                     toolbar: () => <CustomSessionsToolbar
                       selectedSessionIds={selectedSessionIds}
@@ -900,6 +696,7 @@ const fetchProject = async () => {
                       fetchData={fetchData}
                       fetchProject={fetchProject}
                       tab={currentTab}
+                      selectionHasMeasuring={selectionHasMeasuring}
                     />,
                   }}
                   sx={{

@@ -588,6 +588,8 @@ const ProjectDetail = () => {
   const handleOpenDialog2 = () => setDialogOpen(true);
   const handleCloseDialog2 = () => setDialogOpen(false);
 
+  const [measuringSessions, setMeasuringSessions] = useState(false);
+
 
   const handleTabChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
     setTab(newCurrentTab);
@@ -595,19 +597,26 @@ const ProjectDetail = () => {
 
   const fetchData = async () => {
     try {
-      let sessions = [];
+      const activeSessions = await fetchActiveSessions(projectId);
+      const archivedSessions = await fetchArchivedSessions(projectId);
+
+      // Load sessions based on the current tab
       switch (currentTab) {
         case '2':
-          sessions = await fetchActiveSessions(projectId);
+          setSortedSessions(activeSessions);
           break;
         case '4':
-          sessions = await fetchArchivedSessions(projectId);
+          setSortedSessions(archivedSessions);
           break;
         default:
-          sessions = await fetchActiveSessions(projectId);
+          setSortedSessions(activeSessions);
           break;
       }
-      setSortedSessions(sessions);
+
+      // Check if any session is measuring to prevent deletion and archiving
+      const allSessions = [...activeSessions, ...archivedSessions];
+      const hasMeasuring = allSessions.some(s => s.status === 'Measuring');
+      setMeasuringSessions(hasMeasuring);
     } catch (error) {
       console.error('Failed to fetch data', error);
     }
@@ -814,6 +823,7 @@ const fetchProject = async () => {
                 variant="outlined"
                 startIcon={<ArchiveOutlined />}
                 onClick={() => handleArchiveProject(true)}
+                disabled={measuringSessions}
               >
                 Archive Project
               </Button>
@@ -838,6 +848,7 @@ const fetchProject = async () => {
                 }
               }}
               onClick={handleOpenDialog2}
+              disabled={measuringSessions}
             >
               Delete Project
             </Button>

@@ -28,7 +28,7 @@ const getCommonColumns = (sessionId) => [
     ),
   },
   { field: 'battery', headerName: 'Battery', flex: 1, sortable: false, renderCell: renderBatteryCell },
-  { field: 'connected', headerName: 'Connected',flex: 1, sortable: false,
+  { field: 'connected', headerName: 'Status',flex: 1, sortable: false,
       renderCell: (params) => ( <ConnectedCell deviceId={params.row.id} status={params.value} sessionId={sessionId}/>)
   },
   {

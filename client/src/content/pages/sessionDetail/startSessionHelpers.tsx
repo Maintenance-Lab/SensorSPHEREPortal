@@ -15,6 +15,16 @@ export const checkStartingConditions = async (sessionId) => {
       })
     );
 
+    const occupiedStatuses = await Promise.all(
+      devices.map(async (device) => {
+        const occupied = await checkOccupied(device.deviceId, sessionId);
+        return {
+          deviceId: device.deviceId,
+          occupied: occupied.occupied,
+        };
+      })
+    );
+
     const requirements = [
       {
         text: "Add at least one device",
@@ -25,11 +35,16 @@ export const checkStartingConditions = async (sessionId) => {
         done: devices.every(device => device.batteryLevel >= 10),
       },
       {
-        text: "Make sure all added devices are connected",
+        // text: "Make sure all added devices are connected and unused ",
+        text: "Ensure all devices are connected",
         done: devices.every(device => device.connectStatus === 'connected'),
       },
       {
-        text: "Make sure all devices are configured",
+        text: "Ensure devices are not measuring in another session",
+        done: occupiedStatuses.every(status => status.occupied === false),
+      },
+      {
+        text: "Ensure all devices are configured",
         done: sampleRates.every(device => device.sampleRate !== null),
       },
     ];
@@ -178,7 +193,7 @@ export const ConnectedCell = ({ deviceId, status, sessionId }) => {
   }
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%', paddingLeft: 2.5 }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%', paddingLeft: 1 }}>
       {Icon}
     </Box>
   );

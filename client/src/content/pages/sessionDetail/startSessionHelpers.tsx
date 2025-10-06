@@ -1,6 +1,7 @@
 import * as Icons from '@mui/icons-material';
 import {  Typography, Stack, Box } from '@mui/material';
-import { fetchDevices, getSampleRate } from "./api";
+import { fetchDevices, getSampleRate, checkOccupied } from "./api";
+import { useEffect, useState } from 'react';
 
 export const checkStartingConditions = async (sessionId) => {
     const devices = await fetchDevices(sessionId);
@@ -151,18 +152,33 @@ export const renderBatteryCell = (params) => {
   );
 };
 
-export const renderConnectedCell = (params) => {
-  const status = params.value;
+export const ConnectedCell = ({ deviceId, status, sessionId }) => {
+  const [occupied, setOccupied] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    checkOccupied(deviceId, sessionId)
+      .then((res) => {
+        if (mounted) setOccupied(res.occupied);
+      })
+      .catch(() => {
+        if (mounted) setOccupied(false);
+      });
+    return () => { mounted = false; };
+  }, [deviceId, sessionId]);
+
 
   let Icon = null;
-  if (status === 'connected') {
-    Icon =  <Icons.Sensors sx={{ color: 'success.main' }} />;
+  if (occupied === true) {
+    Icon = <Icons.Block sx={{ color: 'warning.main' }} />;
+  } else if (occupied === false && status === 'connected') {
+    Icon = <Icons.Sensors sx={{ color: 'success.main' }} />;
   } else if (status === 'disconnected') {
     Icon = <Icons.SensorsOff sx={{ color: 'error.main' }} />;
   }
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%' }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%', paddingLeft: 2.5 }}>
       {Icon}
     </Box>
   );

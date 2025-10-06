@@ -620,6 +620,7 @@ const handleCheckStartingConditions = async () => {
               rows={devicesRows}
               columns={toolbar.getDevicesColumns({
                   handleRowClick,
+                  sessionId,
                   selectedDevice,
                   loading,
                   configurationDialogOpen,
@@ -682,7 +683,7 @@ const handleCheckStartingConditions = async () => {
           <Paper>
             <DataGrid
               rows={toolbar.getAvailableDevicesRows(availableDevices)}
-              columns={toolbar.availableDevicesColumns}
+              columns={toolbar.availableDevicesColumns(sessionId)}
               sortModel={[{ field: 'lastSeenRaw', sort: 'asc' }]}
               columnVisibilityModel={{
                 lastSeenRaw: false,

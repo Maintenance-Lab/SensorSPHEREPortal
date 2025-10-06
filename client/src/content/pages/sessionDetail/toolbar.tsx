@@ -3,10 +3,10 @@ import { GridToolbarContainer, GridToolbarQuickFilter, GridColDef, GridRowsProp 
 import { Button, Link, Typography, Box, Stack, Tooltip } from '@mui/material';
 
 import { addDevices, removeDevicesFromSession } from "./api";
-import {renderBatteryCell, renderConnectedCell, calculateLastSeen, formatLastSeen } from './startSessionHelpers'
+import { renderBatteryCell, calculateLastSeen, formatLastSeen, ConnectedCell } from './startSessionHelpers';
 import { ConfigurationDialog } from './dialogs/configurationDialog';
 
-const commonColumns: GridColDef[] = [
+const getCommonColumns = (sessionId) => [
   { field: 'id', headerName: 'MAC Address', flex: 2, sortable: false,
     renderCell: (params) => (
       <Link
@@ -29,7 +29,7 @@ const commonColumns: GridColDef[] = [
   },
   { field: 'battery', headerName: 'Battery', flex: 1, sortable: false, renderCell: renderBatteryCell },
   { field: 'connected', headerName: 'Connected',flex: 1, sortable: false,
-    renderCell: renderConnectedCell
+      renderCell: (params) => ( <ConnectedCell deviceId={params.row.id} status={params.value} sessionId={sessionId}/>)
   },
   {
     field: 'lastSeenRaw',
@@ -47,6 +47,7 @@ const commonColumns: GridColDef[] = [
 
 export const getDevicesColumns = (props: {
   handleRowClick: (id: string, event: React.MouseEvent) => void;
+  sessionId: number;
   selectedDevice: string;
   loading: boolean;
   configurationDialogOpen: boolean;
@@ -64,7 +65,7 @@ export const getDevicesColumns = (props: {
   setExpandedNodes: (nodes: string[]) => void;
 }): GridColDef[] => {
   const {
-    handleRowClick, selectedDevice, loading, configurationDialogOpen,
+    handleRowClick, sessionId, selectedDevice, loading, configurationDialogOpen,
     activeStep, steps, sampleRate, selectedProperties,
     expandedNodes, allProperties, sessionStatus, renderTree,
     handleCloseConfigurationDialog, handleNext, handleReconfigure,
@@ -72,7 +73,7 @@ export const getDevicesColumns = (props: {
   } = props;
 
   return [
-    ...commonColumns,
+    ...getCommonColumns(sessionId),
     {
       field: 'sampleRate', headerName: 'Sample Rate', flex: 1, sortable: false
     },
@@ -80,12 +81,6 @@ export const getDevicesColumns = (props: {
       renderCell: (params) => {
         const isConnected = params.row.connected === "connected";
         const disabled = sessionStatus === "Measuring" || !isConnected;
-
-        const tooltipText = !isConnected
-          ? "Device is not connected"
-          : sessionStatus === "Measuring"
-            ? "Disabled while measuring"
-            : "Configure device";
 
         return (
           <Box
@@ -156,8 +151,8 @@ export const getDevicesColumns = (props: {
   ];
 };
 
-export const availableDevicesColumns: GridColDef[] = [
-  ...commonColumns,
+export const availableDevicesColumns = (sessionId): GridColDef[] => [
+  ...getCommonColumns(sessionId),
   {
     field: 'sampleRatePadding', headerName: '', flex: 1,sortable: false,
     renderCell: () => null, disableColumnMenu: true,

@@ -9,7 +9,7 @@ import DeviceModuleMapping from '../../models/mappings/DeviceModuleMapping.js';
 import Sensor from '../../models/Sensor.js';
 import Module from '../../models/Module.js';
 import { listUnits } from '../../services/Device.js';
-import Session from 'src/models/Session.js';
+import Session from '../../models/Session.js';
 
 const router = Router()
 
@@ -180,6 +180,29 @@ router.put("/stopBatch", async (req, res) => {
     const doc = await sendStopBatch(sessionId);
     if (!doc) return res.status(500).json({ message: "Failed to stop batch" });
     return res.json(doc);
+});
+
+router.get("/checkOccupied/:deviceId/:sessionId", async (req, res) => {
+    const deviceId = req.params.deviceId;
+    const sessionId = Number(req.params.sessionId);
+
+    try {
+        const mappings = await SessionDeviceMapping.findAll({ where: { deviceId } });
+        if (!mappings) return res.status(500).json({ message: "Failed to fetch mappings" });
+
+        for (const mapping of mappings) {
+            const session = await Session.findOne({ where: { sessionId: mapping.sessionId } });
+            console.log("Checking session: ", session?.sessionId, session?.status);
+            if (session && session.status === 'Measuring' && mapping.sessionId !== sessionId) {
+                return res.json({ occupied: true });
+            }
+        }
+
+        return res.json({ occupied: false });
+    } catch (error) {
+        console.error("Error checking device occupation: ", error);
+        return res.status(500).json({ message: "Error checking device occupation" });
+    }
 });
 
 export default router;

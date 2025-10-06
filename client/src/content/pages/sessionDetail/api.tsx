@@ -134,3 +134,7 @@ export const getSessionStatus = async (sessionId: number) => {
   return apiRequest("/api/sessions/getStatus/" + sessionId, "GET");
 }
 
+export const checkOccupied = async (deviceId: string, sessionId: number) => {
+  return apiRequest(`/api/devices/checkOccupied/${deviceId}/${sessionId}`, "GET");
+}
+

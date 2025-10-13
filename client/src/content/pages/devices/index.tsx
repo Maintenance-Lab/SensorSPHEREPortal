@@ -8,8 +8,8 @@ import {
   DialogTitle,
   Typography,
   Container,
-  Link,
   List,
+  Link,
   ListItem,
   ListItemButton,
   ListItemText,
@@ -27,6 +27,7 @@ import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQu
 import DevicesIcon from '@mui/icons-material/Devices';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';  // Import the expand/collapse icon
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';  // Import the collapse icon
+import { Link as RouterLink } from 'react-router-dom';
 
 // Fetch active projects
 const fetchActiveProjects = async () => {
@@ -86,7 +87,7 @@ const fetchDevices = async () => {
 
 const devicesColumns: GridColDef[] = [
   { field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
-    <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
+    <Link to={`/devices/detail/${params.id}`} component={RouterLink} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
   )},
   { field: 'id', headerName: 'MAC Address', flex: 1 },
   {

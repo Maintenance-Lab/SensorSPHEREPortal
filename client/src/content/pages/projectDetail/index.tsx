@@ -10,14 +10,16 @@ import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQu
 import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { ArchiveOutlined, DeleteOutline, Devices, Inventory, UnarchiveOutlined } from '@mui/icons-material';
+import { Link as RouterLink } from 'react-router-dom';
 
 const sessionColumns: GridColDef[] = [
   {
     field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
-      <Link href={`/sessions/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}
-        onClick={(event) => {
-        event.stopPropagation();
-      }}>
+      <Link to={`/sessions/detail/${params.id}`}
+        component={RouterLink}
+        sx={{ padding: 1, marginX: -1 }}
+        onClick={(event) => {event.stopPropagation()}}
+      >
       {params.value}</Link>
     )
   },
@@ -291,16 +293,6 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, proj
   );
 };
 
-function CustomAddDevicesToolbar() {
-  return (
-    <GridToolbarContainer sx={{ padding: 1 }}>
-      <Stack direction="row" spacing={1}>
-        <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
-      </Stack>
-    </GridToolbarContainer>
-  );
-}
-
 const ConfirmationDialog = ({ open, onClose, onConfirm, projectIds }) => (
   <Dialog open={open} onClose={onClose}>
     <DialogTitle>Confirm Deletion</DialogTitle>
@@ -375,7 +367,6 @@ const ProjectDetail = () => {
   const [projectHasMeasuring, setProjectHasMeasuring] = useState(false);
   const [selectionHasMeasuring, setSelectionHasMeasuring] = useState(false);
 
-
   const handleTabChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
     setTab(newCurrentTab);
   };
@@ -421,7 +412,6 @@ const ProjectDetail = () => {
     lastActive: session.lastActive,
     archived: session.archived,
   }));
-
 
 const fetchProject = async () => {
     const res = await fetch('/api/projects/id/' + projectId, {

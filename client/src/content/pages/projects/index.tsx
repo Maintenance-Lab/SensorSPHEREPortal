@@ -1,35 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Container,
-  Button,
-  TextField,
-  Paper,
-  Tab,
-  Link,
-  Tabs,
-  Typography,
-  Stack,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle
-} from '@mui/material';
+import { Box, Container, Button, Paper, Tab, Link, Tabs, Typography, Stack, Dialog,
+  DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import AddIcon from '@mui/icons-material/Add';
 import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
-import {
-  DataGrid,
-  GridColDef,
-  GridRowsProp,
-  GridToolbarContainer,
-  GridToolbarQuickFilter
-} from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter
+  } from '@mui/x-data-grid';
 import CreateProjectDialog from './CreateProjectDialog';
 import { GridColumnVisibilityModel } from '@mui/x-data-grid';
-import { set } from 'date-fns';
+import { Link as RouterLink } from 'react-router-dom';
 
 
 const fetchActiveProjects = async () => {
@@ -177,14 +158,14 @@ function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetc
     }
   }, []);
 
-  const handleDeleteProjects = useCallback(async () => {
-    try {
-      await deleteProjects(selectedProjectIds);
-      fetchData();
-    } catch (error) {
-      console.error(error);
-    }
-  }, [selectedProjectIds]);
+  // const handleDeleteProjects = useCallback(async () => {
+  //   try {
+  //     await deleteProjects(selectedProjectIds);
+  //     fetchData();
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // }, [selectedProjectIds]);
 
   const handleArchiveProjects = useCallback(async () => {
     try {
@@ -346,7 +327,9 @@ const Projects = () => {
   const projectsColumns: GridColDef[] = [
     {
       field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
-        <Link href={`/projects/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}
+        <Link to={`/projects/detail/${params.id}`}
+          sx={{ padding: 1, marginX: -1 }}
+          component={RouterLink}
           onClick={(event) => {
             event.stopPropagation();
           }}>

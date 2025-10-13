@@ -10,10 +10,13 @@ import {
   Stack
 } from '@mui/material';
 import { Info, InfoOutlined } from '@mui/icons-material';
+import { useNavigate } from 'react-router';
 
 const CreateProjectDialog = ({ open, setOpen }) => {
   const [name, setName] = useState(`Project ${new Date().toDateString()}`);
   const [description, setDescription] = useState('');
+
+  const navigate = useNavigate();
 
   const handleSubmitCreateProject = useCallback(async () => {
     console.log('Creating project', name, description);
@@ -35,7 +38,9 @@ const CreateProjectDialog = ({ open, setOpen }) => {
 
       const data = await response.json();
       console.log('Created project', data);
-      window.location.href = `/projects/detail/${data.projectId}`;
+      setOpen(false);
+      navigate(`/projects/detail/${data.projectId}`)
+      // window.location.href = `/projects/detail/${data.projectId}`;
     } catch (error) {
       console.log("ERROR");
       console.error(error);

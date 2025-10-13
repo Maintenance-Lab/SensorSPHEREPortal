@@ -111,7 +111,7 @@ const Home = () => {
         <Stack spacing={2} mt={4}>
           <Typography variant="h2">Getting Started</Typography>
         </Stack>
-        <Stack spacing={2} mt={2} py={2} direction="row" divider={<Divider orientation="vertical" flexItem />}>
+        {/* <Stack spacing={2} mt={2} py={2} direction="row" divider={<Divider orientation="vertical" flexItem />}>
           <Stack spacing={2}>
             <DesignServicesOutlined fontSize='large' />
             <Typography variant="body1" mt={1}>Create a data collection project.</Typography>
@@ -124,9 +124,9 @@ const Home = () => {
             <PlayCircleOutline fontSize='large' />
             <Typography variant="body1" mt={1}>Start a data collection session in your project.</Typography>
           </Stack>
-        </Stack>
+        </Stack> */}
         <Stack direction="row" spacing={2} mt={3}>
-        <Card
+        {/* <Card
             sx={{
             flex: 1,
             p: 2,
@@ -143,7 +143,7 @@ const Home = () => {
                 <Typography variant="h6">Find Devices</Typography>
                 <Typography variant="subtitle1">Search and find devices, view sensors, and use them in your projects.</Typography>
               </Stack>
-          </Card>
+          </Card> */}
           <Card
             sx={{
             flex: 1,

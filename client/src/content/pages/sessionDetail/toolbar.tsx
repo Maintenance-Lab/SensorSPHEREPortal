@@ -3,7 +3,7 @@ import { GridToolbarContainer, GridToolbarQuickFilter, GridColDef, GridRowsProp 
 import { Button, Link, Typography, Box, Stack, Tooltip } from '@mui/material';
 
 import { addDevices, removeDevicesFromSession } from "./api";
-import { renderBatteryCell, calculateLastSeen, formatLastSeen, ConnectedCell } from './startSessionHelpers';
+import { renderBatteryCell, calculateLastSeen, formatLastSeenDevice, ConnectedCell } from './startSessionHelpers';
 import { ConfigurationDialog } from './dialogs/configurationDialog';
 
 const getCommonColumns = (sessionId) => [
@@ -166,7 +166,7 @@ export const availableDevicesColumns = (sessionId): GridColDef[] => [
 export const getAvailableDevicesRows = (availableDevices: any[]): GridRowsProp => {
   return availableDevices.map((device) => {
     const lastSeenRaw = calculateLastSeen(device);
-    const lastSeen = formatLastSeen(device);
+    const lastSeen = formatLastSeenDevice(device);
 
     return {
       name: device.manufacturer,

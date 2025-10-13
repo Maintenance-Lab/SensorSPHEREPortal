@@ -11,6 +11,7 @@ import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { ArchiveOutlined, DeleteOutline, Devices, Inventory, UnarchiveOutlined } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
+import { formatLastSeen } from '../sessionDetail/startSessionHelpers';
 
 const sessionColumns: GridColDef[] = [
   {
@@ -409,7 +410,7 @@ const ProjectDetail = () => {
     projectId: session.projectId,
     meta: session.meta,
     createdAt: session.createdAt,
-    lastActive: session.lastActive,
+    lastActive: formatLastSeen(session.lastActive),
     archived: session.archived,
   }));
 

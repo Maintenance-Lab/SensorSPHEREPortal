@@ -18,6 +18,7 @@ import {
 import SidebarMenu from './SidebarMenu';
 import Logo from 'src/Components/LogoSign';
 import { getUser, logout } from 'src/Helpers/cookies';
+import Typography from '@mui/material/Typography';
 
 const SidebarWrapper = styled(Box)(
   ({ theme }) => `
@@ -58,14 +59,27 @@ function Sidebar() {
       >
         <Scrollbar>
           <Box mt={3}>
-            <Box
-              mx={2}
-              sx={{
-                width: 52
-              }}
-            >
-              <Logo />
+            <Box mt={3} textAlign="left" mx={2}>
+              <Typography
+                variant="h3"
+                fontWeight="bold"
+                color="primary.main"
+                sx={{
+                  letterSpacing: 1,
+                  userSelect: 'none',
+                }}
+              >
+                SensorSPHERE
+              </Typography>
+              <Typography
+                variant="caption"
+                color="secondary.main"
+                sx={{ letterSpacing: 1 }}
+              >
+                Portal
+              </Typography>
             </Box>
+
           </Box>
           <Divider
             sx={{

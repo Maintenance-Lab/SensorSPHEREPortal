@@ -546,18 +546,18 @@ const fetchProject = async () => {
                 variant="outlined"
                 size="small"
                 autoFocus
-                onBlur={(event) => {
-                  // Check if the value has changed from the initial value
+                multiline
+                minRows={3}
+                maxRows={10}
+                onBlur={async (event) => {
+                  // Save only if changed
                   if (event.target.value !== projectDescription) {
-                    window.location.reload();
+                    await handleDescriptionChange(event);
                   }
-                  handleDescriptionChange(event);
+                  setIsEditingDescription(false);
                 }}
-                onFocus={(event) => { event.target.select(); }}
-                sx={{ marginLeft: -1, width: '100%' }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') { handleDescriptionChange(event); }
-                }}
+                onFocus={(event) => event.target.select()}
+                sx={{ ml: -1, width: "100%" }}
               />
             </Box>
           ) : (
@@ -565,17 +565,18 @@ const fetchProject = async () => {
               variant="body1"
               onClick={() => setIsEditingDescription(true)}
               sx={{
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                  outline: '2px solid rgba(0, 0, 0, 0.2)',
-                  borderRadius: '8px',
-                  paddingX: 1,
-                  marginX: -1,
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.05)",
+                  outline: "2px solid rgba(0, 0, 0, 0.2)",
+                  borderRadius: "8px",
+                  px: 1,
+                  mx: -1,
                 },
-                color: projectDescription ? 'inherit' : 'gray'
+                color: projectDescription ? "inherit" : "gray",
+                whiteSpace: "pre-wrap",
               }}
             >
-              {projectDescription ? projectDescription : 'Add description...'}
+              {projectDescription ? projectDescription : "Add description..."}
             </Typography>
           )}
           {isArchived &&

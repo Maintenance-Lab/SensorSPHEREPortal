@@ -8,7 +8,7 @@ import {
   CardActionArea,
   Skeleton,
   Divider,
-  Link
+  Link,
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import Card from '@mui/material/Card';
@@ -79,6 +79,7 @@ const Home = () => {
       </PageTitleWrapper>
       <CreateProjectDialog open={openCreateProjectDialog} setOpen={setOpenCreateProjectDialog} />
       <Container>
+          <Typography variant="h2" paddingY={2}>Recent Projects</Typography>
         <Grid container spacing={2} >
           {loading && (
             <Grid item xs={6} lg={4}>

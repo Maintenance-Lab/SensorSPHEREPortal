@@ -47,41 +47,41 @@ const fetchArchivedProjects = async () => {
   return data;
 }
 
-const fetchPendingProjects = async () => {
-  const res = await fetch('/api/projects/pending', {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+// const fetchPendingProjects = async () => {
+//   const res = await fetch('/api/projects/pending', {
+//     method: 'GET',
+//     credentials: 'include',
+//     headers: {
+//       'Content-Type': 'application/json',
+//     },
+//   });
 
-  if (!res.ok) {
-    console.error('Failed to fetch data');
-    return [];
-  }
+//   if (!res.ok) {
+//     console.error('Failed to fetch data');
+//     return [];
+//   }
 
-  const data = await res.json();
-  return data;
-}
+//   const data = await res.json();
+//   return data;
+// }
 
-const createProject = async (name, description) => {
-  const response = await fetch('/api/projects/create', {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ name, description })
-  });
+// const createProject = async (name, description) => {
+//   const response = await fetch('/api/projects/create', {
+//     method: 'POST',
+//     credentials: 'include',
+//     headers: {
+//       'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify({ name, description })
+//   });
 
-  if (!response.ok) {
-    throw new Error('Failed to create project');
-  }
+//   if (!response.ok) {
+//     throw new Error('Failed to create project');
+//   }
 
-  const data = await response.json();
-  return data;
-};
+//   const data = await response.json();
+//   return data;
+// };
 
 const deleteProjects = async (projectIds) => {
   const response = await fetch('/api/projects/delete', {
@@ -112,35 +112,35 @@ const archiveProjects = async (projectIds, tab) => {
   });
 }
 
-const accept = async (projectId) => {
-  const response = await fetch('/api/projects/accept', {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ projectId })
-  });
+// const accept = async (projectId) => {
+//   const response = await fetch('/api/projects/accept', {
+//     method: 'POST',
+//     credentials: 'include',
+//     headers: {
+//       'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify({ projectId })
+//   });
 
-  if (!response.ok) {
-    console.error('Failed to accept project');
-  }
-}
+//   if (!response.ok) {
+//     console.error('Failed to accept project');
+//   }
+// }
 
-const decline = async (projectId) => {
-  const response = await fetch('/api/projects/decline', {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ projectId })
-  });
+// const decline = async (projectId) => {
+//   const response = await fetch('/api/projects/decline', {
+//     method: 'POST',
+//     credentials: 'include',
+//     headers: {
+//       'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify({ projectId })
+//   });
 
-  if (!response.ok) {
-    console.error('Failed to decline project');
-  }
-}
+//   if (!response.ok) {
+//     console.error('Failed to decline project');
+//   }
+// }
 
 function CustomProjectsToolbar({ selectedProjectIds, setSelectedProjectIds, fetchData, tab }) {
   const [open, setOpen] = useState(false);
@@ -270,31 +270,31 @@ const Projects = () => {
     setTab(newCurrentTab);
     setLoading(true);
 
-    // Only show actions column for pending projects
-    if (newCurrentTab === '6') {
-      setColumnVisibilityModel((prev) => ({ ...prev, actions: true }));
-    } else {
-      setColumnVisibilityModel((prev) => ({ ...prev, actions: false }));
-    }
+    // // Only show actions column for pending projects
+    // if (newCurrentTab === '6') {
+    //   setColumnVisibilityModel((prev) => ({ ...prev, actions: true }));
+    // } else {
+    //   setColumnVisibilityModel((prev) => ({ ...prev, actions: false }));
+    // }
   };
 
-  const handleAccept = async (projectId) => {
-    try {
-      await accept(projectId);
-      fetchData();
-    } catch (error) {
-      console.error(error);
-    }
-  }
+  // const handleAccept = async (projectId) => {
+  //   try {
+  //     await accept(projectId);
+  //     fetchData();
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // }
 
-  const handleDecline = async (projectId) => {
-    try {
-      await decline(projectId);
-      fetchData();
-    } catch (error) {
-      console.error(error);
-    }
-  }
+  // const handleDecline = async (projectId) => {
+  //   try {
+  //     await decline(projectId);
+  //     fetchData();
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // }
 
   const fetchData = async () => {
     console.log('Fetching data');
@@ -308,9 +308,9 @@ const Projects = () => {
         case '4':
           projects = await fetchArchivedProjects();
           break;
-        case '6':
-          projects = await fetchPendingProjects();
-          break;
+        // case '6':
+        //   projects = await fetchPendingProjects();
+        //   break;
         default:
           projects = await fetchActiveProjects();
           break;
@@ -337,38 +337,38 @@ const Projects = () => {
       )
     },
     { field: 'lastActive', headerName: 'Last Activity', flex: 1 },
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      flex: 1,
-      sortable: false,
+    // {
+    //   field: 'actions',
+    //   headerName: 'Actions',
+    //   flex: 1,
+    //   sortable: false,
 
-      renderCell: (params) => {
-        if (currentTab === '6' && params.row && !loading) {
-          return (
-            <Box display="flex" gap={1}>
-              <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                onClick={() => handleAccept(params.id)}
-              >
-                Accept
-              </Button>
-              <Button
-                variant="outlined"
-                color="error"
-                size="small"
-                onClick={() => handleDecline(params.id)}
-              >
-                Decline
-              </Button>
-            </Box>
-          );
-        }
-        return null;
-      },
-    },
+    //   renderCell: (params) => {
+    //     if (currentTab === '6' && params.row && !loading) {
+    //       return (
+    //         <Box display="flex" gap={1}>
+    //           <Button
+    //             variant="contained"
+    //             color="primary"
+    //             size="small"
+    //             onClick={() => handleAccept(params.id)}
+    //           >
+    //             Accept
+    //           </Button>
+    //           <Button
+    //             variant="outlined"
+    //             color="error"
+    //             size="small"
+    //             onClick={() => handleDecline(params.id)}
+    //           >
+    //             Decline
+    //           </Button>
+    //         </Box>
+    //       );
+    //     }
+    //     return null;
+    //   },
+    // },
   ];
 
   const projectsRows: GridRowsProp = sortedProjects.map((project) => ({
@@ -401,7 +401,7 @@ const Projects = () => {
           >
             <Tab value="2" label="My Projects" sx={{ alignItems: 'start' }} />
             <Tab value="4" label="Archived" sx={{ alignItems: 'start' }} />
-            <Tab value="6" label="Pending" sx={{ alignItems: 'start' }} />
+            {/* <Tab value="6" label="Pending" sx={{ alignItems: 'start' }} /> */}
           </Tabs>
           <Paper sx={{ width: "100%", height: "100%" }}>
             <DataGrid

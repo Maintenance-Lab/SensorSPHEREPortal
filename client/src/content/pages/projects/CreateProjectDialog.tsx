@@ -1,15 +1,7 @@
 import { useState, useCallback } from 'react';
-import {
-  Button,
-  TextField,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Typography,
-  Stack
-} from '@mui/material';
-import { Info, InfoOutlined } from '@mui/icons-material';
+import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle,
+    Typography, Stack } from '@mui/material';
+import { InfoOutlined } from '@mui/icons-material';
 import { useNavigate } from 'react-router';
 
 const CreateProjectDialog = ({ open, setOpen }) => {
@@ -40,7 +32,6 @@ const CreateProjectDialog = ({ open, setOpen }) => {
       console.log('Created project', data);
       setOpen(false);
       navigate(`/projects/detail/${data.projectId}`)
-      // window.location.href = `/projects/detail/${data.projectId}`;
     } catch (error) {
       console.log("ERROR");
       console.error(error);

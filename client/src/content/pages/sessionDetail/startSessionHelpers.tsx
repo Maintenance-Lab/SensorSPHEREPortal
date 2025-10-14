@@ -54,7 +54,7 @@ export const checkStartingConditions = async (sessionId) => {
       return { allPassed: false, requirements: [requirements[0]] };
     }
 
-    const allPassed = requirements.filter(req => req.text !== "Make sure all devices are configured")
+    const allPassed = requirements.filter(req => req.text !== "Ensure all devices are configured")
       .every(req => req.done);
 
     return { allPassed, requirements }

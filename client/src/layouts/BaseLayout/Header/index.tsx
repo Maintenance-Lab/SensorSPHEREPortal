@@ -8,8 +8,8 @@ import {
   useTheme
 } from '@mui/material';
 
-import HeaderUserbox from './Userbox';
-import HeaderMenu from './Menu';
+import HeaderUserbox from './userbox';
+import HeaderMenu from './menu';
 
 const HeaderWrapper = styled(Box)(
   ({ theme }) => `

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button, TextField, Link, Paper, Tabs, Tab, Typography, Container, Box, Dialog, DialogActions,
   DialogContent, DialogTitle, Snackbar, Alert } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
-import PageTitleWrapper from 'src/Components/PageTitleWrapper';
+import PageTitleWrapper from 'src/components/pageTitleWrapper';
 import Stack from '@mui/material/Stack';
 import { useParams } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';

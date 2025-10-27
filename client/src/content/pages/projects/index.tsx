@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Box, Container, Button, Paper, Tab, Link, Tabs, Typography, Stack, Dialog,
   DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
-import PageTitleWrapper from 'src/Components/PageTitleWrapper';
+import PageTitleWrapper from 'src/components/pageTitleWrapper';
 import AddIcon from '@mui/icons-material/Add';
 import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';

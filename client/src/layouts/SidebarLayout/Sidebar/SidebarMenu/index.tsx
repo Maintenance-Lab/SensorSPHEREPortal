@@ -10,13 +10,13 @@ import {
   ListItem
 } from '@mui/material';
 import { NavLink as RouterLink } from 'react-router-dom';
-import { SidebarContext } from 'src/contexts/SidebarContext';
+import { SidebarContext } from 'src/contexts/sidebarContext';
 
 import HomeIcon from '@mui/icons-material/Home';
 import DesignServicesTwoToneIcon from '@mui/icons-material/DesignServicesTwoTone';
 import BrightnessLowTwoToneIcon from '@mui/icons-material/BrightnessLowTwoTone';
 import AccountCircleTwoToneIcon from '@mui/icons-material/AccountCircleTwoTone';
-import { getUser } from 'src/Helpers/cookies';
+import { getUser } from 'src/helpers/cookies';
 
 const MenuWrapper = styled(Box)(
   ({ theme }) => `

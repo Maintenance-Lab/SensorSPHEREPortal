@@ -6,7 +6,7 @@ import { hashSync } from '@node-rs/argon2';
 import reader from 'readline-sync';
 import Account from '../models/Account.js';
 // import dbConnect from 'src/mongo";
-import { createAccount, getAllAccounts } from 'src/services/Account';
+import { createAccount, getAllAccounts } from 'src/services/account.js';
 import { isEmail, isPasswordStrong } from 'src/tools/utils';
 
 // dbConnect();

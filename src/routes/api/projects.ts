@@ -11,13 +11,13 @@ import {
   deleteProjectsForAll,
   getActiveProjectsByAccountId,
   getArchivedProjectsByAccountId,
-} from '../../services/Projects.js';
-import { getAccountById } from '../../services/Account.js';
+} from '../../services/projects.js';
+import { getAccountById } from '../../services/account.js';
 import { getSession } from '../../utils.js';
 import Project from '../../models/Project.js';
 import AccountProjectMapping from '../../models/mappings/AccountProjectMapping.js';
 import { arch } from 'os';
-import { getPendingProjectsByAccountId } from '../../services/Projects.js';
+import { getPendingProjectsByAccountId } from '../../services/projects.js';
 
 const router = Router();
 

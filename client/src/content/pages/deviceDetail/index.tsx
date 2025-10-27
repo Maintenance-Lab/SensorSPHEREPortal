@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Paper, Typography, Container, Divider, Box } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
-import PageTitleWrapper from 'src/Components/PageTitleWrapper';
+import PageTitleWrapper from 'src/components/pageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import Stack from '@mui/material/Stack';
 import { useParams } from 'react-router-dom';

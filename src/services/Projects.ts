@@ -1,7 +1,7 @@
 import Project from '../models/Project.js';
 import AccountProjectMapping from '../models/mappings/AccountProjectMapping.js';
-import { getSessionsByProject } from './Sessions.js';
-import { deleteSessions } from './Sessions.js';
+import { getSessionsByProject } from './sessions.js';
+import { deleteSessions } from './sessions.js';
 import Session from 'src/models/Session.js';
 
 /* FUNCTIES DIE WERKEN - volgens mij (amber)

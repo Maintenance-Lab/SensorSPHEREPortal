@@ -9,7 +9,7 @@ import {
     getActiveSessionsByProject,
     getArchivedSessionsByProject,
     deleteSessions
-} from '../../services/Sessions.js';
+} from '../../services/sessions.js';
 import { getSession } from '../../utils.js';
 import Session from '../../models/Session.js';
 import AccountProjectMapping from '../../models/mappings/AccountProjectMapping.js';

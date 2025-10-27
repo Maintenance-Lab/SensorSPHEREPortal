@@ -16,10 +16,10 @@ import {
   Skeleton
 } from '@mui/material';
 import MenuTwoToneIcon from '@mui/icons-material/MenuTwoTone';
-import { SidebarContext } from 'src/contexts/SidebarContext';
+import { SidebarContext } from 'src/contexts/sidebarContext';
 import CloseTwoToneIcon from '@mui/icons-material/CloseTwoTone';
-import HeaderUserbox from './Userbox';
-import HeaderMenu from './Menu';
+import HeaderUserbox from './userbox';
+import HeaderMenu from './menu';
 import { set } from 'date-fns';
 
 const HeaderWrapper = styled(Box)(

@@ -16,7 +16,7 @@ import * as Icons from '@mui/icons-material';
 import { Helmet } from 'react-helmet-async';
 
 // Local Components & Helpers
-import PageTitleWrapper from '../../../Components/PageTitleWrapper';
+import PageTitleWrapper from '../../../components/pageTitleWrapper';
 import ConfirmationDialog from './dialogs/confirmationDialog';
 import StartSessionDialog from './dialogs/startSessionDialog';
 

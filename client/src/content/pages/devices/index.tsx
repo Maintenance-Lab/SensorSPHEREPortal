@@ -20,7 +20,7 @@ import {
 
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
-import PageTitleWrapper from 'src/Components/PageTitleWrapper';
+import PageTitleWrapper from 'src/components/pageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import QueueOutlinedIcon from '@mui/icons-material/QueueOutlined';
 import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';

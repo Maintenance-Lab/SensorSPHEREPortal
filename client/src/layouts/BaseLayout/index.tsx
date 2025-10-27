@@ -2,7 +2,7 @@ import { FC, ReactNode } from 'react';
 import PropTypes from 'prop-types';
 import { Outlet } from 'react-router-dom';
 import { Box, alpha, lighten, useTheme } from '@mui/material';
-import Header from './Header';
+import Header from './header';
 
 interface BaseLayoutProps {
   children?: ReactNode;

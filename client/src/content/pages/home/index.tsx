@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import Card from '@mui/material/Card';
-import PageTitleWrapper from 'src/Components/PageTitleWrapper';
+import PageTitleWrapper from 'src/components/pageTitleWrapper';
 import { Add, DesignServices, DesignServicesOutlined, Inventory, PlayCircleOutline, PlusOne, Usb, Schedule } from '@mui/icons-material';
 import CreateProjectDialog from '../projects/CreateProjectDialog';
 import { useNavigate } from 'react-router-dom';

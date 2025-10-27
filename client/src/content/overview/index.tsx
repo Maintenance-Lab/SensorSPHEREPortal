@@ -2,7 +2,7 @@ import { Box, Container, Card, Typography, Button } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import { Theme } from '@mui/material/styles';
 import { makeStyles } from '@mui/styles';
-import { getUser } from 'src/Helpers/cookies';
+import { getUser } from 'src/helpers/cookies';
 import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react'
 import { set } from 'date-fns';

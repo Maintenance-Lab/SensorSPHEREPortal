@@ -2,11 +2,11 @@ import { Suspense, lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import { RouteObject } from 'react-router';
 
-import SidebarLayout from 'src/layouts/SidebarLayout';
-import BaseLayout from 'src/layouts/BaseLayout';
+import SidebarLayout from 'src/layouts/sidebarLayout';
+import BaseLayout from 'src/layouts/baseLayout';
 
-import SuspenseLoader from './Components/SuspenseLoader';
-import { ProtectedRoute } from './Helpers/ProtectedRoute';
+import SuspenseLoader from './components/suspenseLoader';
+import { ProtectedRoute } from './helpers/protectedRoute';
 
 const Loader = (Component) => (props) =>
   (

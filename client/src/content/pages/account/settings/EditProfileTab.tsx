@@ -10,7 +10,7 @@ import {
 
 import EditTwoToneIcon from '@mui/icons-material/EditTwoTone';
 import DoneTwoToneIcon from '@mui/icons-material/DoneTwoTone';
-import Text from 'src/Components/Text';
+import Text from 'src/components/text';
 
 interface EditProfileTabProps {
   account: any;

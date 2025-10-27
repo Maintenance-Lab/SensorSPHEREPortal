@@ -22,7 +22,7 @@ import ExpandMoreTwoToneIcon from '@mui/icons-material/ExpandMoreTwoTone';
 import AccountBoxTwoToneIcon from '@mui/icons-material/AccountBoxTwoTone';
 import LockOpenTwoToneIcon from '@mui/icons-material/LockOpenTwoTone';
 import AccountTreeTwoToneIcon from '@mui/icons-material/AccountTreeTwoTone';
-import { getUser, logout } from 'src/Helpers/cookies';
+import { getUser, logout } from 'src/helpers/cookies';
 import DesignServicesTwoToneIcon from '@mui/icons-material/DesignServicesTwoTone';
 
 const UserBoxButton = styled(Button)(

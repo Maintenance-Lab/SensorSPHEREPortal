@@ -7,7 +7,7 @@ import {
   Tooltip
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
-import Logo from 'src/Components/LogoSign';
+import Logo from 'src/components/logoSign';
 
 import { styled } from '@mui/material/styles';
 

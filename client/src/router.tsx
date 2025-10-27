@@ -6,7 +6,7 @@ import SidebarLayout from 'src/layouts/SidebarLayout';
 import BaseLayout from 'src/layouts/BaseLayout';
 
 import SuspenseLoader from './Components/SuspenseLoader';
-import { ProtectedRoute } from './Helpers/ProtectedRoute';
+import { ProtectedRoute } from './Helpers/protectedRoute';
 
 const Loader = (Component) => (props) =>
   (
@@ -54,16 +54,16 @@ const UserSettings = Loader(
 // Status
 
 const Status404 = Loader(
-  lazy(() => import('src/content/pages/Status/Status404'))
+  lazy(() => import('src/content/pages/status/Status404'))
 );
 const Status500 = Loader(
-  lazy(() => import('src/content/pages/Status/Status500'))
+  lazy(() => import('src/content/pages/status/Status500'))
 );
 const StatusComingSoon = Loader(
-  lazy(() => import('src/content/pages/Status/ComingSoon'))
+  lazy(() => import('src/content/pages/status/ComingSoon'))
 );
 const StatusMaintenance = Loader(
-  lazy(() => import('src/content/pages/Status/Maintenance'))
+  lazy(() => import('src/content/pages/status/Maintenance'))
 );
 
 const routes: RouteObject[] = [

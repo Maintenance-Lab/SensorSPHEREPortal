@@ -10,7 +10,7 @@ import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQu
 import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { ArchiveOutlined, DeleteOutline, Devices, Inventory, UnarchiveOutlined } from '@mui/icons-material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { formatLastSeen } from '../sessionDetail/startSessionHelpers';
 
 const sessionColumns: GridColDef[] = [
@@ -87,7 +87,7 @@ const deleteProject = async (projectId: number) => {
   }
 }
 
-const createSession = async (projectId: number, name, description) => {
+const createSession = async (projectId: number, name, description, navigate) => {
   try {
     const res = await fetch('/api/sessions/create', {
       method: 'POST',
@@ -109,7 +109,6 @@ const createSession = async (projectId: number, name, description) => {
     }
 
     const data = await res.json();
-    window.location.href = `/sessions/detail/${data.sessionId}`;
   } catch (error) {
     console.error(error);
   };
@@ -179,16 +178,17 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, proj
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
 
+  const navigate = useNavigate();
+
   const handleSubmitCreateSession = async () => {
     try {
-      await createSession(projectId, name, description);
       setOpen(false);
-      fetchProject();
+      await fetchProject();
+      await createSession(projectId, name, description, navigate);
     } catch (error) {
       console.error(error);
     }
   };
-
 
   const archiveSessions = async (sessionIds, tab) => {
     const archived = tab === '2' ? true : false;

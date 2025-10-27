@@ -150,38 +150,50 @@ const addDeviceToDatabase = async (message: any) => {
 }
 
 const updateDeviceStatus = async (message: any) => {
-  console.log("IN UPDATE DEVICE STATUS");
-  const now = new Date().getTime();
+  const activeDevices = new Map(
+    message.units.map((unit: any) => [unit.mac, unit])
+  );
 
-  // Run all device updates in parallel
-  const updatePromises = message.units.map(async (unit: any) => {
-    const deviceId = unit.mac;
-    const lastSeenTime = new Date(unit.lastSeen).getTime();
-    const isConnected = now - lastSeenTime <= 5 * 60 * 1000;
+  const allDevices = await Device.findAll();
 
-    // Update all fields in one go
-    await Device.update(
-      {
-        batteryLevel: unit.batteryLevel,
-        lastHeartbeat: unit.lastSeen,
-        connectStatus: isConnected ? "connected" : "disconnected"
-      },
-      { where: { deviceId } }
-    );
+  // Run all updates in parallel
+  const updatePromises = allDevices.map(async (device: any) => {
+    const unit: any = activeDevices.get(device.deviceId);
+
+    if (unit) {
+      await Device.update(
+        {
+          batteryLevel: unit.batteryLevel,
+          lastHeartbeat: unit.lastSeen,
+          connectStatus: "connected"
+        },
+        { where: { deviceId: device.deviceId } }
+      );
+    } else {
+      await Device.update(
+        { connectStatus: "disconnected" },
+        { where: { deviceId: device.deviceId } }
+      );
+    }
   });
 
-  // Wait for all updates to finish
   await Promise.all(updatePromises);
 
-  // Broadcast updated units to WebSocket clients
+  // Broadcast all current units
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify({ event: "list_units", units: message.units }));
+      client.send(
+        JSON.stringify({
+          event: "list_units",
+          units: message.units
+        })
+      );
     }
   });
 
   return { message: "Device status updated" };
 };
+
 
 
 const handshakeResponse = async (message: any) => {

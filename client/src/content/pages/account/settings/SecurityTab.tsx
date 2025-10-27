@@ -38,32 +38,6 @@ import { useNavigate } from 'react-router-dom';
 import MuiAlert from '@mui/material/Alert';
 import zIndex from '@mui/material/styles/zIndex';
 
-const ButtonError = styled(Button)(
-  ({ theme }) => `
-     background: ${theme.colors.error.main};
-     color: ${theme.palette.error.contrastText};
-
-     &:hover {
-        background: ${theme.colors.error.dark};
-     }
-    `
-);
-
-const AvatarSuccess = styled(Avatar)(
-  ({ theme }) => `
-    background: ${theme.colors.success.light};
-    width: ${theme.spacing(5)};
-    height: ${theme.spacing(5)};
-`
-);
-
-const AvatarWrapper = styled(Avatar)(
-  ({ theme }) => `
-    width: ${theme.spacing(5)};
-    height: ${theme.spacing(5)};
-`
-);
-
 interface SecurityTabProps {
   sessions: any;
 }

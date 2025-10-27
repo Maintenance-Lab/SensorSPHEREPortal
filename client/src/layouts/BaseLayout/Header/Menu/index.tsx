@@ -9,8 +9,6 @@ import {
 import { useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
-import ExpandMoreTwoToneIcon from '@mui/icons-material/ExpandMoreTwoTone';
-
 const ListWrapper = styled(Box)(
   ({ theme }) => `
         .MuiTouchRipple-root {

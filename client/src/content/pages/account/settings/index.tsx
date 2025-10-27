@@ -8,7 +8,6 @@ import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 
 import EditProfileTab from './EditProfileTab';
-import NotificationsTab from './NotificationsTab';
 import SecurityTab from './SecurityTab';
 
 const TabsWrapper = styled(Tabs)(

@@ -249,13 +249,13 @@ const Devices = () => {
                     <ListItemButton
                       disableGutters
                       sx={{ px: 2 }}
-                      onClick={() => toggleProjectExpansion(project.projectId)} // Toggle the session list
+                      onClick={() => toggleProjectExpansion(project.projectId)}
                     >
                       <ListItemText primary={project.name} secondary={project.description} />
                       {expandedProject === project.projectId ? (
-                        <ExpandLessIcon /> // Collapse icon
+                        <ExpandLessIcon />
                       ) : (
-                        <ExpandMoreIcon /> // Expand icon
+                        <ExpandMoreIcon />
                       )}
                     </ListItemButton>
                   </ListItem>

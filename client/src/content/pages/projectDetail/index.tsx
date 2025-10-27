@@ -373,6 +373,8 @@ const ProjectDetail = () => {
     setTab(newCurrentTab);
   };
 
+  const navigate = useNavigate();
+
   const fetchData = async () => {
     try {
       const activeSessions = await fetchActiveSessions(projectId);
@@ -415,25 +417,25 @@ const ProjectDetail = () => {
     archived: session.archived,
   }));
 
-const fetchProject = async () => {
-    const res = await fetch('/api/projects/id/' + projectId, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+  const fetchProject = async () => {
+      const res = await fetch('/api/projects/id/' + projectId, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-    if (!res.ok) {
-      console.error('Failed to fetch data');
-      return [];
-    }
+      if (!res.ok) {
+        console.error('Failed to fetch data');
+        return [];
+      }
 
-    const data = await res.json();
-    setProjectName(data.name);
-    setProjectDescription(data.description);
-    setIsArchived(data.archived);
-};
+      const data = await res.json();
+      setProjectName(data.name);
+      setProjectDescription(data.description);
+      setIsArchived(data.archived);
+  };
 
   const handleNameChange = async (event) => {
     await updateProject(projectId, event.target.value, projectDescription, isArchived);
@@ -454,7 +456,12 @@ const fetchProject = async () => {
 
   const handleDeleteProject = async (projectId) => {
     await deleteProject(projectId);
-    window.location.href = '/projects';
+    navigate('/projects', { replace: true });
+
+    window.history.pushState(null, '', '/projects');
+    window.addEventListener('popstate', () => {
+      window.history.pushState(null, '', '/projects');
+    });
   };
 
   const handleSelection = async (selectedIds) => {

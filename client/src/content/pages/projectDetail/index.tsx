@@ -109,6 +109,7 @@ const createSession = async (projectId: number, name, description, navigate) => 
     }
 
     const data = await res.json();
+    navigate(`/sessions/detail/${data.sessionId}`);
   } catch (error) {
     console.error(error);
   };

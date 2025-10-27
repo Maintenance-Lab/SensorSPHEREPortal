@@ -9,13 +9,13 @@ import { ConfigurationDialog } from './dialogs/configurationDialog';
 const getCommonColumns = (sessionId) => [
   { field: 'id', headerName: 'MAC Address', flex: 2, sortable: false,
     renderCell: (params) => (
-      <Link
-        href={`/devices/detail/${params.id}`}
-        sx={{ padding: 1, marginX: -1 }}
-        onClick={(event) => event.stopPropagation()}
-      >
-        {params.value}
-      </Link>
+      // <Link
+      //   href={`/devices/detail/${params.id}`}
+      //   sx={{ padding: 1, marginX: -1 }}
+      //   onClick={(event) => event.stopPropagation()}
+      // >
+        params.value
+      // </Link>
     ),
   },
   { field: 'lastSeen', headerName: 'Last Seen', flex: 1, sortable: false,

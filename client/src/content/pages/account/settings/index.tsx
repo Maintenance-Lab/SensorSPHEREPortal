@@ -7,8 +7,8 @@ import Footer from 'src/components/footer';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 
-import EditProfileTab from './EditProfileTab';
-import SecurityTab from './SecurityTab';
+import EditProfileTab from './editProfileTab';
+import SecurityTab from './securityTab';
 
 const TabsWrapper = styled(Tabs)(
   () => `

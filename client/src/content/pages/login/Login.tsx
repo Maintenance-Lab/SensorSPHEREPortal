@@ -8,7 +8,7 @@ import {
   Container
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
-import { getUser } from 'src/Helpers/cookies';
+import { getUser } from 'src/helpers/cookies';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 

@@ -8,8 +8,8 @@ import {
   DialogTitle,
   Typography,
   Container,
-  Link,
   List,
+  Link,
   ListItem,
   ListItemButton,
   ListItemText,
@@ -20,13 +20,14 @@ import {
 
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
-import PageTitleWrapper from 'src/Components/PageTitleWrapper';
+import PageTitleWrapper from 'src/components/pageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import QueueOutlinedIcon from '@mui/icons-material/QueueOutlined';
 import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';
 import DevicesIcon from '@mui/icons-material/Devices';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';  // Import the expand/collapse icon
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';  // Import the collapse icon
+import { Link as RouterLink } from 'react-router-dom';
 
 // Fetch active projects
 const fetchActiveProjects = async () => {
@@ -86,7 +87,7 @@ const fetchDevices = async () => {
 
 const devicesColumns: GridColDef[] = [
   { field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
-    <Link href={`/devices/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
+    <Link to={`/devices/detail/${params.id}`} component={RouterLink} sx={{ padding: 1, marginX: -1 }}>{params.value}</Link>
   )},
   { field: 'id', headerName: 'MAC Address', flex: 1 },
   {
@@ -248,13 +249,13 @@ const Devices = () => {
                     <ListItemButton
                       disableGutters
                       sx={{ px: 2 }}
-                      onClick={() => toggleProjectExpansion(project.projectId)} // Toggle the session list
+                      onClick={() => toggleProjectExpansion(project.projectId)}
                     >
                       <ListItemText primary={project.name} secondary={project.description} />
                       {expandedProject === project.projectId ? (
-                        <ExpandLessIcon /> // Collapse icon
+                        <ExpandLessIcon />
                       ) : (
-                        <ExpandMoreIcon /> // Expand icon
+                        <ExpandMoreIcon />
                       )}
                     </ListItemButton>
                   </ListItem>

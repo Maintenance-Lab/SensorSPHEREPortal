@@ -16,7 +16,7 @@ import * as Icons from '@mui/icons-material';
 import { Helmet } from 'react-helmet-async';
 
 // Local Components & Helpers
-import PageTitleWrapper from '../../../Components/PageTitleWrapper';
+import PageTitleWrapper from '../../../components/pageTitleWrapper';
 import ConfirmationDialog from './dialogs/confirmationDialog';
 import StartSessionDialog from './dialogs/startSessionDialog';
 
@@ -436,12 +436,18 @@ const handleCheckStartingConditions = async () => {
                 variant="outlined"
                 size="small"
                 autoFocus
-                onBlur={handleDescriptionChange}
-                onFocus={(event) => { event.target.select(); }}
-                sx={{ marginLeft: -1, width: '100%' }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') { handleDescriptionChange(event); }
+                multiline
+                minRows={3}
+                maxRows={10}
+                onBlur={async (event) => {
+                  // Save only if changed
+                  if (event.target.value !== sessionDescription) {
+                    await handleDescriptionChange(event);
+                  }
+                  setIsEditingDescription(false);
                 }}
+                onFocus={(event) => event.target.select()}
+                sx={{ ml: -1, width: "100%" }}
               />
             </Box>
           ) : (
@@ -449,17 +455,18 @@ const handleCheckStartingConditions = async () => {
               variant="body1"
               onClick={() => setIsEditingDescription(true)}
               sx={{
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                  outline: '2px solid rgba(0, 0, 0, 0.2)',
-                  borderRadius: '8px',
-                  paddingX: 1,
-                  marginX: -1,
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.05)",
+                  outline: "2px solid rgba(0, 0, 0, 0.2)",
+                  borderRadius: "8px",
+                  px: 1,
+                  mx: -1,
                 },
-                color: sessionDescription ? 'inherit' : 'gray'
+                color: sessionDescription ? "inherit" : "gray",
+                whiteSpace: "pre-wrap",
               }}
             >
-              {sessionDescription ? sessionDescription : 'Add description...'}
+              {sessionDescription ? sessionDescription : "Add description..."}
             </Typography>
           )}
           {isArchived &&

@@ -1,9 +1,9 @@
-import { calculateLastSeen, formatLastSeen } from "./startSessionHelpers";
+import { calculateLastSeen, formatLastSeenDevice } from "./startSessionHelpers";
 
 
 export const formatDeviceRow = (device, sampleRate) => {
   const lastSeenRaw = calculateLastSeen(device);
-  const lastSeen = formatLastSeen(device);
+  const lastSeen = formatLastSeenDevice(device);
 
   return {
     name: device.manufacturer,

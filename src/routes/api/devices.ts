@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import { getDeviceById, getAllDevices, getAllAvailableDevicesSession, getDevicesMappedToSession, updateSelectedProperties, getSelectedProperties, sendConfigurationToDevice,
-    getSampleRate, saveSampleRate, sendStartBatch, sendStopBatch } from '../../services/Device.js';
+    getSampleRate, saveSampleRate, sendStartBatch, sendStopBatch } from '../../services/device.js';
 import SessionDeviceMapping from '../../models/mappings/SessionDeviceMapping.js';
-import { getDeviceProperties } from '../../services/Device.js';
+import { getDeviceProperties } from '../../services/device.js';
 import Property from '../../models/Property.js';
 import DeviceSensorConfiguration from '../../models/DeviceSensorConfiguration.js';
 import DeviceModuleMapping from '../../models/mappings/DeviceModuleMapping.js';
 import Sensor from '../../models/Sensor.js';
 import Module from '../../models/Module.js';
-import { listUnits } from '../../services/Device.js';
+import { listUnits } from '../../services/device.js';
 import Session from '../../models/Session.js';
 
 const router = Router()

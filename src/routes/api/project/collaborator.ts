@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { IS_PROD } from "../../../config.js";
 import { getSession } from "../../../utils.js";
-import { getProjectById, updateProject } from "../../../services/Projects.js";
-import { getAccountByEmail } from "../../../services/Account.js";
+import { getProjectById, updateProject } from "../../../services/projects.js";
+import { getAccountByEmail } from "../../../services/account.js";
 import AccountProjectMapping from "../../../models/mappings/AccountProjectMapping.js";
 
 const router = Router();

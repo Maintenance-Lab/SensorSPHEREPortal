@@ -7,43 +7,23 @@ import {
   Chip,
   CardActionArea,
   Skeleton,
-  Divider
+  Divider,
+  Link,
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import Card from '@mui/material/Card';
-import PageTitleWrapper from 'src/Components/PageTitleWrapper';
+import PageTitleWrapper from 'src/components/pageTitleWrapper';
 import { Add, DesignServices, DesignServicesOutlined, Inventory, PlayCircleOutline, PlusOne, Usb, Schedule } from '@mui/icons-material';
 import CreateProjectDialog from '../projects/createProjectDialog';
-import { lastDayOfDecade, set } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
+
 
 const Home = () => {
   const [latestProjects, setLatestProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openCreateProjectDialog, setOpenCreateProjectDialog] = useState(false);
 
-  // OM FUNCTIES TE TESTEN -----------------------------------------------------
-
-  const test = async () => {
-    const res = await fetch('/api/sessions/project/active/21', {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!res.ok) {
-      console.error('Failed to fetch data');
-      return [];
-    }
-
-    const data = await res.json();
-
-    console.log("TEST", data);
-    return data;
-  }
-
-  // ---------------------------------------------------------------------------
+  const navigate = useNavigate();
 
   const fetchLatestProjects = async () => {
     const res = await fetch('/api/projects/latest', {
@@ -87,8 +67,6 @@ const Home = () => {
 
   useEffect(() => {
     fetchLatestProjects();
-    test();
-
   }, []);
 
   return (
@@ -101,6 +79,7 @@ const Home = () => {
       </PageTitleWrapper>
       <CreateProjectDialog open={openCreateProjectDialog} setOpen={setOpenCreateProjectDialog} />
       <Container>
+          <Typography variant="h2" paddingY={2}>Recent Projects</Typography>
         <Grid container spacing={2} >
           {loading && (
             <Grid item xs={6} lg={4}>
@@ -110,7 +89,7 @@ const Home = () => {
           {latestProjects.map((project) => (
             <Grid item xs={6} lg={4} key={project.projectId}>
               <Card>
-                <CardActionArea sx={{ p: 2 }} onClick={() => window.location.href = '/projects/detail/' + project.projectId}>
+                <CardActionArea sx={{ p: 2 }} onClick={() => navigate(`/projects/detail/${project.projectId}`)}>
                   <Stack direction="row" spacing={1} mb={1}>
                     <Chip label="Recent" icon={<Schedule />} size="small" sx={{ px: 0.5 }} />
                     {project.archived && (
@@ -133,7 +112,7 @@ const Home = () => {
         <Stack spacing={2} mt={4}>
           <Typography variant="h2">Getting Started</Typography>
         </Stack>
-        <Stack spacing={2} mt={2} py={2} direction="row" divider={<Divider orientation="vertical" flexItem />}>
+        {/* <Stack spacing={2} mt={2} py={2} direction="row" divider={<Divider orientation="vertical" flexItem />}>
           <Stack spacing={2}>
             <DesignServicesOutlined fontSize='large' />
             <Typography variant="body1" mt={1}>Create a data collection project.</Typography>
@@ -146,9 +125,9 @@ const Home = () => {
             <PlayCircleOutline fontSize='large' />
             <Typography variant="body1" mt={1}>Start a data collection session in your project.</Typography>
           </Stack>
-        </Stack>
+        </Stack> */}
         <Stack direction="row" spacing={2} mt={3}>
-        <Card
+        {/* <Card
             sx={{
             flex: 1,
             p: 2,
@@ -165,7 +144,7 @@ const Home = () => {
                 <Typography variant="h6">Find Devices</Typography>
                 <Typography variant="subtitle1">Search and find devices, view sensors, and use them in your projects.</Typography>
               </Stack>
-          </Card>
+          </Card> */}
           <Card
             sx={{
             flex: 1,

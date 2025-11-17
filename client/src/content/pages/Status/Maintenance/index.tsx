@@ -7,12 +7,9 @@ import {
   Tooltip
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
-import Logo from 'src/Components/LogoSign';
+import Logo from 'src/components/logoSign';
 
 import { styled } from '@mui/material/styles';
-import FacebookIcon from '@mui/icons-material/Facebook';
-import TwitterIcon from '@mui/icons-material/Twitter';
-import InstagramIcon from '@mui/icons-material/Instagram';
 
 const MainContent = styled(Box)(
   () => `
@@ -72,23 +69,6 @@ function StatusMaintenance() {
               >
                 + 00 1 888 555 444
               </Typography>
-            </Box>
-            <Box>
-              <Tooltip arrow placement="top" title="Facebook">
-                <IconButton color="primary">
-                  <FacebookIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip arrow placement="top" title="Twitter">
-                <IconButton color="primary">
-                  <TwitterIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip arrow placement="top" title="Instagram">
-                <IconButton color="primary">
-                  <InstagramIcon />
-                </IconButton>
-              </Tooltip>
             </Box>
           </Box>
         </Container>

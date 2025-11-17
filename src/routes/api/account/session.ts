@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getSession } from '../../../utils.js';
-import { deleteLoginSession } from '../../../services/LoginSession.js';
+import { deleteLoginSession } from '../../../services/loginSession.js';
 import { IS_PROD } from '../../../config.js';
 
 const router = Router();

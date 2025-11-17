@@ -1,14 +1,13 @@
 import { useState, ChangeEvent, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import PageHeader from './pageHeader';
-import PageTitleWrapper from 'src/Components/PageTitleWrapper';
+import PageTitleWrapper from 'src/components/pageTitleWrapper';
 import { Container, Tabs, Tab, Grid, Typography } from '@mui/material';
-import Footer from 'src/Components/Footer';
+import Footer from 'src/components/footer';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 
 import EditProfileTab from './editProfileTab';
-import NotificationsTab from './notificationsTab';
 import SecurityTab from './securityTab';
 
 const TabsWrapper = styled(Tabs)(

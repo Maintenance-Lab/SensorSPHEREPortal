@@ -18,7 +18,7 @@ function Footer() {
       >
         <Box>
           <Typography variant="subtitle1">
-            &copy; 2024 - SensorSphere Portal
+            &copy; 2025 - SensorSphere Portal
           </Typography>
         </Box>
       </Box>

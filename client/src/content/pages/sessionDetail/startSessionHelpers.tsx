@@ -54,7 +54,7 @@ export const checkStartingConditions = async (sessionId) => {
       return { allPassed: false, requirements: [requirements[0]] };
     }
 
-    const allPassed = requirements.filter(req => req.text !== "Make sure all devices are configured")
+    const allPassed = requirements.filter(req => req.text !== "Ensure all devices are configured")
       .every(req => req.done);
 
     return { allPassed, requirements }
@@ -67,13 +67,8 @@ export const isValidDate = (dateString: any) => {
   return !isNaN(date.getTime());
 };
 
-export const calculateLastSeen = (device) => {
-  const timestamp = device.lastHeartbeat;
+export const calculateLastSeen = (timestamp) => {
   if (!timestamp || typeof timestamp !== 'string') return Infinity;
-
-  if (device.connectStatus === 'connected') {
-    return 0;
-  }
 
   // Format the timestamp into a valid ISO string
   const iso = timestamp
@@ -95,13 +90,21 @@ export const calculateLastSeen = (device) => {
   return Infinity;
 };
 
-export const formatLastSeen = (device): string => {
-  const timestamp = device.lastHeartbeat;
-  if (!timestamp || typeof timestamp !== 'string') return 'Unknown';
+export const formatLastSeenDevice = (device): string => {
   if (device.connectStatus === 'connected') {
     return 'Now';
   }
-  const diffInSeconds = Math.floor(calculateLastSeen(device) / 1000);
+
+  const timestamp = device.lastHeartbeat;
+  return formatLastSeen(timestamp);
+}
+
+
+export const formatLastSeen = (timestamp): string => {
+  if (!timestamp || typeof timestamp !== 'string') return 'Unknown';
+
+
+  const diffInSeconds = Math.floor(calculateLastSeen(timestamp) / 1000);
 
   if (diffInSeconds === Infinity) return 'A long time ago';
 

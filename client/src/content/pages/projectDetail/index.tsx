@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button, TextField, Link, Paper, Tabs, Tab, Typography, Container, Box, Dialog, DialogActions,
   DialogContent, DialogTitle, Snackbar, Alert } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
-import PageTitleWrapper from 'src/Components/PageTitleWrapper';
+import PageTitleWrapper from 'src/components/pageTitleWrapper';
 import Stack from '@mui/material/Stack';
 import { useParams } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';
@@ -10,14 +10,17 @@ import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQu
 import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { ArchiveOutlined, DeleteOutline, Devices, Inventory, UnarchiveOutlined } from '@mui/icons-material';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { formatLastSeen } from '../sessionDetail/startSessionHelpers';
 
 const sessionColumns: GridColDef[] = [
   {
     field: 'name', headerName: 'Name', flex: 1, renderCell: (params) => (
-      <Link href={`/sessions/detail/${params.id}`} sx={{ padding: 1, marginX: -1 }}
-        onClick={(event) => {
-        event.stopPropagation();
-      }}>
+      <Link to={`/sessions/detail/${params.id}`}
+        component={RouterLink}
+        sx={{ padding: 1, marginX: -1 }}
+        onClick={(event) => {event.stopPropagation()}}
+      >
       {params.value}</Link>
     )
   },
@@ -84,7 +87,7 @@ const deleteProject = async (projectId: number) => {
   }
 }
 
-const createSession = async (projectId: number, name, description) => {
+const createSession = async (projectId: number, name, description, navigate) => {
   try {
     const res = await fetch('/api/sessions/create', {
       method: 'POST',
@@ -106,7 +109,7 @@ const createSession = async (projectId: number, name, description) => {
     }
 
     const data = await res.json();
-    window.location.href = `/sessions/detail/${data.sessionId}`;
+    navigate(`/sessions/detail/${data.sessionId}`);
   } catch (error) {
     console.error(error);
   };
@@ -176,16 +179,17 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, proj
   const handleOpenDialog = () => setDialogOpen(true);
   const handleCloseDialog = () => setDialogOpen(false);
 
+  const navigate = useNavigate();
+
   const handleSubmitCreateSession = async () => {
     try {
-      await createSession(projectId, name, description);
       setOpen(false);
-      fetchProject();
+      await fetchProject();
+      await createSession(projectId, name, description, navigate);
     } catch (error) {
       console.error(error);
     }
   };
-
 
   const archiveSessions = async (sessionIds, tab) => {
     const archived = tab === '2' ? true : false;
@@ -291,16 +295,6 @@ function CustomSessionsToolbar({ selectedSessionIds, setSelectedSessionIds, proj
   );
 };
 
-function CustomAddDevicesToolbar() {
-  return (
-    <GridToolbarContainer sx={{ padding: 1 }}>
-      <Stack direction="row" spacing={1}>
-        <GridToolbarQuickFilter variant="outlined" size='small' sx={{ padding: 0 }} />
-      </Stack>
-    </GridToolbarContainer>
-  );
-}
-
 const ConfirmationDialog = ({ open, onClose, onConfirm, projectIds }) => (
   <Dialog open={open} onClose={onClose}>
     <DialogTitle>Confirm Deletion</DialogTitle>
@@ -375,10 +369,11 @@ const ProjectDetail = () => {
   const [projectHasMeasuring, setProjectHasMeasuring] = useState(false);
   const [selectionHasMeasuring, setSelectionHasMeasuring] = useState(false);
 
-
   const handleTabChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
     setTab(newCurrentTab);
   };
+
+  const navigate = useNavigate();
 
   const fetchData = async () => {
     try {
@@ -418,30 +413,29 @@ const ProjectDetail = () => {
     projectId: session.projectId,
     meta: session.meta,
     createdAt: session.createdAt,
-    lastActive: session.lastActive,
+    lastActive: formatLastSeen(session.lastActive),
     archived: session.archived,
   }));
 
+  const fetchProject = async () => {
+      const res = await fetch('/api/projects/id/' + projectId, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-const fetchProject = async () => {
-    const res = await fetch('/api/projects/id/' + projectId, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+      if (!res.ok) {
+        console.error('Failed to fetch data');
+        return [];
+      }
 
-    if (!res.ok) {
-      console.error('Failed to fetch data');
-      return [];
-    }
-
-    const data = await res.json();
-    setProjectName(data.name);
-    setProjectDescription(data.description);
-    setIsArchived(data.archived);
-};
+      const data = await res.json();
+      setProjectName(data.name);
+      setProjectDescription(data.description);
+      setIsArchived(data.archived);
+  };
 
   const handleNameChange = async (event) => {
     await updateProject(projectId, event.target.value, projectDescription, isArchived);
@@ -462,7 +456,12 @@ const fetchProject = async () => {
 
   const handleDeleteProject = async (projectId) => {
     await deleteProject(projectId);
-    window.location.href = '/projects';
+    navigate('/projects', { replace: true });
+
+    window.history.pushState(null, '', '/projects');
+    window.addEventListener('popstate', () => {
+      window.history.pushState(null, '', '/projects');
+    });
   };
 
   const handleSelection = async (selectedIds) => {
@@ -555,18 +554,18 @@ const fetchProject = async () => {
                 variant="outlined"
                 size="small"
                 autoFocus
-                onBlur={(event) => {
-                  // Check if the value has changed from the initial value
+                multiline
+                minRows={3}
+                maxRows={10}
+                onBlur={async (event) => {
+                  // Save only if changed
                   if (event.target.value !== projectDescription) {
-                    window.location.reload();
+                    await handleDescriptionChange(event);
                   }
-                  handleDescriptionChange(event);
+                  setIsEditingDescription(false);
                 }}
-                onFocus={(event) => { event.target.select(); }}
-                sx={{ marginLeft: -1, width: '100%' }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') { handleDescriptionChange(event); }
-                }}
+                onFocus={(event) => event.target.select()}
+                sx={{ ml: -1, width: "100%" }}
               />
             </Box>
           ) : (
@@ -574,17 +573,18 @@ const fetchProject = async () => {
               variant="body1"
               onClick={() => setIsEditingDescription(true)}
               sx={{
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                  outline: '2px solid rgba(0, 0, 0, 0.2)',
-                  borderRadius: '8px',
-                  paddingX: 1,
-                  marginX: -1,
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.05)",
+                  outline: "2px solid rgba(0, 0, 0, 0.2)",
+                  borderRadius: "8px",
+                  px: 1,
+                  mx: -1,
                 },
-                color: projectDescription ? 'inherit' : 'gray'
+                color: projectDescription ? "inherit" : "gray",
+                whiteSpace: "pre-wrap",
               }}
             >
-              {projectDescription ? projectDescription : 'Add description...'}
+              {projectDescription ? projectDescription : "Add description..."}
             </Typography>
           )}
           {isArchived &&

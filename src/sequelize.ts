@@ -1,5 +1,3 @@
-// import {Sequelize} from 'sequelize';
-// const Sequelize = require('sequelize');
 import { Sequelize } from 'sequelize';
 import { SQLITE_PATH } from './config.js';
 

@@ -25,7 +25,7 @@ import {
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { Theme } from '@mui/material/styles';
-import { generateRandomString, isEmail } from 'src/Helpers/utils';
+import { generateRandomString, isEmail } from 'src/helpers/utils';
 import { Helmet } from 'react-helmet-async';
 import MuiAlert from '@mui/material/Alert';
 

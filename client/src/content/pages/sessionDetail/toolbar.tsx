@@ -3,19 +3,19 @@ import { GridToolbarContainer, GridToolbarQuickFilter, GridColDef, GridRowsProp 
 import { Button, Link, Typography, Box, Stack, Tooltip } from '@mui/material';
 
 import { addDevices, removeDevicesFromSession } from "./api";
-import { renderBatteryCell, calculateLastSeen, formatLastSeen, ConnectedCell } from './startSessionHelpers';
+import { renderBatteryCell, calculateLastSeen, formatLastSeenDevice, ConnectedCell } from './startSessionHelpers';
 import { ConfigurationDialog } from './dialogs/configurationDialog';
 
 const getCommonColumns = (sessionId) => [
   { field: 'id', headerName: 'MAC Address', flex: 2, sortable: false,
     renderCell: (params) => (
-      <Link
-        href={`/devices/detail/${params.id}`}
-        sx={{ padding: 1, marginX: -1 }}
-        onClick={(event) => event.stopPropagation()}
-      >
-        {params.value}
-      </Link>
+      // <Link
+      //   href={`/devices/detail/${params.id}`}
+      //   sx={{ padding: 1, marginX: -1 }}
+      //   onClick={(event) => event.stopPropagation()}
+      // >
+        params.value
+      // </Link>
     ),
   },
   { field: 'lastSeen', headerName: 'Last Seen', flex: 1, sortable: false,
@@ -166,7 +166,7 @@ export const availableDevicesColumns = (sessionId): GridColDef[] => [
 export const getAvailableDevicesRows = (availableDevices: any[]): GridRowsProp => {
   return availableDevices.map((device) => {
     const lastSeenRaw = calculateLastSeen(device);
-    const lastSeen = formatLastSeen(device);
+    const lastSeen = formatLastSeenDevice(device);
 
     return {
       name: device.manufacturer,

@@ -2,7 +2,7 @@ import mqtt from 'mqtt';
 import { MQTT_URI } from '../config.js';
 import Device from '../models/Device.js';
 import Manufacturer from '../models/Manufacturer.js';
-import { MQTTMessage } from '../services/Mqtt.js';
+import { MQTTMessage } from '../services/mqtt.js';
 
 export class MQTTServer {
   private client: mqtt.MqttClient;

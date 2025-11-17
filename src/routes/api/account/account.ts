@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { IS_PROD, JWT_ACCESS_SECRET, JWT_EXPIRESIN } from '../../../config.js';
-import { getAccountById, updateAccount } from '../../../services/Account.js';
+import { getAccountById, updateAccount } from '../../../services/account.js';
 import { getSession } from '../../../utils.js';
 import { hash, verify } from '@node-rs/argon2';
 import jwt from 'jsonwebtoken';
-import { createLoginSession } from '../../../services/LoginSession.js';
+import { createLoginSession } from '../../../services/loginSession.js';
 
 const router = Router();
 

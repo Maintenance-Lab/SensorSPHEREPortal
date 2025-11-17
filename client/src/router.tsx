@@ -2,11 +2,11 @@ import { Suspense, lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import { RouteObject } from 'react-router';
 
-import SidebarLayout from 'src/layouts/SidebarLayout';
-import BaseLayout from 'src/layouts/BaseLayout';
+import SidebarLayout from 'src/layouts/sidebarLayout';
+import BaseLayout from 'src/layouts/baseLayout';
 
-import SuspenseLoader from './Components/SuspenseLoader';
-import { ProtectedRoute } from './Helpers/protectedRoute';
+import SuspenseLoader from './components/suspenseLoader';
+import { ProtectedRoute } from './helpers/protectedRoute';
 
 const Loader = (Component) => (props) =>
   (
@@ -57,10 +57,10 @@ const Status404 = Loader(
   lazy(() => import('src/content/pages/status/Status404'))
 );
 const Status500 = Loader(
-  lazy(() => import('src/content/pages/status/Status500'))
+  lazy(() => import('src/content/pages/Status/Status500'))
 );
 const StatusComingSoon = Loader(
-  lazy(() => import('src/content/pages/status/ComingSoon'))
+  lazy(() => import('src/content/pages/Status/ComingSoon'))
 );
 const StatusMaintenance = Loader(
   lazy(() => import('src/content/pages/status/Maintenance'))

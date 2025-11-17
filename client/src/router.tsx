@@ -54,16 +54,13 @@ const UserSettings = Loader(
 // Status
 
 const Status404 = Loader(
-  lazy(() => import('src/content/pages/status/Status404'))
+  lazy(() => import('src/content/pages/status/status404'))
 );
 const Status500 = Loader(
-  lazy(() => import('src/content/pages/Status/Status500'))
-);
-const StatusComingSoon = Loader(
-  lazy(() => import('src/content/pages/Status/ComingSoon'))
+  lazy(() => import('src/content/pages/status/status500'))
 );
 const StatusMaintenance = Loader(
-  lazy(() => import('src/content/pages/status/Maintenance'))
+  lazy(() => import('src/content/pages/status/maintenance'))
 );
 
 const routes: RouteObject[] = [

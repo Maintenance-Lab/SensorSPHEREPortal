@@ -8,7 +8,7 @@ import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter
   } from '@mui/x-data-grid';
-import CreateProjectDialog from './CreateProjectDialog';
+import CreateProjectDialog from './createProjectDialog';
 import { GridColumnVisibilityModel } from '@mui/x-data-grid';
 import { Link as RouterLink } from 'react-router-dom';
 

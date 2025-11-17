@@ -17,7 +17,7 @@ const Loader = (Component) => (props) =>
 
 // Base
 
-const Login = Loader(lazy(() => import('src/content/pages/login/Login')));
+const Login = Loader(lazy(() => import('src/content/pages/login/login')));
 const Home = Loader(lazy(() => import('src/content/pages/home/')));
 
 // Pages

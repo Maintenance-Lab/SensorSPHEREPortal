@@ -13,7 +13,7 @@ import { Helmet } from 'react-helmet-async';
 import Card from '@mui/material/Card';
 import PageTitleWrapper from 'src/Components/PageTitleWrapper';
 import { Add, DesignServices, DesignServicesOutlined, Inventory, PlayCircleOutline, PlusOne, Usb, Schedule } from '@mui/icons-material';
-import CreateProjectDialog from '../projects/CreateProjectDialog';
+import CreateProjectDialog from '../projects/createProjectDialog';
 import { lastDayOfDecade, set } from 'date-fns';
 
 const Home = () => {

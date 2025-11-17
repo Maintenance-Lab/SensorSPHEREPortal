@@ -27,7 +27,7 @@ import {
   GridToolbarContainer,
   GridToolbarQuickFilter
 } from '@mui/x-data-grid';
-import CreateProjectDialog from './CreateProjectDialog';
+import CreateProjectDialog from './createProjectDialog';
 import { GridColumnVisibilityModel } from '@mui/x-data-grid';
 import { set } from 'date-fns';
 

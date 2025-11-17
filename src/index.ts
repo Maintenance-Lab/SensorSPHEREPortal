@@ -1,6 +1,6 @@
 import cleanup from 'node-cleanup';
 import WebServer from './classes/WebServer.js';
-import { initDb, startDb } from './sqlite.js';
+import { initDb, startDb, createDefaultUser } from './sqlite.js';
 import db from './sequelize.js'
 import { MQTTServer } from './classes/MQTTServer.js';
 
@@ -9,6 +9,7 @@ const mqtt = new MQTTServer();
 
 initDb();
 startDb();
+createDefaultUser();
 
 mqtt.subscribe('interface/listUnitsResult');
 mqtt.subscribe('interface/validateConfigurationResult');

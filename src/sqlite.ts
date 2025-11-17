@@ -4,9 +4,8 @@ import { Database } from 'sqlite3';
 import { SQLITE_PATH } from './config.js';
 import sequelize from './sequelize.js';
 import setupRelations from './relationships/relationships.js';
-
-// const sqlite3 = require('sqlite3').verbose();
-
+import Account from './models/Account.js';
+import { hash } from '@node-rs/argon2';
 
 // Initialize and configure the SQLite database
 const initDb = () => {
@@ -216,11 +215,27 @@ const startDb = async () => {
     console.log('All models were synchronized successfully.');
 }
 
-// initDb();
-// startDb();
+const createDefaultUser = async () => {
+  try {
+    const userExists = await Account.findOne({ where: { email: 'admin@example.com' } });
 
-export { initDb, closeDb, startDb };
-// export default db;
+    if (!userExists) {
+      const hashedPassword = await hash('admin');
+      await Account.create({
+        name: 'admin',
+        email: 'admin@example.com',
+        password: hashedPassword,
+        role: 'admin',
+      });
+      console.log('Default user created with username: admin / password: admin');
+    }
+  } catch (err) {
+    console.error('Error creating default user:', err);
+  }
+};
+
+export { initDb, closeDb, startDb, createDefaultUser };
+
 
 
 

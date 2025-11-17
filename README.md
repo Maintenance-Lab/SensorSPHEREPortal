@@ -18,7 +18,7 @@ ISsues and Contributors don't work as it can't find the repo -->
   <p align="center">
     A web-based interface for managing SensorSPHERE data collection projects and sessions.
     <br /><br />
-    <a href="https://github.com/Maintenance-Lab/SensorSPHEREPortal/tree/development/docs">View Documentation</a>
+    <a href="https://github.com/Maintenance-Lab/SensorSPHEREDocs">View Documentation</a>
     &middot;
     <a href="https://github.com/Maintenance-Lab/SensorSPHEREGateway">SensorSPHERE Gateway</a>
     &middot;
@@ -179,6 +179,9 @@ After units are configured, start the session to initiate data acquisition. Moni
 
 ## Database Structure
 The SensorSPHERE Portal uses SQLite to store all project, session, and device data. The diagram below provides a complete overview of the database schema, showing all tables and how they relate to each other.
+
+<!-- Image of database structure -->
+![Database Structure](/ERD.png)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

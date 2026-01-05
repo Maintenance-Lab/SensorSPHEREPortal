@@ -20,9 +20,9 @@ ISsues and Contributors don't work as it can't find the repo -->
     <br /><br />
     <a href="https://github.com/Maintenance-Lab/SensorSPHEREDocs">View Documentation</a>
     &middot;
-    <a href="https://github.com/Maintenance-Lab/SensorSPHEREGateway">SensorSPHERE Gateway</a>
+    <a href="https://github.com/Maintenance-Lab/SensorSPHEREGateway">Reference SensorSPHERE Gateway</a>
     &middot;
-    <a href="https://github.com/Maintenance-Lab/SensorSPHEREUnit">SensorSPHERE Unit</a>
+    <a href="https://github.com/Maintenance-Lab/SensorSPHEREUnit">Reference SensorSPHERE Unit</a>
   </p>
 </div>
 
@@ -53,6 +53,8 @@ ISsues and Contributors don't work as it can't find the repo -->
 The **SensorSPHERE Portal** serves as the central management interface within the SensorSPHERE ecosystem. It enables users to efficiently create and manage projects and sessions for data collection from various sensor-equipped devices, known as SensorSPHERE Units.
 
 Through the portal, users can view an overview of all available devices, configure their settings, and initiate data collection sessions remotely. This streamlined process facilitates easy data gathering for research and analysis, making it accessible even for users without extensive programming experience.
+
+To get a better overview of the complete system and how the SensorSPHERE Portal fits within that **please refer to our dedicated documentation page:** <a href="https://github.com/Maintenance-Lab/SensorSPHEREDocs"><strong>Explore the docs »</strong></a>
 
 _Note: The current structure and features reflect an ongoing development process, and some components may not yet represent the final implementation._
 

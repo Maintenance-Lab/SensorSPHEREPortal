@@ -23,33 +23,42 @@ ISsues and Contributors don't work as it can't find the repo -->
     <a href="https://github.com/Maintenance-Lab/SensorSPHEREGateway">Reference SensorSPHERE Gateway</a>
     &middot;
     <a href="https://github.com/Maintenance-Lab/SensorSPHEREUnit">Reference SensorSPHERE Unit</a>
-  </p>
+
+### Frontend
+[![React][React.js]][React-url] [![Next.js][Next.js]][Next-url] [![Material-UI][Mui]][Mui-url] [![TypeScript][TypeScript]][TypeScript-url]
+
+### Backend
+[![Node.js][Node.js]][Node-url] [![Express][Express]][Express-url] [![Sequelize][Sequelize]][Sequelize-url] [![SQLite][SQLite]][SQLite-url] [![MQTT][MQTT]][MQTT-url] [![TypeScript][TypeScript]][TypeScript-url]
 </div>
 
 <details>
   <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-portal">About the Portal</a>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
+  <ul>
+    <li><a href="#about-the-portal">About the Portal</a></li>
+    <li><a href="#getting-started">Getting Started</a></li>
+    <ul>
+      <li><a href="#installation">Installation</a></li>
       <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-        <li><a href="#configuration">Configuration</a></li>
-        <li><a href="#running-the-project">Running the Project</a></li>
+        <li><a href="#tech-stack">Tech Stack</a></li>
+        <li><a href="#dependencies">Dependencies</a></li>
+        <ul>
+          <li><a href="#clone-repository">Clone Repository</a></li>
+        </ul>
+        <li><a href="#configuration-setup">Configuration Setup</a></li>
       </ul>
-    </li>
-    <li><a href="#database-structure">Database Structure</a></li>
-    <li><a href="#tech-stack">Tech Stack</a></li>
+      <li><a href="#running-the-project">Running the Project</a></li>
+    </ul>
+    <li><a href="#getting-familiar">Getting Familiar</a></li>
+    <ul>
+      <li><a href="#components">Components</a></li>
+      <li><a href="#database-structure">Database Structure</a></li>
+    </ul>
     <li><a href="#future-features">Future Features</a></li>
     <li><a href="#license">License</a></li>
-  </ol>
+  </ul>
 </details>
 
-## About the Portal
+# About the Portal
 The **SensorSPHERE Portal** serves as the central management interface within the SensorSPHERE ecosystem. It enables users to efficiently create and manage projects and sessions for data collection from various sensor-equipped devices, known as SensorSPHERE Units.
 
 Through the portal, users can view an overview of all available devices, configure their settings, and initiate data collection sessions remotely. This streamlined process facilitates easy data gathering for research and analysis, making it accessible even for users without extensive programming experience.
@@ -58,32 +67,39 @@ To get a better overview of the complete system and how the SensorSPHERE Portal 
 
 _Note: The current structure and features reflect an ongoing development process, and some components may not yet represent the final implementation._
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Getting Started
+# Getting Started
 Follow these instructions to set up and run the SensorSPHERE Portal on your local machine for development and testing purposes.
 
-### Prerequisites
-Ensure you have the following software installed on your system:
+## Installation
+
+### Tech Stack
+Use the tech stack by ensuring you have the following software installed on your system:
 * **Node.js**
   ```sh
   sudo apt install nodejs
   ```
 * **npm**
   ```sh
-  npm install npm
+  sudo apt install npm
   ```
+[Node and npm documentation](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 * **SQLite3**
   ```sh
   sudo apt install sqlite3
   ```
-The portal was tested with Node.js v20.17, npm v10.8.2, and SQLite3 v3.45.3. Other versions may also work.
-Refer to the package.json files for a full list of module dependencies.
-
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+### Dependencies
+<!-- Kijk naar de unit (lijst overzicht) (running the project chapter)
+requirement.txt 
+-->
+The portal was tested with Node.js v20.17, npm v10.8.2, and SQLite3 v3.45.3. Other versions may also work.
+Refer to the package.json files for a full list of module dependencies.
 
-### Installation
+#### Clone Repository
 Below are the steps to install and set up the SensorSPHERE Portal locally.
 
 1. Clone the repository
@@ -95,6 +111,7 @@ Below are the steps to install and set up the SensorSPHERE Portal locally.
     cd SensorSPHEREPortal
     npm install
    ```
+<!-- npm install 2 keer nodig? -->
 3. Install frontend dependencies
    ```sh
     cd client
@@ -104,7 +121,7 @@ Below are the steps to install and set up the SensorSPHERE Portal locally.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-### Configuration
+### Configuration Setup
 Before running the application, you may need to set up environment variables for configuration. Create a `.env` file in the root directory with the following content:
 ```
 ENV=development                      # Options: development, production
@@ -116,11 +133,12 @@ SQLITE_PATH='./database/db.sqlite3'  # Path to SQLite database file
 DANGEROUSLY_DISABLE_HOST_CHECK=true  # Disable host check for development
 FIRMWARE='1.2.2'                     # Firmware version
 ```
+<!-- Describe: only tested on development and locally  -->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-### Running the Project
+## Running the Project
 
 To start the SensorSPHERE Portal, follow these steps:
 1. Ensure the SensorSPHEREGateway is running and connected to the MQTT broker.
@@ -143,9 +161,11 @@ You can log in using the default admin credentials:
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-## Usage
-Once the SensorSPHERE Portal is running, you can use it to manage and monitor your data collection sessions. The main workflow is outlined below:
+# Getting Familiar
+Once the SensorSPHERE Portal is running, you can use it to manage and monitor your data collection sessions. The main workflow is outlined below.
 
+## Components
+<!-- Screenshots? -->
 ### Logging In
 Access the portal using your credentials.
 
@@ -182,13 +202,12 @@ After units are configured, start the session to initiate data acquisition. Moni
 ## Database Structure
 The SensorSPHERE Portal uses SQLite to store all project, session, and device data. The diagram below provides a complete overview of the database schema, showing all tables and how they relate to each other.
 
-<!-- Image of database structure -->
 ![Database Structure](/ERD.png)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-## Tech Stack
+<!-- ## Tech Stack
 
 The following core technologies form the foundation of the portal’s frontend and backend.
 
@@ -206,17 +225,17 @@ The following core technologies form the foundation of the portal’s frontend a
 * [![MQTT][MQTT]][MQTT-url]
 * [![TypeScript][TypeScript]][TypeScript-url]
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
 
-## Future Features
+# Future Features
 
 See the [open issues](https://github.com/Maintenance-Lab/SensorSPHEREPortal/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-## License
+# License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

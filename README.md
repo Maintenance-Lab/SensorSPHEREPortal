@@ -41,9 +41,7 @@ ISsues and Contributors don't work as it can't find the repo -->
       <ul>
         <li><a href="#tech-stack">Tech Stack</a></li>
         <li><a href="#dependencies">Dependencies</a></li>
-        <ul>
-          <li><a href="#clone-repository">Clone Repository</a></li>
-        </ul>
+        <li><a href="#clone-repository">Clone Repository</a></li>
         <li><a href="#configuration-setup">Configuration Setup</a></li>
       </ul>
       <li><a href="#running-the-project">Running the Project</a></li>
@@ -94,12 +92,12 @@ Use the tech stack by ensuring you have the following software installed on your
 
 ### Dependencies
 <!-- Kijk naar de unit (lijst overzicht) (running the project chapter)
-requirement.txt 
--->
+requirement.txt  -->
+
 The portal was tested with Node.js v20.17, npm v10.8.2, and SQLite3 v3.45.3. Other versions may also work.
 Refer to the package.json files for a full list of module dependencies.
 
-#### Clone Repository
+### Clone Repository
 Below are the steps to install and set up the SensorSPHERE Portal locally.
 
 1. Clone the repository
@@ -206,26 +204,6 @@ The SensorSPHERE Portal uses SQLite to store all project, session, and device da
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-<!-- ## Tech Stack
-
-The following core technologies form the foundation of the portal’s frontend and backend.
-
-### Frontend
-* [![React][React.js]][React-url]
-* [![Next.js][Next.js]][Next-url]
-* [![Material-UI][Mui]][Mui-url]
-* [![TypeScript][TypeScript]][TypeScript-url]
-
-### Backend
-* [![Node.js][Node.js]][Node-url]
-* [![Express][Express]][Express-url]
-* [![Sequelize][Sequelize]][Sequelize-url]
-* [![SQLite][SQLite]][SQLite-url]
-* [![MQTT][MQTT]][MQTT-url]
-* [![TypeScript][TypeScript]][TypeScript-url]
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
 
 # Future Features

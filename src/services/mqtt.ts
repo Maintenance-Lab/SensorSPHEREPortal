@@ -15,7 +15,14 @@ import mqtt from '../index.js';
 export const wss = new WebSocketServer({ port: 8080 });
 
 export const MQTTMessage = async (topic: string, message: Buffer) => {
-    const parsed_message = JSON.parse(message.toString());
+    let parsed_message: any;
+    try {
+        parsed_message = JSON.parse(message.toString());
+    }
+    catch (error) {
+        console.error("Failed to parse JSON from MQTT message on topic", topic, ":", error);
+        return { message: "Invalid message received" };
+    }
 
     if (topic == "interface/listUnitsResult") {
         console.log("Got message on listUnitsResult topic");

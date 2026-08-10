@@ -20,7 +20,9 @@ export class MQTTServer {
 
     this.client.on("message", (topic, message) => {
       console.log(`MQTT message received: ${topic} ${message}`);
-      MQTTMessage(topic, message);
+      MQTTMessage(topic, message).catch((error) => {
+        console.error("Unhandled error in MQTTMessage:", error);
+      });
     });
   }
 

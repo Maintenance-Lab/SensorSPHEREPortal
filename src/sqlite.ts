@@ -1,6 +1,5 @@
-import sqlite3 from 'sqlite3';
-// import * as sqlite3 from 'sqlite3';
-import { Database } from 'sqlite3';
+import sqlite3 from './sqlite3-compat.js';
+import { Database } from './sqlite3-compat.js';
 import { SQLITE_PATH } from './config.js';
 import sequelize from './sequelize.js';
 import setupRelations from './relationships/relationships.js';

@@ -8,11 +8,15 @@ export const formatDeviceRow = (device, sampleRate) => {
   return {
     name: device.manufacturer,
     id: device.deviceId,
+    manufacturer: device.manufacturer,
+    model: device.model,
     connected: device.connectStatus,
     battery: device.batteryLevel,
     sampleRate: sampleRate ? sampleRate + " Hz" : "-",
+    configured: sampleRate != null,
     lastSeen,
     lastSeenRaw,
+    lastHeartbeat: device.lastHeartbeat,
   };
 };
 

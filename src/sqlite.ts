@@ -114,8 +114,7 @@ const initDb = () => {
                 sensorType TEXT NOT NULL,
                 active BOOLEAN NOT NULL,
                 PRIMARY KEY (sessionId, deviceId, sensorProperty, sensorType),
-                FOREIGN KEY (sessionId, deviceId) REFERENCES SessionDeviceMapping(sessionId, deviceId),
-                FOREIGN KEY (sensorProperty, sensorType) REFERENCES Property(name, sensorType)
+                FOREIGN KEY (sessionId, deviceId) REFERENCES SessionDeviceMapping(sessionId, deviceId)
             );
         `);
 
@@ -142,14 +141,16 @@ const initDb = () => {
         // SensorProperty table
         db.run(`
             CREATE TABLE IF NOT EXISTS Property (
-                name TEXT,
-                sensorType TEXT,
+                name TEXT NOT NULL,
+                sensorType TEXT NOT NULL,
+                moduleName TEXT NOT NULL,
+                moduleManufacturer TEXT NOT NULL,
                 unit TEXT,
                 accuracy FLOAT,
                 rangeMin FLOAT,
                 rangeMax FLOAT,
-                PRIMARY KEY (name, sensortype),
-                FOREIGN KEY (sensortype) REFERENCES Sensor(type)
+                PRIMARY KEY (name, sensorType, moduleName, moduleManufacturer),
+                FOREIGN KEY (sensorType) REFERENCES Sensor(type)
             );
         `);
 

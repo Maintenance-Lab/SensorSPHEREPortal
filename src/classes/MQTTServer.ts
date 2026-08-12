@@ -19,7 +19,9 @@ export class MQTTServer {
     });
 
     this.client.on("message", (topic, message) => {
-      console.log(`MQTT message received: ${topic} ${message}`);
+      const shown =
+        message.length > 120 ? message.toString().slice(0, 120) + "..." : message.toString();
+      console.log(`MQTT message received: ${topic} [${message.length} bytes] ${shown}`);
       MQTTMessage(topic, message).catch((error) => {
         console.error("Unhandled error in MQTTMessage:", error);
       });

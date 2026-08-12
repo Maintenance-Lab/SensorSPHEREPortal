@@ -1,5 +1,5 @@
 import * as Icons from '@mui/icons-material';
-import {  Typography, Stack, Box } from '@mui/material';
+import {  Typography, Stack, Box, Tooltip } from '@mui/material';
 import { fetchDevices, getSampleRate, checkOccupied } from "./api";
 import { useEffect, useState } from 'react';
 
@@ -92,7 +92,7 @@ export const calculateLastSeen = (timestamp) => {
 
 export const formatLastSeenDevice = (device): string => {
   if (device.connectStatus === 'connected') {
-    return 'Now';
+    return 'online';
   }
 
   const timestamp = device.lastHeartbeat;
@@ -130,6 +130,21 @@ export const formatLastSeen = (timestamp): string => {
     return 'A long time ago';
   }
 
+};
+
+export const formatExactTime = (timestamp): string => {
+  if (!timestamp || typeof timestamp !== 'string') return 'Unknown';
+
+  const iso = timestamp
+    .replace(' ', 'T')
+    .replace(/ ([+-]\d{2}:\d{2})$/, '$1')
+    .replace(/ ([+-]\d{4})$/, (_, offset) => {
+      return offset.slice(0, 3) + ':' + offset.slice(3);
+    });
+
+  const date = new Date(iso);
+  if (!isValidDate(date)) return timestamp;
+  return date.toLocaleString();
 };
 
 export const renderBatteryCell = (params) => {
@@ -170,7 +185,7 @@ export const renderBatteryCell = (params) => {
   );
 };
 
-export const ConnectedCell = ({ deviceId, status, sessionId }) => {
+export const ConnectedCell = ({ deviceId, status, sessionId, lastSeen, lastHeartbeat }) => {
   const [occupied, setOccupied] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -185,20 +200,40 @@ export const ConnectedCell = ({ deviceId, status, sessionId }) => {
     return () => { mounted = false; };
   }, [deviceId, sessionId]);
 
+  const tooltip = occupied === true
+    ? 'Device is measuring in another session'
+    : `Last heartbeat: ${formatExactTime(lastHeartbeat)}`;
 
-  let Icon = null;
+  let content;
   if (occupied === true) {
-    Icon = <Icons.Block sx={{ color: 'warning.main' }} />;
-  } else if (occupied === false && status === 'connected') {
-    Icon = <Icons.Sensors sx={{ color: 'success.main' }} />;
-  } else if (status === 'disconnected') {
-    Icon = <Icons.SensorsOff sx={{ color: 'error.main' }} />;
+    content = (
+      <Stack direction="row" alignItems="center" spacing={0.5}>
+        <Icons.Block sx={{ color: 'warning.main' }} />
+        <Typography variant="body2" color="text.secondary">In use</Typography>
+      </Stack>
+    );
+  } else if (status === 'connected') {
+    content = (
+      <Stack direction="row" alignItems="center" spacing={0.5}>
+        <Icons.Sensors sx={{ color: 'success.main' }} />
+        <Typography variant="body2" color="success.main">online</Typography>
+      </Stack>
+    );
+  } else {
+    content = (
+      <Stack direction="row" alignItems="center" spacing={0.5}>
+        <Icons.SensorsOff sx={{ color: 'error.main' }} />
+        <Typography variant="body2" color="text.secondary">last seen {lastSeen}</Typography>
+      </Stack>
+    );
   }
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%', paddingLeft: 1 }}>
-      {Icon}
-    </Box>
+    <Tooltip title={tooltip} arrow>
+      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', width: '100%' }}>
+        {content}
+      </Box>
+    </Tooltip>
   );
 };
 

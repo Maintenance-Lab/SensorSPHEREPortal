@@ -56,11 +56,11 @@ router.post("/addToSession", async (req, res) => {
             if (!sensorsDeviceMappings) return res.status(404).json({ message: "Sensors not found" });
             try {
                 for (const sensorMapping of sensorsDeviceMappings) {
-                    const { deviceId, sensorType } = sensorMapping.dataValues;
+                    const { deviceId, sensorType, moduleName, moduleManufacturer } = sensorMapping.dataValues;
 
-                    // Get matching Property entries
+                    // Get matching Property entries for this device's module
                     const properties = await Property.findAll({
-                      where: { sensorType }, // assuming 'sensorType' column in Property
+                      where: { sensorType, moduleName, moduleManufacturer },
                       attributes: ['name', 'sensorType']
                     });
 

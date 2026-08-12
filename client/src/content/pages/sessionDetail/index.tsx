@@ -644,7 +644,7 @@ const handleCheckStartingConditions = async () => {
                   handleReconfigure,
                   setExpandedNodes,
               })}
-              sortingOrder={['asc']}
+              sortingOrder={['asc', 'desc']}
               density='compact'
               autoHeight
               pageSizeOptions={[10]}
@@ -652,7 +652,6 @@ const handleCheckStartingConditions = async () => {
                 lastSeenRaw: false,
               }}
               disableColumnMenu
-              disableColumnResize
               initialState={{
                 pagination: { paginationModel: { pageSize: 10 } },
                 sorting: {
@@ -676,8 +675,11 @@ const handleCheckStartingConditions = async () => {
                 "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {
                   outline: "none !important",
                 },
+                "& .MuiDataGrid-row": {
+                  cursor: "pointer",
+                },
                 "& .MuiDataGrid-row:hover": {
-                  backgroundColor: "rgba(0, 0, 0, 0)",
+                  backgroundColor: "rgba(0, 0, 0, 0.04)",
                 }
               }}
             />
@@ -698,7 +700,6 @@ const handleCheckStartingConditions = async () => {
               density='compact'
               autoHeight
               disableColumnMenu
-              disableColumnResize
               checkboxSelection
               onRowSelectionModelChange={(newSelection) => setSelectedAddDeviceIds(newSelection)}
               slots={{
@@ -716,8 +717,11 @@ const handleCheckStartingConditions = async () => {
                 "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {
                   outline: "none !important",
                 },
+                "& .MuiDataGrid-row": {
+                  cursor: "pointer",
+                },
                 "& .MuiDataGrid-row:hover": {
-                  backgroundColor: "rgba(0, 0, 0, 0)",
+                  backgroundColor: "rgba(0, 0, 0, 0.04)",
                 }
               }}
             />

@@ -14,13 +14,28 @@ import mqtt from '../index.js';
 // Set up WebSocket server
 export const wss = new WebSocketServer({ port: 8080 });
 
+// Throttle repeated JSON parse errors per topic so a broken device cannot spam the console.
+const lastParseErrorReport: Record<string, number> = {};
+const PARSE_ERROR_REPORT_INTERVAL_MS = 60_000;
+
 export const MQTTMessage = async (topic: string, message: Buffer) => {
     let parsed_message: any;
     try {
         parsed_message = JSON.parse(message.toString());
     }
     catch (error) {
-        console.error("Failed to parse JSON from MQTT message on topic", topic, ":", error);
+        const now = Date.now();
+        const last = lastParseErrorReport[topic] || 0;
+        lastParseErrorReport[topic] = now;
+        if (now - last >= PARSE_ERROR_REPORT_INTERVAL_MS) {
+            const snippet =
+                message.length > 160 ? message.toString().slice(0, 160) + "..." : message.toString();
+            const reason = error instanceof Error ? error.message : String(error);
+            console.error(
+                `Failed to parse JSON from MQTT message on topic "${topic}" (${message.length} bytes): ${reason}`,
+                `payload: ${snippet}`
+            );
+        }
         return { message: "Invalid message received" };
     }
 
@@ -145,7 +160,7 @@ const addDeviceToDatabase = async (message: any) => {
                 for (const measurement of sensor.measurements) {
                     // Accuracy is "±0.05", needs to be float
                     const accuracy = parseFloat(measurement.accuracy.replace("±", "").replace(",", ".").trim());
-                    await addNewEntryToTable(Property, { name: measurement.type , sensorType: sensor.sensorType, unit: measurement.unit, accuracy: accuracy, rangeMin: measurement.minRange, rangeMax: measurement.maxRange })
+                    await addNewEntryToTable(Property, { name: measurement.type , sensorType: sensor.sensorType, moduleName: module.moduleName, moduleManufacturer: module.manufacturer, unit: measurement.unit, accuracy: accuracy, rangeMin: measurement.minRange, rangeMax: measurement.maxRange })
                 }
             }
         } catch (e) {

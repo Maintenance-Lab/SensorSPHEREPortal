@@ -10,7 +10,7 @@ import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQu
   } from '@mui/x-data-grid';
 import CreateProjectDialog from './createProjectDialog';
 import { GridColumnVisibilityModel } from '@mui/x-data-grid';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
 
 const fetchActiveProjects = async () => {
@@ -260,15 +260,18 @@ const ConfirmationDialog = ({ open, onClose, onConfirm, projectIds }) => (
 
 
 const Projects = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentTabParam = searchParams.get('tab');
   const [sortedProjects, setSortedProjects] = useState([]);
   const [selectedProjectIds, setSelectedProjectIds] = useState([]);
-  const [currentTab, setTab] = useState('2');
+  const [currentTab, setTab] = useState(currentTabParam === 'archived' ? '4' : '2');
   const [loading, setLoading] = useState(true);
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({lastActive: false, actions: false});
 
   const handleTabChange = (event: React.SyntheticEvent, newCurrentTab: string) => {
     setTab(newCurrentTab);
     setLoading(true);
+    setSearchParams({ tab: newCurrentTab === '4' ? 'archived' : 'active' }, { replace: true });
 
     // // Only show actions column for pending projects
     // if (newCurrentTab === '6') {
@@ -380,6 +383,10 @@ const Projects = () => {
   useEffect(() => {
     fetchData();
   }, [currentTab]);
+
+  useEffect(() => {
+    setTab(currentTabParam === 'archived' ? '4' : '2');
+  }, [currentTabParam]);
 
   return (
     <div>

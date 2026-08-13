@@ -1,6 +1,6 @@
 import * as Icons from '@mui/icons-material';
 import { GridToolbarContainer, GridToolbarQuickFilter, GridColDef, GridRowsProp } from '@mui/x-data-grid';
-import { Button, Chip, Link, Typography, Box, Stack, Tooltip } from '@mui/material';
+import { Button, Chip, IconButton, Link, Typography, Box, Stack, Tooltip } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 
 import { addDevices, removeDevicesFromSession } from "./api";
@@ -43,7 +43,7 @@ const getCommonColumns = (sessionId) => [
   },
   { field: 'manufacturer', headerName: 'Manufacturer', flex: 1, sortable: true, renderCell: (params) => renderTruncatedCell(params.value) },
   { field: 'model', headerName: 'Model', flex: 2, minWidth: 160, sortable: true, renderCell: (params) => renderTruncatedCell(params.value) },
-  { field: 'battery', headerName: 'Battery', flex: 1, sortable: true, sortComparator: (v1, v2) => (v1 ?? -1) - (v2 ?? -1), renderCell: renderBatteryCell },
+  { field: 'battery', headerName: 'Power', flex: 1, sortable: true, sortComparator: (v1, v2) => (v1 ?? -1) - (v2 ?? -1), renderCell: renderBatteryCell },
   {
     field: 'lastSeenRaw',
     headerName: 'Last Seen Raw',
@@ -224,6 +224,7 @@ interface AvailableDevicesToolbarProps {
   sessionStatus: string;
   handleAvailableDevices: (sessionId, setAvailableDevices) => Promise<void>;
   handleCheckStartingConditions: () => Promise<void>;
+  availableCount: number;
 }
 
 export const AvailableDevicesToolbar: React.FC<AvailableDevicesToolbarProps> = ({
@@ -235,6 +236,7 @@ export const AvailableDevicesToolbar: React.FC<AvailableDevicesToolbarProps> = (
   sessionStatus,
   handleAvailableDevices,
   handleCheckStartingConditions,
+  availableCount,
 }) => {
 
     const handleAddDevices = async (sessionId, selectedAddDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices, sessionStatus) => {
@@ -251,8 +253,7 @@ export const AvailableDevicesToolbar: React.FC<AvailableDevicesToolbarProps> = (
 
   return (
     <GridToolbarContainer sx={{ padding: 1 }}>
-      <Stack direction="row" spacing={1}>
-        <GridToolbarQuickFilter variant="outlined" size="small" sx={{ padding: 0 }} />
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ width: '100%', justifyContent: 'space-between' }}>
         <Button
           variant="outlined"
           startIcon={<Icons.Devices />}
@@ -270,6 +271,9 @@ export const AvailableDevicesToolbar: React.FC<AvailableDevicesToolbarProps> = (
         >
           Add Devices to Session
         </Button>
+        {availableCount > 10 && (
+          <GridToolbarQuickFilter variant="outlined" size="small" sx={{ padding: 0 }} />
+        )}
       </Stack>
     </GridToolbarContainer>
   );
@@ -284,6 +288,7 @@ interface ConnectedDevicesToolbarProps {
   sessionStatus: string;
   handleAvailableDevices: (sessionId, setAvailableDevices) => Promise<void>;
   handleCheckStartingConditions: () => Promise<void>;
+  deviceCount: number;
 }
 
 export const ConnectedDevicesToolbar: React.FC<ConnectedDevicesToolbarProps> = ({
@@ -295,6 +300,7 @@ export const ConnectedDevicesToolbar: React.FC<ConnectedDevicesToolbarProps> = (
   sessionStatus,
   handleAvailableDevices,
   handleCheckStartingConditions,
+  deviceCount,
 }) => {
 
   const handleRemoveDevices = async (sessionId, selectedDeviceIds, fetchSessionDevices, setAvailableDevices, setDevices, sessionStatus) => {
@@ -311,27 +317,31 @@ export const ConnectedDevicesToolbar: React.FC<ConnectedDevicesToolbarProps> = (
 
   return (
     <GridToolbarContainer sx={{ padding: 1 }}>
-      <Stack direction="row" spacing={1}>
-        <GridToolbarQuickFilter variant="outlined" size="small" sx={{ padding: 0 }} />
-        <Button
-          variant="outlined"
-          size="medium"
-          color="error"
-          startIcon={<Icons.DeleteOutlineOutlined />}
-          disabled={!activeSelection || sessionStatus === 'Measuring'}
-          onClick={() =>
-            handleRemoveDevices(
-              sessionId,
-              selectedDeviceIds,
-              fetchSessionDevices,
-              setAvailableDevices,
-              setDevices,
-              sessionStatus,
-            )
-          }
-        >
-          Remove Devices from Session
-        </Button>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ width: '100%', justifyContent: 'space-between' }}>
+        {activeSelection && (
+          <Tooltip title="Remove selected devices from session">
+            <span>
+              <IconButton
+                disabled={sessionStatus === 'Measuring'}
+                onClick={() =>
+                  handleRemoveDevices(
+                    sessionId,
+                    selectedDeviceIds,
+                    fetchSessionDevices,
+                    setAvailableDevices,
+                    setDevices,
+                    sessionStatus,
+                  )
+                }
+              >
+                <Icons.PlaylistRemoveOutlined />
+              </IconButton>
+            </span>
+          </Tooltip>
+        )}
+        {deviceCount > 10 && (
+          <GridToolbarQuickFilter variant="outlined" size="small" sx={{ padding: 0 }} />
+        )}
       </Stack>
     </GridToolbarContainer>
   );

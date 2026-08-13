@@ -6,15 +6,24 @@ interface Props {
   onClose: () => void;
   onConfirm: (sessionId: number) => void;
   sessionId: number;
+  title?: string;
+  message?: string;
+  confirmLabel?: string;
 }
 
-const ConfirmationDialog: React.FC<Props> = ({ open, onClose, onConfirm, sessionId }) => (
+const ConfirmationDialog: React.FC<Props> = ({
+  open,
+  onClose,
+  onConfirm,
+  sessionId,
+  title = 'Confirm Deletion',
+  message = 'Are you sure you want to delete this session? This action cannot be undone.',
+  confirmLabel = 'Delete'
+}) => (
   <Dialog open={open} onClose={onClose}>
-    <DialogTitle>Confirm Deletion</DialogTitle>
+    <DialogTitle>{title}</DialogTitle>
     <DialogContent>
-      <Typography>
-        Are you sure you want to delete this session? This action cannot be undone.
-      </Typography>
+      <Typography>{message}</Typography>
     </DialogContent>
     <DialogActions>
       <Button onClick={onClose} color="primary">
@@ -28,7 +37,7 @@ const ConfirmationDialog: React.FC<Props> = ({ open, onClose, onConfirm, session
         color="error"
         variant="contained"
       >
-        Delete
+        {confirmLabel}
       </Button>
     </DialogActions>
   </Dialog>

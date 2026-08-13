@@ -9,16 +9,16 @@ import {
   styled,
   Divider,
   useTheme,
-  Button,
   lighten,
   darken,
-  Tooltip
+  Button
 } from '@mui/material';
+import { NavLink as RouterLink } from 'react-router-dom';
 
 import SidebarMenu from './sidebarMenu';
 import Logo from 'src/components/logoSign';
-import { getUser, logout } from 'src/helpers/cookies';
 import Typography from '@mui/material/Typography';
+import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 
 const SidebarWrapper = styled(Box)(
   ({ theme }) => `
@@ -32,11 +32,36 @@ const SidebarWrapper = styled(Box)(
 `
 );
 
+function SidebarFooter({ onNavigate }) {
+  const theme = useTheme();
+  return (
+    <>
+      <Divider
+        sx={{
+          background: theme.colors.alpha.trueWhite[10]
+        }}
+      />
+      <Box p={2}>
+        <Button
+          component={RouterLink}
+          to="/projects/overview?tab=archived"
+          variant="contained"
+          size="small"
+          fullWidth
+          startIcon={<ArchiveOutlinedIcon />}
+          onClick={onNavigate}
+        >
+          Archived
+        </Button>
+      </Box>
+    </>
+  );
+}
+
 function Sidebar() {
   const { sidebarToggle, toggleSidebar } = useContext(SidebarContext);
   const closeSidebar = () => toggleSidebar();
   const theme = useTheme();
-  const user = getUser()
 
   return (
     <>
@@ -90,23 +115,7 @@ function Sidebar() {
           />
           <SidebarMenu />
         </Scrollbar>
-        <Divider
-          sx={{
-            background: theme.colors.alpha.trueWhite[10]
-          }}
-        />
-        <Box p={2}>
-          <Button
-            href={user ? null : "/login"}
-            variant="contained"
-            // color="#1f2737"
-            size="small"
-            fullWidth
-            onClick={user ? logout : null}
-          >
-            {user ? "Logout" : "Login"}
-          </Button>
-        </Box>
+        <SidebarFooter onNavigate={closeSidebar} />
       </SidebarWrapper>
       <Drawer
         sx={{
@@ -146,6 +155,7 @@ function Sidebar() {
             />
             <SidebarMenu />
           </Scrollbar>
+          <SidebarFooter onNavigate={closeSidebar} />
         </SidebarWrapper>
       </Drawer>
     </>

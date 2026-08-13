@@ -1,19 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Paper, Typography, Container, Divider, Box } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/components/pageTitleWrapper';
 import BatteryFullIcon from '@mui/icons-material/BatteryFull';
+import CableIcon from '@mui/icons-material/Cable';
 import Stack from '@mui/material/Stack';
 import { useParams } from 'react-router-dom';
 
 import { TreeView, TreeItem } from '@mui/lab';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { useGatewaySocket } from '../../../helpers/useGatewaySocket';
 
 const DeviceDetail = () => {
   const { deviceId } = useParams();
   const [deviceManufacturer, setDeviceManufacturer] = useState('');
-  const [deviceBatteryLevel, setDeviceBatteryLevel] = useState('');
+  const [deviceBatteryLevel, setDeviceBatteryLevel] = useState<number | null>(null);
+  const [deviceConnectStatus, setDeviceConnectStatus] = useState('connected');
   const [sensorTree, setSensorTree] = useState<React.ReactNode[]>([]);
 
   const getDeviceProperties = async (deviceId: string) => {
@@ -94,7 +97,8 @@ const DeviceDetail = () => {
   const handleDeviceDetails = async (deviceId: string) => {
     const data = await getDeviceDetails(deviceId);
     setDeviceManufacturer(data.manufacturer);
-    setDeviceBatteryLevel(data.batteryLevel);
+    setDeviceBatteryLevel(data.batteryLevel ?? null);
+    setDeviceConnectStatus(data.connectStatus ?? 'connected');
   };
 
   const deviceProperties = async (deviceId: string) => {
@@ -128,6 +132,19 @@ const DeviceDetail = () => {
     }
   }, [deviceId]);
 
+  const handleGatewayEvent = useCallback((data: any) => {
+    if (!data || data.event !== 'list_units' || !Array.isArray(data.units)) return;
+    const unit = data.units.find((u: any) => u.mac === deviceId);
+    if (!unit) {
+      setDeviceConnectStatus('disconnected');
+      return;
+    }
+    setDeviceBatteryLevel(unit.batteryLevel ?? null);
+    setDeviceConnectStatus('connected');
+  }, [deviceId]);
+
+  useGatewaySocket(handleGatewayEvent);
+
   return (
     <div>
       <Helmet>
@@ -146,10 +163,19 @@ const DeviceDetail = () => {
             divider={<Divider orientation="vertical" flexItem />}
           >
             <Typography variant="body1">{deviceId}</Typography>
-            <Stack direction="row">
-              <BatteryFullIcon />
-              <Typography variant="body1">{deviceBatteryLevel}%</Typography>
-            </Stack>
+            {deviceBatteryLevel === null || deviceBatteryLevel === undefined || deviceBatteryLevel < 0 ? (
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                <CableIcon fontSize="small" sx={{ color: deviceConnectStatus === 'connected' ? 'success.main' : 'text.disabled' }} />
+                <Typography variant="body1" color={deviceConnectStatus === 'connected' ? 'success.main' : 'text.disabled'}>
+                  {deviceConnectStatus === 'connected' ? 'Cable' : 'Offline'}
+                </Typography>
+              </Stack>
+            ) : (
+              <Stack direction="row">
+                <BatteryFullIcon />
+                <Typography variant="body1">{deviceBatteryLevel}%</Typography>
+              </Stack>
+            )}
           </Stack>
         </Stack>
       </PageTitleWrapper>

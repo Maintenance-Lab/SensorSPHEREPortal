@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Button,
   Paper,
@@ -21,13 +21,15 @@ import {
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PageTitleWrapper from 'src/components/pageTitleWrapper';
-import BatteryFullIcon from '@mui/icons-material/BatteryFull';
 import QueueOutlinedIcon from '@mui/icons-material/QueueOutlined';
+import { renderBatteryCell } from '../sessionDetail/startSessionHelpers';
 import { DataGrid, GridColDef, GridRowsProp, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-data-grid';
 import DevicesIcon from '@mui/icons-material/Devices';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';  // Import the expand/collapse icon
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';  // Import the collapse icon
 import { Link as RouterLink } from 'react-router-dom';
+import { useGatewaySocket } from 'src/helpers/useGatewaySocket';
+import { patchDevicesFromUnits } from 'src/helpers/gatewayUnits';
 
 // Fetch active projects
 const fetchActiveProjects = async () => {
@@ -91,12 +93,7 @@ const devicesColumns: GridColDef[] = [
   )},
   { field: 'id', headerName: 'MAC Address', flex: 1 },
   {
-    field: 'battery', headerName: 'Battery', flex: 1, renderCell: (params) => (
-      <Stack direction="row" alignItems="center" sx={params.value ? { color: 'success.main', fontWeight: '500' } : { color: 'gray' }}>
-        <BatteryFullIcon fontSize="small" />
-        {params.value ? <Typography variant="inherit">{params.value}%</Typography> : <Typography variant="inherit">?</Typography>}
-      </Stack>
-    )
+    field: 'battery', headerName: 'Power', flex: 1, renderCell: renderBatteryCell
   },
   { field: 'status', headerName: 'Status', flex: 1 },
 ];
@@ -147,6 +144,13 @@ const Devices = () => {
   useEffect(() => {
     allDevices();
   }, []);
+
+  const handleGatewayEvent = useCallback((data) => {
+    if (!data || data.event !== 'list_units' || !Array.isArray(data.units)) return;
+    setDevices((current) => patchDevicesFromUnits(current, data.units));
+  }, []);
+
+  useGatewaySocket(handleGatewayEvent);
 
   const handleOpenAddToProjects = async () => {
     console.log("handleOpenAddToProjects called");
@@ -221,6 +225,7 @@ const Devices = () => {
     name: device.manufacturer,
     id: device.deviceId,
     status: device.connectStatus,
+    connectStatus: device.connectStatus,
     battery: device.batteryLevel,
   }));
 

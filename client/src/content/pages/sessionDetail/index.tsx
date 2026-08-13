@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 // MUI Components
 import {
-  Box, Button, Checkbox, Container, FormControlLabel, Link, List, ListItem,
+  Box, Button, Checkbox, Container, Divider, FormControlLabel, IconButton, Link, List, ListItem,
   ListItemIcon, ListItemText, Paper, Stack, TextField, Tooltip, Typography
 } from '@mui/material';
 
@@ -26,6 +26,8 @@ import { formatDeviceRow, fetchDevicesWithSampleRates } from './utils';
 import * as api from './api';
 import * as toolbar from './toolbar';
 import { getOnChange, loadRows, updateSelection } from './treeView';
+import { useGatewaySocket } from '../../../helpers/useGatewaySocket';
+import { patchDevicesFromUnits } from '../../../helpers/gatewayUnits';
 
 //  Api calls in api.tsx
 const handleAvailableDevices = async (sessionId: number, setAvailableDevices: Function) => {
@@ -68,6 +70,49 @@ const fetchSessionStatus = async (sessionId: number, setSessionStatus: Function)
   setSessionStatus(status);
   return status;
 }
+
+const SessionStatusTag = ({ status }: { status: string }) => {
+  const recording = status === 'Measuring';
+
+  return (
+    <Stack
+      direction="row"
+      alignItems="center"
+      spacing={1}
+      sx={{
+        px: 1.5,
+        py: 0.5,
+        borderRadius: '16px',
+        bgcolor: recording ? 'rgba(211, 47, 47, 0.08)' : 'action.hover',
+      }}
+    >
+      <Box
+        sx={{
+          width: 10,
+          height: 10,
+          borderRadius: '50%',
+          bgcolor: recording ? 'error.main' : 'text.disabled',
+          ...(recording && {
+            animation: 'pulse 1.5s ease-in-out infinite',
+            '@keyframes pulse': {
+              '0%': { boxShadow: '0 0 0 0 rgba(211, 47, 47, 0.6)' },
+              '70%': { boxShadow: '0 0 0 8px rgba(211, 47, 47, 0)' },
+              '100%': { boxShadow: '0 0 0 0 rgba(211, 47, 47, 0)' },
+            },
+          }),
+        }}
+      />
+      <Typography
+        variant="button"
+        fontWeight="bold"
+        color={recording ? 'error.main' : 'text.secondary'}
+      >
+        {recording ? 'Recording' : status}
+      </Typography>
+    </Stack>
+  );
+};
+
 const SessionDetail = () => {
   // Session Info
   const sessionId = Number(useParams().sessionId);
@@ -81,6 +126,8 @@ const SessionDetail = () => {
 
   // Dialog States
   const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [archiveTarget, setArchiveTarget] = useState(false);
   const [configurationDialogOpen, setConfigurationDialogOpen] = useState(false);
   const [StartSessionDialogOpen, setStartSessionDialogOpen] = useState(false);
 
@@ -117,6 +164,12 @@ const SessionDetail = () => {
 
   const handleOpenDialog = () => setConfirmationDialogOpen(true);
   const handleCloseDialog = () => setConfirmationDialogOpen(false);
+
+  const handleOpenArchiveDialog = (archive: boolean) => {
+    setArchiveTarget(archive);
+    setArchiveDialogOpen(true);
+  };
+  const handleCloseArchiveDialog = () => setArchiveDialogOpen(false);
 
   const MemoizedTreeItem = React.memo(TreeItem);
   const renderTree = useCallback((nodes: RenderTree) => {
@@ -279,6 +332,35 @@ const SessionDetail = () => {
     renewAvailableDevices();
   }, []);
 
+  const handleGatewayEvent = useCallback((data: any) => {
+    if (!data || data.event !== 'list_units' || !Array.isArray(data.units)) return;
+    setDevices((current) => patchDevicesFromUnits(current, data.units));
+    setAvailableDevices((current) => patchDevicesFromUnits(current, data.units));
+  }, []);
+
+  useGatewaySocket(handleGatewayEvent);
+
+  useEffect(() => {
+    // The gateway only reports status when asked (interface/listUnits).
+    // Poll periodically so the WebSocket pushes fresh heartbeats and the
+    // "last seen / (last: Ns)" indicators stay live.
+    let mounted = true;
+    const poll = async () => {
+      if (!mounted) return;
+      try {
+        await api.listUnits();
+      } catch {
+        // Gateway unreachable; the next poll will retry.
+      }
+    };
+    poll();
+    const interval = setInterval(poll, 30000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
   const fetchSampleRates = async () => {
     const rows = await Promise.all(
       devices.map(async (device) => {
@@ -387,97 +469,146 @@ const handleCheckStartingConditions = async () => {
         <title>{sessionName}</title>
       </Helmet>
       <PageTitleWrapper>
-        <Stack spacing={1} >
-          {isEditingName ? (
-            <Box>
-              <TextField
-                defaultValue={sessionName}
-                variant="outlined"
-                size="small"
-                autoFocus
-                onBlur={handleNameChange}
-                onFocus={(event) => { event.target.select(); }}
-                sx={{ marginTop: -1, marginLeft: -1, width: '100%' }}
-                inputProps={{ sx: { fontSize: '2rem', fontWeight: 700, lineHeight: 1.167 }, }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') { handleNameChange(event); }
-                }}
-              />
-            </Box>
-          ) : (
-            <Typography
-              variant="h1"
-              onClick={() => setIsEditingName(true)}
-              sx={{
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                  outline: '2px solid rgba(0, 0, 0, 0.2)',
-                  borderRadius: '8px',
-                  padding: 1,
-                  margin: -1
-                }
-              }}
-            >
-              {sessionName}
-            </Typography>
-          )}
-          <Stack direction="row" spacing={1}>
-            <Link color="primary" underline="hover" variant="body1" href={"../../projects/detail/" + projectId}>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Icons.DesignServicesOutlined fontSize="small" />
-                <Typography variant="body1">{projectName}</Typography>
-              </Stack>
-            </Link>
+        <Stack spacing={2}>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="flex-start"
+            spacing={2}
+          >
+            <Stack spacing={1} sx={{ flexGrow: 1, minWidth: 0 }}>
+              {isEditingName ? (
+                <Box>
+                  <TextField
+                    defaultValue={sessionName}
+                    variant="outlined"
+                    size="small"
+                    autoFocus
+                    onBlur={handleNameChange}
+                    onFocus={(event) => { event.target.select(); }}
+                    sx={{ marginTop: -1, marginLeft: -1, width: '100%' }}
+                    inputProps={{ sx: { fontSize: '2rem', fontWeight: 700, lineHeight: 1.167 }, }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') { handleNameChange(event); }
+                    }}
+                  />
+                </Box>
+              ) : (
+                <Typography
+                  variant="h1"
+                  onClick={() => setIsEditingName(true)}
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                      outline: '2px solid rgba(0, 0, 0, 0.2)',
+                      borderRadius: '8px',
+                      padding: 1,
+                      margin: -1
+                    }
+                  }}
+                >
+                  {sessionName}
+                </Typography>
+              )}
+              <Link color="primary" underline="hover" variant="body1" href={"../../projects/detail/" + projectId}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Icons.DesignServicesOutlined fontSize="small" />
+                  <Typography variant="body1">{projectName}</Typography>
+                </Stack>
+              </Link>
+              {isEditingDescription ? (
+                <Box>
+                  <TextField
+                    defaultValue={sessionDescription}
+                    variant="outlined"
+                    size="small"
+                    autoFocus
+                    multiline
+                    minRows={3}
+                    maxRows={10}
+                    onBlur={async (event) => {
+                      // Save only if changed
+                      if (event.target.value !== sessionDescription) {
+                        await handleDescriptionChange(event);
+                      }
+                      setIsEditingDescription(false);
+                    }}
+                    onFocus={(event) => event.target.select()}
+                    sx={{ ml: -1, width: "100%" }}
+                  />
+                </Box>
+              ) : (
+                <Typography
+                  variant="body1"
+                  onClick={() => setIsEditingDescription(true)}
+                  sx={{
+                    "&:hover": {
+                      backgroundColor: "rgba(0, 0, 0, 0.05)",
+                      outline: "2px solid rgba(0, 0, 0, 0.2)",
+                      borderRadius: "8px",
+                      px: 1,
+                      mx: -1,
+                    },
+                    color: sessionDescription ? "inherit" : "gray",
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
+                  {sessionDescription ? sessionDescription : "Add description..."}
+                </Typography>
+              )}
+            </Stack>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <SessionStatusTag status={sessionStatus} />
+              {isArchived ? (
+                <Tooltip title="Unarchive Session">
+                  <span>
+                    <IconButton
+                      onClick={() => handleOpenArchiveDialog(false)}
+                      disabled={sessionStatus === 'Measuring'}
+                    >
+                      <Icons.UnarchiveOutlined />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              ) : (
+                <Tooltip title="Archive Session">
+                  <span>
+                    <IconButton
+                      onClick={() => handleOpenArchiveDialog(true)}
+                      disabled={sessionStatus === 'Measuring'}
+                    >
+                      <Icons.ArchiveOutlined />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              )}
+              <Tooltip title="Delete Session">
+                <span>
+                  <IconButton
+                    color="error"
+                    onClick={handleOpenDialog}
+                    disabled={sessionStatus === 'Measuring'}
+                  >
+                    <Icons.DeleteOutline />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            </Stack>
           </Stack>
-          {isEditingDescription ? (
-            <Box>
-              <TextField
-                defaultValue={sessionDescription}
-                variant="outlined"
-                size="small"
-                autoFocus
-                multiline
-                minRows={3}
-                maxRows={10}
-                onBlur={async (event) => {
-                  // Save only if changed
-                  if (event.target.value !== sessionDescription) {
-                    await handleDescriptionChange(event);
-                  }
-                  setIsEditingDescription(false);
-                }}
-                onFocus={(event) => event.target.select()}
-                sx={{ ml: -1, width: "100%" }}
-              />
-            </Box>
-          ) : (
-            <Typography
-              variant="body1"
-              onClick={() => setIsEditingDescription(true)}
+
+          {isArchived &&
+            <Stack
+              direction="row"
+              spacing={2}
               sx={{
-                "&:hover": {
-                  backgroundColor: "rgba(0, 0, 0, 0.05)",
-                  outline: "2px solid rgba(0, 0, 0, 0.2)",
-                  borderRadius: "8px",
-                  px: 1,
-                  mx: -1,
-                },
-                color: sessionDescription ? "inherit" : "gray",
-                whiteSpace: "pre-wrap",
+                backgroundColor: "warning.main",
+                color: "white",
+                borderRadius: "8px",
+                padding: 1,
+                pl: 2,
+                alignItems: "center"
               }}
             >
-              {sessionDescription ? sessionDescription : "Add description..."}
-            </Typography>
-          )}
-          {isArchived &&
-            <Stack direction="row" spacing={2} sx={{
-              backgroundColor: "warning.main",
-              color: "white",
-              borderRadius: "8px",
-              padding: 1,
-              pl: 2,
-              alignItems: "center"
-            }}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <Icons.Inventory />
                 <Typography variant="body1" fontWeight="bold">
@@ -486,108 +617,28 @@ const handleCheckStartingConditions = async () => {
               </Stack>
             </Stack>
           }
-          <Stack direction="row" spacing={1}>
-            {!isArchived &&
-              <Button
-                variant="outlined"
-                startIcon={<Icons.ArchiveOutlined />}
-                onClick={() => handleArchiveSession(true)}
-                disabled={sessionStatus === 'Measuring'}
-              >
-                Archive Session
-              </Button>
-            }
-            {isArchived &&
-              <Button
-                variant="outlined"
-                startIcon={<Icons.UnarchiveOutlined />}
-                onClick={() => handleArchiveSession(false)}
-                disabled={sessionStatus === 'Measuring'}
-              >
-                Unarchive Session
-              </Button>
-            }
-            <Button
-              variant="outlined"
-              startIcon={<Icons.DeleteOutline />}
-              disabled={sessionStatus === 'Measuring'}
-              sx={{
-                '&:hover': {
-                  color: 'white',
-                  borderColor: 'error.main',
-                  backgroundColor: 'error.main'
-                }
-              }}
-              onClick={handleOpenDialog}
-            >
-              Delete Session
-            </Button>
-            <ConfirmationDialog
-              open={confirmationDialogOpen}
-              onClose={handleCloseDialog}
-              onConfirm={async (sessionId) => {
-                await handleDeleteSession(sessionId);
-              }}
-              sessionId={sessionId}
-            />
-          </Stack>
-        </Stack>
-      </PageTitleWrapper>
 
-      <Container>
-        <Stack spacing={2}>
-          <Paper elevation={3} sx={{ p: 2, borderRadius: 2 }}>
-            <Stack spacing={2}>
-              <Typography variant="h6" fontWeight="bold">
-                Session Overview
-              </Typography>
+          <Divider />
 
-              {/* Status and Elapsed Time */}
-              <Stack direction="row" spacing={3} justifyContent="space-between" alignItems="center">
-                {/* <Typography variant="body2">
-                  Elapsed Time: {formatTime(elapsedTime)}
-                </Typography> */}
-                <Typography variant="body2" color="text.secondary">
-                  Status: {sessionStatus}
-                </Typography>
-              </Stack>
-              {(sessionStatus === 'Idle') && (
-              <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
-                <Tooltip
-                title={
-                  <List dense sx={{ p: 0, m: 0 }}>
-                    {startRequirements.map(({ text, done }) => (
-                      <ListItem key={text} sx={{ py: 0.5 }}>
-                        <ListItemIcon sx={{ minWidth: 30 }}>
-                          {done ? (
-                            <Icons.CheckCircle color="success" fontSize="small" />
-                          ) : (
-                            <Icons.RadioButtonUnchecked color="disabled" fontSize="small" />
-                          )}
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={text}
-                          sx={{ color: done ? 'text.primary' : 'text.disabled', fontSize: '0.875rem' }}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                }
-                placement="top"
-                arrow
-                componentsProps={{
-                  tooltip: {
-                    sx: (theme) => ({
-                      backgroundColor: theme.palette.background.paper,
-                      color: theme.palette.text.primary,
-                      boxShadow: theme.shadows[3],
-                      maxWidth: 300,
-                    }),
-                  },
-                }}
-              >
-                <Icons.Info color="action" sx={{ cursor: 'pointer' }} />
-              </Tooltip>
+          {sessionStatus === 'Idle' && (
+            <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+              <List dense sx={{ p: 0, m: 0 }}>
+                {startRequirements.map(({ text, done }) => (
+                  <ListItem key={text} sx={{ py: 0.25 }}>
+                    <ListItemIcon sx={{ minWidth: 30 }}>
+                      {done ? (
+                        <Icons.CheckCircle color="success" fontSize="small" />
+                      ) : (
+                        <Icons.RadioButtonUnchecked color="disabled" fontSize="small" />
+                      )}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={text}
+                      sx={{ color: done ? 'text.primary' : 'text.disabled', fontSize: '0.875rem' }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
               <Button
                 variant="contained"
                 color="primary"
@@ -596,96 +647,119 @@ const handleCheckStartingConditions = async () => {
               >
                 Start Session
               </Button>
-              <StartSessionDialog
-                open={StartSessionDialogOpen}
-                devices={devicesWithoutSampleRate}
-                defaultConfigStep={defaultConfigStep}
-                sampleRates={sampleRates}
-                handleStartSession={handleStartSession}
-                handleCloseDialog3={handleCloseStartSessionDialog}
-              />
             </Stack>
-              )}
+          )}
 
-              {sessionStatus === 'Measuring' && (
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
-                  <Button variant="outlined" color="error" onClick={handleStopSession}>
-                    Stop Session
-                  </Button>
-                </Stack>
-              )}
+          {sessionStatus === 'Measuring' && (
+            <Stack direction="row" spacing={1} justifyContent="flex-end">
+              <Button variant="outlined" color="error" onClick={handleStopSession}>
+                Stop Session
+              </Button>
             </Stack>
-          </Paper>
-        </Stack>
-      </Container>
+          )}
 
-      <Container>
-        <Stack spacing={2}>
-          <Typography variant="h2" sx={{ pt: 2 }}>Connected Devices in Session</Typography>
-          <Paper>
-            <DataGrid
-              rows={devicesRows}
-              columns={toolbar.getDevicesColumns({
-                  handleRowClick,
-                  sessionId,
-                  selectedDevice,
-                  loading,
-                  configurationDialogOpen,
-                  activeStep,
-                  steps,
-                  sampleRate,
-                  selectedProperties,
-                  expandedNodes,
-                  allProperties,
-                  sessionStatus,
-                  renderTree,
-                  handleCloseConfigurationDialog,
-                  handleNext,
-                  handleReconfigure,
-                  setExpandedNodes,
-              })}
-              sortingOrder={['asc', 'desc']}
-              density='compact'
-              autoHeight
-              pageSizeOptions={[10]}
-              columnVisibilityModel={{
-                lastSeenRaw: false,
-              }}
-              disableColumnMenu
-              initialState={{
-                pagination: { paginationModel: { pageSize: 10 } },
-                sorting: {
-                  sortModel: [{ field: 'lastSeenRaw', sort: 'asc' }],
+          <StartSessionDialog
+            open={StartSessionDialogOpen}
+            devices={devicesWithoutSampleRate}
+            defaultConfigStep={defaultConfigStep}
+            sampleRates={sampleRates}
+            handleStartSession={handleStartSession}
+            handleCloseDialog3={handleCloseStartSessionDialog}
+          />
+
+          <DataGrid
+            rows={devicesRows}
+            columns={toolbar.getDevicesColumns({
+                handleRowClick,
+                sessionId,
+                selectedDevice,
+                loading,
+                configurationDialogOpen,
+                activeStep,
+                steps,
+                sampleRate,
+                selectedProperties,
+                expandedNodes,
+                allProperties,
+                sessionStatus,
+                renderTree,
+                handleCloseConfigurationDialog,
+                handleNext,
+                handleReconfigure,
+                setExpandedNodes,
+            })}
+            sortingOrder={['asc', 'desc']}
+            density='compact'
+            autoHeight
+            hideFooter={devicesRows.length <= 10}
+            pageSizeOptions={[10]}
+            columnVisibilityModel={{
+              lastSeenRaw: false,
+            }}
+            disableColumnMenu
+            initialState={{
+              pagination: { paginationModel: { pageSize: 10 } },
+              sorting: {
+                sortModel: [{ field: 'lastSeenRaw', sort: 'asc' }],
+              },
+            }}
+            checkboxSelection
+            onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
+            slots={{
+              toolbar: () => <toolbar.ConnectedDevicesToolbar
+                selectedDeviceIds={selectedDeviceIds}
+                sessionId={sessionId}
+                fetchSessionDevices={() => fetchSessionDevices(sessionId, setDevices)}
+                setAvailableDevices={setAvailableDevices}
+                setDevices={setDevices}
+                sessionStatus={sessionStatus}
+                handleAvailableDevices={() => handleAvailableDevices(sessionId, setAvailableDevices)}
+                handleCheckStartingConditions={handleCheckStartingConditions}
+                deviceCount={devicesRows.length}
+              />}}
+            sx={{
+              ...(devicesRows.length <= 1 ? {
+                "& .MuiDataGrid-columnHeaderCheckbox": {
+                  display: "none",
                 },
-              }}
-              checkboxSelection
-              onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
-              slots={{
-                toolbar: () => <toolbar.ConnectedDevicesToolbar
-                  selectedDeviceIds={selectedDeviceIds}
-                  sessionId={sessionId}
-                  fetchSessionDevices={() => fetchSessionDevices(sessionId, setDevices)}
-                  setAvailableDevices={setAvailableDevices}
-                  setDevices={setDevices}
-                  sessionStatus={sessionStatus}
-                  handleAvailableDevices={() => handleAvailableDevices(sessionId, setAvailableDevices)}
-                  handleCheckStartingConditions={handleCheckStartingConditions}
-                />}}
-              sx={{
-                "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {
-                  outline: "none !important",
-                },
-                "& .MuiDataGrid-row": {
-                  cursor: "pointer",
-                },
-                "& .MuiDataGrid-row:hover": {
-                  backgroundColor: "rgba(0, 0, 0, 0.04)",
-                }
-              }}
-            />
-          </Paper>
+              } : {}),
+              "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {
+                outline: "none !important",
+              },
+              "& .MuiDataGrid-row": {
+                cursor: "pointer",
+              },
+              "& .MuiDataGrid-row:hover": {
+                backgroundColor: "rgba(0, 0, 0, 0.04)",
+              }
+            }}
+          />
+
+          <ConfirmationDialog
+            open={archiveDialogOpen}
+            onClose={handleCloseArchiveDialog}
+            onConfirm={async () => {
+              await handleArchiveSession(archiveTarget);
+            }}
+            sessionId={sessionId}
+            title={archiveTarget ? 'Confirm Archiving' : 'Confirm Unarchiving'}
+            message={
+              archiveTarget
+                ? 'Are you sure you want to archive this session? It will no longer appear in the active sessions list.'
+                : 'Are you sure you want to unarchive this session?'
+            }
+            confirmLabel={archiveTarget ? 'Archive' : 'Unarchive'}
+          />
+          <ConfirmationDialog
+            open={confirmationDialogOpen}
+            onClose={handleCloseDialog}
+            onConfirm={async (sessionId) => {
+              await handleDeleteSession(sessionId);
+            }}
+            sessionId={sessionId}
+          />
         </Stack>
-      </Container>
+      </PageTitleWrapper>
       <Container>
         <Stack spacing={2} sx={{ mt: 4 }}>
           <Typography variant="h2">Available Devices to Add</Typography>
@@ -699,6 +773,11 @@ const handleCheckStartingConditions = async () => {
               }}
               density='compact'
               autoHeight
+              hideFooter={availableDevices.length <= 10}
+              pageSizeOptions={[10]}
+              initialState={{
+                pagination: { paginationModel: { pageSize: 10 } },
+              }}
               disableColumnMenu
               checkboxSelection
               onRowSelectionModelChange={(newSelection) => setSelectedAddDeviceIds(newSelection)}
@@ -712,8 +791,14 @@ const handleCheckStartingConditions = async () => {
                   sessionStatus={sessionStatus}
                   handleAvailableDevices={() => handleAvailableDevices(sessionId, setAvailableDevices)}
                   handleCheckStartingConditions={handleCheckStartingConditions}
+                  availableCount={availableDevices.length}
                 />}}
                 sx={{
+                ...(availableDevices.length <= 1 ? {
+                  "& .MuiDataGrid-columnHeaderCheckbox": {
+                    display: "none",
+                  },
+                } : {}),
                 "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {
                   outline: "none !important",
                 },

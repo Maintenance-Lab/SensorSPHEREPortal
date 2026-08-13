@@ -140,7 +140,7 @@ const addDeviceToDatabase = async (message: any) => {
     const deviceId = message.mac;
 
     // Add device to database if device does not exist
-    await addOrUpdateDevice({ deviceId: deviceId, manufacturer: message.manufacturer, model: message.model, batteryLevel: message.batteryLevel })
+    await addOrUpdateDevice({ deviceId: deviceId, manufacturer: message.manufacturer, model: message.model, batteryLevel: message.batteryLevel ?? null })
 
     // If sensor module manufacturer does not exist, add it to database
     for (const module of message.sensorModules) {
@@ -185,7 +185,7 @@ const updateDeviceStatus = async (message: any) => {
     if (unit) {
       await Device.update(
         {
-          batteryLevel: unit.batteryLevel,
+          batteryLevel: unit.batteryLevel ?? null,
           lastHeartbeat: unit.lastSeen,
           connectStatus: "connected"
         },

@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import {
   ListSubheader,
@@ -7,15 +7,17 @@ import {
   List,
   styled,
   Button,
-  ListItem
+  ListItem,
+  Link,
+  Collapse
 } from '@mui/material';
-import { NavLink as RouterLink } from 'react-router-dom';
+import { NavLink as RouterLink, useLocation } from 'react-router-dom';
 import { SidebarContext } from 'src/contexts/sidebarContext';
 
 import HomeIcon from '@mui/icons-material/Home';
 import DesignServicesTwoToneIcon from '@mui/icons-material/DesignServicesTwoTone';
 import BrightnessLowTwoToneIcon from '@mui/icons-material/BrightnessLowTwoTone';
-import AccountCircleTwoToneIcon from '@mui/icons-material/AccountCircleTwoTone';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { getUser } from 'src/helpers/cookies';
 
 const MenuWrapper = styled(Box)(
@@ -162,7 +164,64 @@ const SubMenuWrapper = styled(Box)(
 
 function SidebarMenu() {
   const { closeSidebar } = useContext(SidebarContext);
+  const location = useLocation();
   const user = getUser();
+  const [activeProjects, setActiveProjects] = useState([]);
+  const [expandedProjectIds, setExpandedProjectIds] = useState({});
+  const [sessionsByProject, setSessionsByProject] = useState({});
+
+  const handleToggleProject = async (projectId) => {
+    const expanded = !!expandedProjectIds[projectId];
+    setExpandedProjectIds((prev) => ({ ...prev, [projectId]: !expanded }));
+    if (!expanded && !sessionsByProject[projectId]) {
+      try {
+        const res = await fetch(`/api/sessions/project/active/${projectId}`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!res.ok) {
+          console.error('Failed to fetch sessions');
+          return;
+        }
+        const data = await res.json();
+        setSessionsByProject((prev) => ({ ...prev, [projectId]: data }));
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchActiveProjects = async () => {
+      try {
+        const res = await fetch('/api/projects/active', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!res.ok) {
+          console.error('Failed to fetch projects');
+          return;
+        }
+        const data = await res.json();
+        if (mounted) {
+          setActiveProjects(data);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchActiveProjects();
+    return () => {
+      mounted = false;
+    };
+  }, [location.pathname]);
 
   const isAdmin = user && user.role === 'administrator';
   const adminMenu = isAdmin ? (
@@ -206,18 +265,7 @@ function SidebarMenu() {
                   to="/home"
                   startIcon={<HomeIcon />}
                 >
-                  Home
-                </Button>
-              </ListItem>
-              <ListItem component="div">
-                <Button
-                  disableRipple
-                  component={RouterLink}
-                  onClick={closeSidebar}
-                  to="/account"
-                  startIcon={<AccountCircleTwoToneIcon />}
-                >
-                  My account
+                  Getting Started
                 </Button>
               </ListItem>
             </List>
@@ -247,6 +295,61 @@ function SidebarMenu() {
                   All Projects
                 </Button>
               </ListItem>
+              {activeProjects.map((project) => {
+                const expanded = !!expandedProjectIds[project.projectId];
+                const sessions = sessionsByProject[project.projectId] || [];
+                return (
+                  <ListItem
+                    key={project.projectId}
+                    component="div"
+                    className="Mui-children"
+                  >
+                    <Button
+                      disableRipple
+                      onClick={() => handleToggleProject(project.projectId)}
+                      startIcon={
+                        <ChevronRightIcon
+                          sx={{
+                            transform: expanded ? 'rotate(90deg)' : 'none',
+                            transition: 'transform 0.2s',
+                          }}
+                        />
+                      }
+                      endIcon={
+                        <Link
+                          component={RouterLink}
+                          to={`/projects/detail/${project.projectId}`}
+                          sx={{ display: 'flex' }}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            closeSidebar();
+                          }}
+                        >
+                          <ChevronRightIcon fontSize="small" />
+                        </Link>
+                      }
+                    >
+                      {project.name}
+                    </Button>
+                    <Collapse in={expanded}>
+                      <List component="div">
+                        {sessions.map((session) => (
+                          <ListItem key={session.sessionId} component="div">
+                            <Button
+                              disableRipple
+                              component={RouterLink}
+                              onClick={closeSidebar}
+                              to={`/sessions/detail/${session.sessionId}`}
+                            >
+                              {session.name}
+                            </Button>
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Collapse>
+                  </ListItem>
+                );
+              })}
             </List>
           </SubMenuWrapper>
         </List>

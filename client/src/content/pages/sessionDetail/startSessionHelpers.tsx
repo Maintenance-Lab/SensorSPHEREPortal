@@ -27,25 +27,30 @@ export const checkStartingConditions = async (sessionId) => {
 
     const requirements = [
       {
-        text: "Add at least one device",
+        text: "Add at least one device to the session",
         done: devices.length > 0,
       },
       {
-        text: "Charge all devices to at least 10% battery",
-        done: devices.every(device => device.batteryLevel >= 10),
+        text: "All devices reporting battery are at least 10%",
+        done: devices.filter(device => device.batteryLevel != null && device.batteryLevel >= 0).every(device => device.batteryLevel >= 10),
       },
       {
-        // text: "Make sure all added devices are connected and unused ",
-        text: "Ensure all devices are connected",
-        done: devices.every(device => device.connectStatus === 'connected'),
+        text: "All devices reported a heartbeat in the last 2 minutes",
+        done: devices.every(device =>
+          device.lastHeartbeat && Date.now() - new Date(device.lastHeartbeat).getTime() < 120000
+        ),
       },
       {
-        text: "Ensure devices are not measuring in another session",
+        text: "Devices are not occupied",
         done: occupiedStatuses.every(status => status.occupied === false),
       },
       {
-        text: "Ensure all devices are configured",
-        done: sampleRates.every(device => device.sampleRate !== null),
+        text: "All devices have a sample rate assigned",
+        done: sampleRates.every(device => device.sampleRate != null),
+      },
+      {
+        text: "All sample rates are valid",
+        done: sampleRates.every(device => device.sampleRate > 0),
       },
     ];
 
@@ -54,8 +59,7 @@ export const checkStartingConditions = async (sessionId) => {
       return { allPassed: false, requirements: [requirements[0]] };
     }
 
-    const allPassed = requirements.filter(req => req.text !== "Ensure all devices are configured")
-      .every(req => req.done);
+    const allPassed = requirements.every(req => req.done);
 
     return { allPassed, requirements }
     // setIsStartDisabled(!allPassed);
@@ -67,10 +71,17 @@ export const isValidDate = (dateString: any) => {
   return !isNaN(date.getTime());
 };
 
-export const calculateLastSeen = (timestamp) => {
-  if (!timestamp || typeof timestamp !== 'string') return Infinity;
+// Parse a timestamp that may be a string ("YYYY-MM-DD HH:MM:SS.mmm +00:00"),
+// an epoch-milliseconds number (as sent by the gateway) or a Date object.
+const parseTimestamp = (timestamp: any): Date | null => {
+  if (timestamp === null || timestamp === undefined || timestamp === '') return null;
+  if (timestamp instanceof Date) return isValidDate(timestamp) ? timestamp : null;
+  if (typeof timestamp === 'number') {
+    const date = new Date(timestamp);
+    return isValidDate(date) ? date : null;
+  }
+  if (typeof timestamp !== 'string') return null;
 
-  // Format the timestamp into a valid ISO string
   const iso = timestamp
     .replace(' ', 'T')
     .replace(/ ([+-]\d{2}:\d{2})$/, '$1')
@@ -79,15 +90,15 @@ export const calculateLastSeen = (timestamp) => {
     });
 
   const date = new Date(iso);
+  return isValidDate(date) ? date : null;
+};
 
-  // If it's an invalid date, return Infinity
-    if (!isValidDate(date)) return Infinity;
+export const calculateLastSeen = (timestamp) => {
+  const date = parseTimestamp(timestamp);
+  if (!date) return Infinity;
 
-  const now = new Date();
-  if (now.getTime() - date.getTime()) {
-    return now.getTime() - date.getTime();
-  }
-  return Infinity;
+  const diff = Date.now() - date.getTime();
+  return diff > 0 ? diff : Infinity;
 };
 
 export const formatLastSeenDevice = (device): string => {
@@ -101,7 +112,8 @@ export const formatLastSeenDevice = (device): string => {
 
 
 export const formatLastSeen = (timestamp): string => {
-  if (!timestamp || typeof timestamp !== 'string') return 'Unknown';
+  const date = parseTimestamp(timestamp);
+  if (!date) return 'Unknown';
 
 
   const diffInSeconds = Math.floor(calculateLastSeen(timestamp) / 1000);
@@ -133,29 +145,30 @@ export const formatLastSeen = (timestamp): string => {
 };
 
 export const formatExactTime = (timestamp): string => {
-  if (!timestamp || typeof timestamp !== 'string') return 'Unknown';
-
-  const iso = timestamp
-    .replace(' ', 'T')
-    .replace(/ ([+-]\d{2}:\d{2})$/, '$1')
-    .replace(/ ([+-]\d{4})$/, (_, offset) => {
-      return offset.slice(0, 3) + ':' + offset.slice(3);
-    });
-
-  const date = new Date(iso);
-  if (!isValidDate(date)) return timestamp;
+  const date = parseTimestamp(timestamp);
+  if (!date) return typeof timestamp === 'string' ? timestamp : 'Unknown';
   return date.toLocaleString();
 };
 
 export const renderBatteryCell = (params) => {
   const level = params.value;
+
+  if (level === null || level === undefined || level < 0) {
+    const connected = params.row?.connectStatus === 'connected' || params.row?.connected === 'connected';
+    return (
+      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ color: connected ? 'success.main' : 'text.disabled' }}>
+        <Icons.Cable fontSize="small" />
+        <Typography variant="inherit" color={connected ? 'success.main' : 'text.disabled'}>
+          {connected ? 'Cable' : 'Offline'}
+        </Typography>
+      </Stack>
+    );
+  }
+
   let IconComponent = Icons.BatteryAlert;
   let color = 'error.main';
 
-  if (level === null || level === undefined) {
-    IconComponent = Icons.BatteryAlert;
-    color = 'gray';
-  } else if (level > 90) {
+  if (level > 90) {
     IconComponent = Icons.BatteryFull;
     color = 'success.main';
   } else if (level > 75) {
@@ -179,7 +192,7 @@ export const renderBatteryCell = (params) => {
     <Stack direction="row" alignItems="center" sx={{ color, fontWeight: 500 }}>
       <IconComponent fontSize="small" />
       <Typography variant="inherit" sx={{ ml: 0.5 }}>
-        {level != null ? `${level}%` : '?'}
+        {level}%
       </Typography>
     </Stack>
   );
@@ -187,6 +200,7 @@ export const renderBatteryCell = (params) => {
 
 export const ConnectedCell = ({ deviceId, status, sessionId, lastSeen, lastHeartbeat }) => {
   const [occupied, setOccupied] = useState<boolean | null>(null);
+  const [lastSeenSeconds, setLastSeenSeconds] = useState<number>(0);
 
   useEffect(() => {
     let mounted = true;
@@ -199,6 +213,17 @@ export const ConnectedCell = ({ deviceId, status, sessionId, lastSeen, lastHeart
       });
     return () => { mounted = false; };
   }, [deviceId, sessionId]);
+
+  useEffect(() => {
+    if (status !== 'connected') return;
+    const recount = () => {
+      const base = lastHeartbeat ? new Date(lastHeartbeat).getTime() : Date.now();
+      setLastSeenSeconds(Math.max(0, Math.floor((Date.now() - base) / 1000)));
+    };
+    recount();
+    const interval = setInterval(recount, 1000);
+    return () => clearInterval(interval);
+  }, [lastHeartbeat, status]);
 
   const tooltip = occupied === true
     ? 'Device is measuring in another session'
@@ -217,6 +242,7 @@ export const ConnectedCell = ({ deviceId, status, sessionId, lastSeen, lastHeart
       <Stack direction="row" alignItems="center" spacing={0.5}>
         <Icons.Sensors sx={{ color: 'success.main' }} />
         <Typography variant="body2" color="success.main">online</Typography>
+        <Typography variant="body2" color="text.secondary">(last: {lastSeenSeconds}s)</Typography>
       </Stack>
     );
   } else {

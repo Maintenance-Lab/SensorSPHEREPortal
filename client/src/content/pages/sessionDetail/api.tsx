@@ -20,7 +20,7 @@ export const fetchDevices =  async (sessionId: number) => {
   return apiRequest(`/api/devices/all/${sessionId}`, "GET");
 }
 
-export const removeDevicesFromSession = async (sessionId: number, selectedDeviceIds: number[]) => {
+export const removeDevicesFromSession = async (sessionId: number, selectedDeviceIds: string[]) => {
     return apiRequest("/api/sessions/removeFromSession", "DELETE", {
       sessionId,
       deviceIds: selectedDeviceIds,
@@ -47,7 +47,7 @@ export const deleteSession = async (sessionId: number) => {
   });
 }
 
-export const addDevices = async (sessionId: number, selectedAddDeviceIds: number[]) => {
+export const addDevices = async (sessionId: number, selectedAddDeviceIds: string[]) => {
     return apiRequest("/api/devices/addToSession", "POST", {
       sessionId,
       deviceIds: selectedAddDeviceIds,

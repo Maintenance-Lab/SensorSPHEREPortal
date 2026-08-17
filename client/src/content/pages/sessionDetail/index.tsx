@@ -135,8 +135,7 @@ const SessionDetail = () => {
   const [devices, setDevices] = useState([]);
   const [availableDevices, setAvailableDevices] = useState([]);
   const [devicesRows, setDevicesRows] = useState<GridRowsProp>([]);
-  const [selectedDeviceIds, setSelectedDeviceIds] = useState([]);
-  const [selectedAddDeviceIds, setSelectedAddDeviceIds] = useState([]);
+  const [availableDevicesRows, setAvailableDevicesRows] = useState<GridRowsProp>([]);
   const [selectedDevice, setSelectedDevice] = useState(null);
 
   // Tree Properties
@@ -375,6 +374,24 @@ const SessionDetail = () => {
     fetchSampleRates();
   }, [devices, sessionId, sampleRate, devicesWithoutSampleRate]);
 
+  useEffect(() => {
+    const buildRows = async () => {
+      const sampleRateMap = {};
+      await Promise.all(
+        availableDevices.map(async (device) => {
+          try {
+            const sr = await api.getSampleRate(sessionId, device.deviceId);
+            if (sr != null) sampleRateMap[device.deviceId] = sr;
+          } catch {
+            // Device not in session yet; leave as not set.
+          }
+        })
+      );
+      setAvailableDevicesRows(toolbar.getAvailableDevicesRows(availableDevices, sampleRateMap));
+    };
+    buildRows();
+  }, [availableDevices, sessionId, sampleRate]);
+
 
 const handleCheckStartingConditions = async () => {
     const data = await checkStartingConditions(sessionId);
@@ -462,6 +479,22 @@ const handleCheckStartingConditions = async () => {
     setSessionStatus('Idle');
     api.updateSessionStatus(sessionId, "Idle");
   }
+
+  const refreshDeviceLists = async () => {
+    await fetchSessionDevices(sessionId, setDevices);
+    await handleAvailableDevices(sessionId, setAvailableDevices);
+    await handleCheckStartingConditions();
+  };
+
+  const handleIncludeDevice = async (deviceId: string) => {
+    await api.addDevices(sessionId, [deviceId]);
+    await refreshDeviceLists();
+  };
+
+  const handleExcludeDevice = async (deviceId: string) => {
+    await api.removeDevicesFromSession(sessionId, [deviceId]);
+    await refreshDeviceLists();
+  };
 
   return (
     <div>
@@ -687,6 +720,7 @@ const handleCheckStartingConditions = async () => {
                 handleNext,
                 handleReconfigure,
                 setExpandedNodes,
+                onExclude: handleExcludeDevice,
             })}
             sortingOrder={['asc', 'desc']}
             density='compact'
@@ -703,26 +737,12 @@ const handleCheckStartingConditions = async () => {
                 sortModel: [{ field: 'lastSeenRaw', sort: 'asc' }],
               },
             }}
-            checkboxSelection
-            onRowSelectionModelChange={(newSelection) => setSelectedDeviceIds(newSelection)}
+            disableRowSelectionOnClick
             slots={{
               toolbar: () => <toolbar.ConnectedDevicesToolbar
-                selectedDeviceIds={selectedDeviceIds}
-                sessionId={sessionId}
-                fetchSessionDevices={() => fetchSessionDevices(sessionId, setDevices)}
-                setAvailableDevices={setAvailableDevices}
-                setDevices={setDevices}
-                sessionStatus={sessionStatus}
-                handleAvailableDevices={() => handleAvailableDevices(sessionId, setAvailableDevices)}
-                handleCheckStartingConditions={handleCheckStartingConditions}
                 deviceCount={devicesRows.length}
               />}}
             sx={{
-              ...(devicesRows.length <= 1 ? {
-                "& .MuiDataGrid-columnHeaderCheckbox": {
-                  display: "none",
-                },
-              } : {}),
               "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {
                 outline: "none !important",
               },
@@ -762,11 +782,30 @@ const handleCheckStartingConditions = async () => {
       </PageTitleWrapper>
       <Container>
         <Stack spacing={2} sx={{ mt: 4 }}>
-          <Typography variant="h2">Available Devices to Add</Typography>
+          <Typography variant="h4">Available Devices</Typography>
           <Paper>
             <DataGrid
-              rows={toolbar.getAvailableDevicesRows(availableDevices)}
-              columns={toolbar.availableDevicesColumns(sessionId)}
+              rows={availableDevicesRows}
+              columns={toolbar.availableDevicesColumns({
+                handleRowClick,
+                sessionId,
+                selectedDevice,
+                loading,
+                configurationDialogOpen,
+                activeStep,
+                steps,
+                sampleRate,
+                selectedProperties,
+                expandedNodes,
+                allProperties,
+                sessionStatus,
+                renderTree,
+                handleCloseConfigurationDialog,
+                handleNext,
+                handleReconfigure,
+                setExpandedNodes,
+                onInclude: handleIncludeDevice,
+              })}
               sortModel={[{ field: 'lastSeenRaw', sort: 'asc' }]}
               columnVisibilityModel={{
                 lastSeenRaw: false,
@@ -779,26 +818,12 @@ const handleCheckStartingConditions = async () => {
                 pagination: { paginationModel: { pageSize: 10 } },
               }}
               disableColumnMenu
-              checkboxSelection
-              onRowSelectionModelChange={(newSelection) => setSelectedAddDeviceIds(newSelection)}
+              disableRowSelectionOnClick
               slots={{
                 toolbar: () => <toolbar.AvailableDevicesToolbar
-                  selectedAddDeviceIds={selectedAddDeviceIds}
-                  sessionId={sessionId}
-                  fetchSessionDevices={() => fetchSessionDevices(sessionId, setDevices)}
-                  setAvailableDevices={setAvailableDevices}
-                  setDevices={setDevices}
-                  sessionStatus={sessionStatus}
-                  handleAvailableDevices={() => handleAvailableDevices(sessionId, setAvailableDevices)}
-                  handleCheckStartingConditions={handleCheckStartingConditions}
                   availableCount={availableDevices.length}
                 />}}
                 sx={{
-                ...(availableDevices.length <= 1 ? {
-                  "& .MuiDataGrid-columnHeaderCheckbox": {
-                    display: "none",
-                  },
-                } : {}),
                 "& .MuiDataGrid-columnHeader:focus, .MuiDataGrid-cell:focus, .MuiDataGrid-cell:focus-within": {
                   outline: "none !important",
                 },

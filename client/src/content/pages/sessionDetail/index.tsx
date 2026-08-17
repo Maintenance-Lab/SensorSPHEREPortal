@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 // MUI Components
 import {
   Box, Button, Checkbox, Container, Divider, FormControlLabel, IconButton, Link, List, ListItem,
-  ListItemIcon, ListItemText, Paper, Stack, TextField, Tooltip, Typography
+  ListItemIcon, ListItemText, Menu, MenuItem, Paper, Stack, TextField, Tooltip, Typography
 } from '@mui/material';
 
 import { DataGrid, GridRowsProp } from '@mui/x-data-grid';
@@ -130,6 +130,7 @@ const SessionDetail = () => {
   const [archiveTarget, setArchiveTarget] = useState(false);
   const [configurationDialogOpen, setConfigurationDialogOpen] = useState(false);
   const [StartSessionDialogOpen, setStartSessionDialogOpen] = useState(false);
+  const [sessionMenuAnchor, setSessionMenuAnchor] = useState<null | HTMLElement>(null);
 
   // Device Selection and Properties
   const [devices, setDevices] = useState([]);
@@ -592,40 +593,47 @@ const handleCheckStartingConditions = async () => {
             </Stack>
             <Stack direction="row" spacing={1} alignItems="center">
               <SessionStatusTag status={sessionStatus} />
-              {isArchived ? (
-                <Tooltip title="Unarchive Session">
-                  <span>
-                    <IconButton
-                      onClick={() => handleOpenArchiveDialog(false)}
-                      disabled={sessionStatus === 'Measuring'}
-                    >
-                      <Icons.UnarchiveOutlined />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              ) : (
-                <Tooltip title="Archive Session">
-                  <span>
-                    <IconButton
-                      onClick={() => handleOpenArchiveDialog(true)}
-                      disabled={sessionStatus === 'Measuring'}
-                    >
-                      <Icons.ArchiveOutlined />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              )}
-              <Tooltip title="Delete Session">
+              <Tooltip title="Session options">
                 <span>
                   <IconButton
-                    color="error"
-                    onClick={handleOpenDialog}
-                    disabled={sessionStatus === 'Measuring'}
+                    onClick={(event) => setSessionMenuAnchor(event.currentTarget)}
                   >
-                    <Icons.DeleteOutline />
+                    <Icons.MoreVert />
                   </IconButton>
                 </span>
               </Tooltip>
+              <Menu
+                anchorEl={sessionMenuAnchor}
+                open={Boolean(sessionMenuAnchor)}
+                onClose={() => setSessionMenuAnchor(null)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+              >
+                <MenuItem
+                  disabled={sessionStatus === 'Measuring'}
+                  onClick={() => {
+                    setSessionMenuAnchor(null);
+                    handleOpenArchiveDialog(!isArchived);
+                  }}
+                >
+                  <ListItemIcon>
+                    {isArchived ? <Icons.UnarchiveOutlined fontSize="small" /> : <Icons.ArchiveOutlined fontSize="small" />}
+                  </ListItemIcon>
+                  <ListItemText primary={isArchived ? 'Unarchive Session' : 'Archive Session'} />
+                </MenuItem>
+                <MenuItem
+                  disabled={sessionStatus === 'Measuring'}
+                  onClick={() => {
+                    setSessionMenuAnchor(null);
+                    handleOpenDialog();
+                  }}
+                >
+                  <ListItemIcon>
+                    <Icons.DeleteOutline fontSize="small" color="error" />
+                  </ListItemIcon>
+                  <ListItemText primary="Delete Session" sx={{ color: 'error.main' }} />
+                </MenuItem>
+              </Menu>
             </Stack>
           </Stack>
 

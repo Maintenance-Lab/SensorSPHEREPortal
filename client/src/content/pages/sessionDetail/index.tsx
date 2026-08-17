@@ -22,6 +22,7 @@ import StartSessionDialog from './dialogs/startSessionDialog';
 
 import { RenderTree } from './types';
 import { checkStartingConditions, formatTime } from './startSessionHelpers';
+import { StatusTag } from './statusTag';
 import { formatDeviceRow, fetchDevicesWithSampleRates } from './utils';
 import * as api from './api';
 import * as toolbar from './toolbar';
@@ -70,48 +71,6 @@ const fetchSessionStatus = async (sessionId: number, setSessionStatus: Function)
   setSessionStatus(status);
   return status;
 }
-
-const SessionStatusTag = ({ status }: { status: string }) => {
-  const recording = status === 'Measuring';
-
-  return (
-    <Stack
-      direction="row"
-      alignItems="center"
-      spacing={1}
-      sx={{
-        px: 1.5,
-        py: 0.5,
-        borderRadius: '16px',
-        bgcolor: recording ? 'rgba(211, 47, 47, 0.08)' : 'action.hover',
-      }}
-    >
-      <Box
-        sx={{
-          width: 10,
-          height: 10,
-          borderRadius: '50%',
-          bgcolor: recording ? 'error.main' : 'text.disabled',
-          ...(recording && {
-            animation: 'pulse 1.5s ease-in-out infinite',
-            '@keyframes pulse': {
-              '0%': { boxShadow: '0 0 0 0 rgba(211, 47, 47, 0.6)' },
-              '70%': { boxShadow: '0 0 0 8px rgba(211, 47, 47, 0)' },
-              '100%': { boxShadow: '0 0 0 0 rgba(211, 47, 47, 0)' },
-            },
-          }),
-        }}
-      />
-      <Typography
-        variant="button"
-        fontWeight="bold"
-        color={recording ? 'error.main' : 'text.secondary'}
-      >
-        {recording ? 'Recording' : status}
-      </Typography>
-    </Stack>
-  );
-};
 
 const SessionDetail = () => {
   // Session Info
@@ -476,9 +435,9 @@ const handleCheckStartingConditions = async () => {
   };
 
   const handleStopSession = async () => {
-    api.stopBatch(sessionId);
+    await api.stopBatch(sessionId);
+    await api.updateSessionStatus(sessionId, "Idle");
     setSessionStatus('Idle');
-    api.updateSessionStatus(sessionId, "Idle");
   }
 
   const refreshDeviceLists = async () => {
@@ -592,7 +551,36 @@ const handleCheckStartingConditions = async () => {
               )}
             </Stack>
             <Stack direction="row" spacing={1} alignItems="center">
-              <SessionStatusTag status={sessionStatus} />
+              <StatusTag status={sessionStatus} />
+              {sessionStatus === 'Idle' && (
+                <Tooltip title="Start Session">
+                  <span>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleOpenStartSessionDialog}
+                      disabled={isStartDisabled}
+                      sx={{ height: 32, minWidth: 40, p: 1, borderRadius: 1 }}
+                    >
+                      <Icons.PlayArrow />
+                    </Button>
+                  </span>
+                </Tooltip>
+              )}
+              {sessionStatus === 'Measuring' && (
+                <Tooltip title="Stop Session">
+                  <span>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      onClick={handleStopSession}
+                      sx={{ height: 32, minWidth: 40, p: 1, borderRadius: 1 }}
+                    >
+                      <Icons.Pause />
+                    </Button>
+                  </span>
+                </Tooltip>
+              )}
               <Tooltip title="Session options">
                 <span>
                   <IconButton
@@ -662,7 +650,7 @@ const handleCheckStartingConditions = async () => {
           <Divider />
 
           {sessionStatus === 'Idle' && (
-            <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+            <Stack direction="row" spacing={2} alignItems="center">
               <List dense sx={{ p: 0, m: 0 }}>
                 {startRequirements.map(({ text, done }) => (
                   <ListItem key={text} sx={{ py: 0.25 }}>
@@ -680,22 +668,6 @@ const handleCheckStartingConditions = async () => {
                   </ListItem>
                 ))}
               </List>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleOpenStartSessionDialog}
-                disabled={isStartDisabled}
-              >
-                Start Session
-              </Button>
-            </Stack>
-          )}
-
-          {sessionStatus === 'Measuring' && (
-            <Stack direction="row" spacing={1} justifyContent="flex-end">
-              <Button variant="outlined" color="error" onClick={handleStopSession}>
-                Stop Session
-              </Button>
             </Stack>
           )}
 

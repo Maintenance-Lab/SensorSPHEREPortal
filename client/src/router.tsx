@@ -19,6 +19,7 @@ const Loader = (Component) => (props) =>
 
 const Login = Loader(lazy(() => import('src/content/pages/login/login')));
 const Home = Loader(lazy(() => import('src/content/pages/home/')));
+const SystemStatus = Loader(lazy(() => import('src/content/pages/systemStatus/')));
 
 // Pages
 
@@ -116,6 +117,20 @@ const routes: RouteObject[] = [
             element: (
               <ProtectedRoute>
             <Home />
+          </ProtectedRoute>
+        )
+      }
+    ]
+  },
+  {
+    path: 'system',
+    element: <SidebarLayout />,
+    children: [
+      {
+        path: '',
+        element: (
+          <ProtectedRoute>
+            <SystemStatus />
           </ProtectedRoute>
         )
       }

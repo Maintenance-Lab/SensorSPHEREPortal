@@ -32,6 +32,10 @@ export class MQTTServer {
     this.client.subscribe(topic);
   }
 
+  get connected(): boolean {
+    return this.client.connected;
+  }
+
   publish(topic: string, message: string, options?: any) {
     // this.client.publish(topic, message);
     this.client.publish(topic, message, options);

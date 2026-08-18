@@ -20,6 +20,7 @@ import { SidebarContext } from 'src/contexts/sidebarContext';
 import CloseTwoToneIcon from '@mui/icons-material/CloseTwoTone';
 import HeaderUserbox from './userbox';
 import HeaderMenu from './menu';
+import GatewayStatus from './gatewayStatus';
 import { set } from 'date-fns';
 
 const HeaderWrapper = styled(Box)(
@@ -220,6 +221,7 @@ function Header() {
       </Stack>
       <Box display="flex" alignItems="center">
         {/* <HeaderButtons /> */}
+        <GatewayStatus />
         <HeaderUserbox />
         <Box
           component="span"

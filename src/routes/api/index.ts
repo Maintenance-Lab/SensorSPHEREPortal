@@ -6,6 +6,7 @@ import DeviceRouter from './devices.js';
 import ProjectsRouter from './projects.js';
 import ProjectRouter from './project/index.js';
 import SessionRouter from './sessions.js';
+import StatusRouter from './status.js';
 import TestRouter from './test.js';
 // import MQTTRouter from './mqtt.js';
 
@@ -18,6 +19,7 @@ router.use("/login", LoginRouter);
 router.use("/projects", ProjectsRouter);
 router.use("/project", ProjectRouter);
 router.use("/sessions", SessionRouter);
+router.use("/status", StatusRouter);
 router.use("/test", TestRouter);
 // router.use("/mqtt", MQTTRouter);
 

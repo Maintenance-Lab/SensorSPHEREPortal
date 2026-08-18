@@ -6,7 +6,7 @@ import mqtt from '../index.js';
 import WebSocket from 'ws';
 import { FIRMWARE } from '../config.js';
 
-const socket = new WebSocket('ws://localhost:8080');
+export const gatewaySocket = new WebSocket('ws://localhost:8080');
 
 // Hulp functies
 const splitProperty = (property: string): any => {
@@ -216,7 +216,7 @@ export const listUnits = async (): Promise<any> => {
       try {
         const data = JSON.parse(raw.toString());
         if (data.event === "list_units") {
-          socket.removeListener("message", handler);
+          gatewaySocket.removeListener("message", handler);
           resolve(data.units);
         }
       } catch (err) {
@@ -225,10 +225,10 @@ export const listUnits = async (): Promise<any> => {
     };
 
     // Attach the handler to the WebSocket
-    socket.on("message", handler);
+    gatewaySocket.on("message", handler);
 
     setTimeout(() => {
-      socket.removeListener("message", handler);
+      gatewaySocket.removeListener("message", handler);
         reject(new Error("Timeout waiting for list_units response"));
     }, 5000);
   });
@@ -252,7 +252,7 @@ export const sendConfigurationToDevice = async (deviceId: any): Promise<any> => 
       try {
         const data = JSON.parse(raw.toString());
         if (data.event === "sampleRate" && data.deviceId === deviceId) {
-          socket.removeListener("message", handler);
+          gatewaySocket.removeListener("message", handler);
           clearTimeout(timeout);
           resolve(data.sampleRate);
         }
@@ -262,11 +262,11 @@ export const sendConfigurationToDevice = async (deviceId: any): Promise<any> => 
     };
 
     // Attach the handler to the WebSocket
-    socket.on("message", handler);
+    gatewaySocket.on("message", handler);
 
     // Timeout after 5 seconds
     const timeout = setTimeout(() => {
-      socket.removeListener("message", handler);
+      gatewaySocket.removeListener("message", handler);
       resolve(null);
     }, 7500);
   });

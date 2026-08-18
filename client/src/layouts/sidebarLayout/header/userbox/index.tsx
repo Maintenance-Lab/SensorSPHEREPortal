@@ -20,6 +20,7 @@ import ExpandMoreTwoToneIcon from '@mui/icons-material/ExpandMoreTwoTone';
 import AccountBoxTwoToneIcon from '@mui/icons-material/AccountBoxTwoTone';
 import LockOpenTwoToneIcon from '@mui/icons-material/LockOpenTwoTone';
 import AccountTreeTwoToneIcon from '@mui/icons-material/AccountTreeTwoTone';
+import DnsTwoToneIcon from '@mui/icons-material/DnsTwoTone';
 import { getUser, logout } from 'src/helpers/cookies';
 import DesignServicesTwoToneIcon from '@mui/icons-material/DesignServicesTwoTone';
 
@@ -103,6 +104,10 @@ function HeaderUserbox() {
         <ListItem button to="/account" component={NavLink} onClick={handleClose}>
           <AccountTreeTwoToneIcon fontSize="small" />
           <ListItemText primary="Account Settings" />
+        </ListItem>
+        <ListItem button to="/system" component={NavLink} onClick={handleClose}>
+          <DnsTwoToneIcon fontSize="small" />
+          <ListItemText primary="System Status" />
         </ListItem>
       </List>
       <Divider />

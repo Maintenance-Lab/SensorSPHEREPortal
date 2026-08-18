@@ -79,7 +79,7 @@ const Home = () => {
       </PageTitleWrapper>
       <CreateProjectDialog open={openCreateProjectDialog} setOpen={setOpenCreateProjectDialog} />
       <Container>
-          <Typography variant="h2" paddingY={2}>Recent Projects</Typography>
+        <Typography variant="h2" paddingY={2}>Recent Projects</Typography>
         <Grid container spacing={2} >
           {loading && (
             <Grid item xs={6} lg={4}>

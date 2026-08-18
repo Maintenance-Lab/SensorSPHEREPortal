@@ -35,9 +35,9 @@ export const checkStartingConditions = async (sessionId) => {
         done: devices.filter(device => device.batteryLevel != null && device.batteryLevel >= 0).every(device => device.batteryLevel >= 10),
       },
       {
-        text: "All devices reported a heartbeat in the last 2 minutes",
+        text: "All devices are connected to the gateway",
         done: devices.every(device =>
-          device.lastHeartbeat && Date.now() - new Date(device.lastHeartbeat).getTime() < 120000
+          device.connectStatus === 'connected'
         ),
       },
       {

@@ -106,7 +106,7 @@ function ManagementUserSettings() {
           )}
           {/* {currentTab === 'notifications' && <NotificationsTab />} */}
           {currentTab === 'security' && (
-            <SecurityTab sessions={loginSessions} />
+            <SecurityTab sessions={loginSessions} account={account} />
           )}
         </Grid>
       </Grid>

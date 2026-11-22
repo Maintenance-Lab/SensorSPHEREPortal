@@ -40,11 +40,13 @@ import zIndex from '@mui/material/styles/zIndex';
 
 interface SecurityTabProps {
   sessions: any;
+  account?: any;
 }
 
 function SecurityTab(props: SecurityTabProps) {
   const theme = useTheme();
   const navigate = useNavigate();
+  const isForcedChange = props.account && !props.account.hasChangedPassword;
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -75,6 +77,7 @@ function SecurityTab(props: SecurityTabProps) {
   };
 
   const handlePasswordDialogClose = () => {
+    if (isForcedChange) return;
     setOpenPasswordDialog(false);
 
     setCurrentPass('');
@@ -233,14 +236,16 @@ function SecurityTab(props: SecurityTabProps) {
               {errorMessage}
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handlePasswordDialogClose} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleChangePassword} color="primary">
-            Change Password
-          </Button>
-        </DialogActions>
+          <DialogActions>
+              {!isForcedChange && (
+                  <Button onClick={handlePasswordDialogClose} color="primary">
+                      Cancel
+                  </Button>
+              )}
+              <Button onClick={handleChangePassword} color="primary">
+                  Change Password
+              </Button>
+          </DialogActions>
       </Dialog>
 
       <Snackbar

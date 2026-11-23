@@ -29,6 +29,7 @@
 .vscode
 /node_modules
 /node_modules
+.idea/
 
 # populate database python file
 database/populate_dummy.py

@@ -5,11 +5,12 @@ import { getSession } from '../../../utils.js';
 import { hash, verify } from '@node-rs/argon2';
 import jwt from 'jsonwebtoken';
 import { createLoginSession } from '../../../services/loginSession.js';
+import { isPasswordStrong } from '../../../tools/utils.js';
 
 const router = Router();
 
 router.get("/", async (req, res) => {
-  const response = await getSession(req, res);
+  const response = await getSession(req, res, true);
   if (!response) return;
 
   const { account, sessions } = response;
@@ -19,15 +20,19 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/password", async (req, res) => {
-  const response = await getSession(req, res);
+  const response = await getSession(req, res, true);
   if (!response) return;
 
   const { account } = response;
   if (!account) return res.status(401).json({ message: "Unauthorized" });
 
-  // let { newPass, currentPass } = req.body;
   let { newPass, currentPass, confirmNewPass } = req.body;
-  if (!newPass || !currentPass) return res.status(400).json({ message: "Current and new password required" });
+  if (typeof newPass !== "string" || typeof currentPass !== "string") {
+      return res.status(400).json({ message: "Current and new password required" });
+  }
+  if (!isPasswordStrong(newPass)) {
+      return res.status(400).json({ message: "Password must be between 12 and 128 characters long"})
+  }
   if (newPass === currentPass) return res.status(400).json({ message: "New password cannot be the same as the current password" });
   if (newPass !== confirmNewPass) return res.status(400).json({ message: "New passwords do not match" });
 
@@ -50,8 +55,6 @@ router.post("/password", async (req, res) => {
   const updatedAccount = await updateAccount(accountId, { password: newPass, hasChangedPassword: true });
   if (!updatedAccount) return res.status(500).json({ message: "Internal Server Error" });
 
-  console.log("updatedAccount", updatedAccount);
-
   const { name, role, hasAvatar, email, hasChangedPassword } = updatedAccount;
 
   const token = jwt.sign({ accountId, name, role, hasAvatar, email, hasChangedPassword }, JWT_ACCESS_SECRET, {
@@ -62,7 +65,6 @@ router.post("/password", async (req, res) => {
   const ip: any = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
   await createLoginSession({ account: accountId, token, userAgent, ip });
-  console.log("token", token);
 
   return res
     .cookie("token", token, {

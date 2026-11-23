@@ -118,7 +118,11 @@ function SecurityTab(props: SecurityTabProps) {
       setCurrentPass('');
       setNewPass('');
       setConfirmNewPass('');
-      handlePasswordDialogClose();
+      setErrorMessage('');
+      setOpenPasswordDialog(false);
+      if (isForcedChange) {
+        navigate('/home', {replace: true});
+      }
     } else {
       setSnackbar({
         open: true,
@@ -149,14 +153,14 @@ function SecurityTab(props: SecurityTabProps) {
     setFilteredSessions(
       sessions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
     );
-    console.log("sessions ", sessions);
-    console.log("filteredSessions ", filteredSessions);
   }, [sessions, page, rowsPerPage]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('action') === 'change') handlePasswordDialogOpen();
-  }, []);
+    if (urlParams.get('action') === 'change' || isForcedChange) {
+      handlePasswordDialogOpen();
+    }
+  }, [isForcedChange]);
 
   const handleChangePage = (
     event: MouseEvent<HTMLButtonElement> | null,

@@ -36,6 +36,7 @@ import DoneTwoToneIcon from '@mui/icons-material/DoneTwoTone';
 import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
 import { useNavigate } from 'react-router-dom';
 import MuiAlert from '@mui/material/Alert';
+import { createPortal } from 'react-dom';
 import zIndex from '@mui/material/styles/zIndex';
 
 interface SecurityTabProps {
@@ -128,7 +129,7 @@ function SecurityTab(props: SecurityTabProps) {
         open: true,
         message: data.message || 'Failed to update password',
         severity: 'error',
-        sx: { zIndex: 1300 }
+        sx: { zIndex: 1400 }
       });
     }
   };
@@ -252,11 +253,13 @@ function SecurityTab(props: SecurityTabProps) {
           </DialogActions>
       </Dialog>
 
+    {createPortal(
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        sx={snackbar.sx || { zIndex: 1500 }}
       >
         <MuiAlert
           onClose={handleSnackbarClose}
@@ -266,7 +269,9 @@ function SecurityTab(props: SecurityTabProps) {
         >
           {snackbar.message}
         </MuiAlert>
-      </Snackbar>
+      </Snackbar>,
+      document.body
+    )}
     </Grid>
   );
 }

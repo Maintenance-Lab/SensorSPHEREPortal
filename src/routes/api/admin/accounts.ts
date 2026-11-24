@@ -43,7 +43,7 @@ AdminAccountRouter.post("/create", async (req, res) => {
             return res.json({success: false, error: "Invalid email address"});
         }
         if (typeof password !== "string" || !isPasswordStrong(password)) {
-            return res.json({success: false, error: "Password must be between 12 and 128 characters long"});
+            return res.json({success: false, error: "Password must be between 15 and 128 characters long"});
         }
 
         const hashedPassword = await hash(password);
@@ -92,7 +92,7 @@ AdminAccountRouter.post("/update", async (req, res) => {
 
         if (password !== undefined && password !== "") {
             if (typeof password !== "string" || !isPasswordStrong(password)) {
-                return res.json({success: false, error: "Password must be between 12 and 128 characters long"});
+                return res.json({success: false, error: "Password must be between 15 and 128 characters long"});
             }
             updates.password = await hash(password);
             updates.hasChangedPassword = false;

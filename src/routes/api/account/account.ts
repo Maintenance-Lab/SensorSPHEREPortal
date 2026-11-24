@@ -31,7 +31,7 @@ router.post("/password", async (req, res) => {
       return res.status(400).json({ message: "Current and new password required" });
   }
   if (!isPasswordStrong(newPass)) {
-      return res.status(400).json({ message: "Password must be between 12 and 128 characters long"})
+      return res.status(400).json({ message: "Password must be between 15 and 128 characters long"})
   }
   if (newPass === currentPass) return res.status(400).json({ message: "New password cannot be the same as the current password" });
   if (newPass !== confirmNewPass) return res.status(400).json({ message: "New passwords do not match" });

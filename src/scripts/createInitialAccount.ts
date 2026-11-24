@@ -31,7 +31,7 @@ const main = async () => {
     }
 
     while (!isPasswordStrong(password)) {
-        console.error("The password is not strong enough. Please make sure it is between 12 and 128 characters long");
+        console.error("The password is not strong enough. Please make sure it is between 15 and 128 characters long");
         password = reader.question("Enter a password: ", {hideEchoBack: true});
     }
 

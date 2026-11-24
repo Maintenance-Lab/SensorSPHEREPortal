@@ -41,7 +41,7 @@ export const handleMongoError = (error: any) => {
 };
 
 export const isPasswordStrong = (password: string) => {
-    return password.length >= 12 && password.length <= 128;
+    return password.length >= 15 && password.length <= 128;
 };
 
 export const isEmail = (email: string) => {

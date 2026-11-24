@@ -380,7 +380,7 @@ const ManageUsers = () => {
               onChange={handleChange}
               label="Role"
             >
-              <MenuItem value="administrator">Administrator</MenuItem>
+              <MenuItem value="admin">Administrator</MenuItem>
               <MenuItem value="student">Student</MenuItem>
               <MenuItem value="teacher">Teacher</MenuItem>
               <MenuItem value="staff">Staff</MenuItem>
@@ -451,7 +451,7 @@ const ManageUsers = () => {
                         handleRoleChange(account._id, e.target.value)
                       }
                     >
-                      <MenuItem value="administrator">Administrator</MenuItem>
+                      <MenuItem value="admin">Administrator</MenuItem>
                       <MenuItem value="student">Student</MenuItem>
                       <MenuItem value="teacher">Teacher</MenuItem>
                       <MenuItem value="staff">Staff</MenuItem>

@@ -40,7 +40,7 @@ export const deleteLoginSession = async (id: number): Promise<LoginSession> => {
   }
 };
 
-export const deleteLoginSessionsByAccountID = async (id: number) => {
+export const deleteAllLoginSessionsByAccountID = async (id: number) => {
   try {
     await LoginSession.destroy({ where: { Account: id }});
     return true;

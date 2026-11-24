@@ -8,7 +8,6 @@ import { createLoginSession } from '../../services/loginSession.js';
 const router = Router();
 
 router.post("/", async (req, res) => {
-  console.log("login route", req.body);
   const { username, password } = req.body;
 
   // await createAccount({ name: "Test2", email: "ammie2206@gmail.com", password: await hash("password123"), role: "admin" })

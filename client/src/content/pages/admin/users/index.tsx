@@ -114,7 +114,7 @@ const ManageUsers = () => {
     name: '',
     email: '',
     role: '',
-    password: generateRandomString(8)
+    password: generateRandomString(15)
   });
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -218,7 +218,7 @@ const ManageUsers = () => {
             name: '',
             email: '',
             role: '',
-            password: generateRandomString(8)
+            password: generateRandomString(15)
           });
           setSnackbar({
             open: true,
@@ -245,7 +245,7 @@ const ManageUsers = () => {
   };
 
   const handleResetPassword = (id: number) => {
-    const password = generateRandomString(8);
+    const password = generateRandomString(15);
     updateAccount(id, { password, hasChangedPassword: false });
   };
 
@@ -380,7 +380,7 @@ const ManageUsers = () => {
               onChange={handleChange}
               label="Role"
             >
-              <MenuItem value="administrator">Administrator</MenuItem>
+              <MenuItem value="admin">Administrator</MenuItem>
               <MenuItem value="student">Student</MenuItem>
               <MenuItem value="teacher">Teacher</MenuItem>
               <MenuItem value="staff">Staff</MenuItem>
@@ -451,7 +451,7 @@ const ManageUsers = () => {
                         handleRoleChange(account._id, e.target.value)
                       }
                     >
-                      <MenuItem value="administrator">Administrator</MenuItem>
+                      <MenuItem value="admin">Administrator</MenuItem>
                       <MenuItem value="student">Student</MenuItem>
                       <MenuItem value="teacher">Teacher</MenuItem>
                       <MenuItem value="staff">Staff</MenuItem>

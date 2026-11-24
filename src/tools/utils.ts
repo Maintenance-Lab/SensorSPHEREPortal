@@ -41,12 +41,7 @@ export const handleMongoError = (error: any) => {
 };
 
 export const isPasswordStrong = (password: string) => {
-  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-  const hasNumber = /\d/.test(password);
-  const hasUpperCase = /[A-Z]/.test(password);
-  const hasLowerCase = /[a-z]/.test(password);
-  const hasLength = password.length >= 8;
-  return hasSpecialChar && hasNumber && hasUpperCase && hasLowerCase && hasLength;
+    return password.length >= 15 && password.length <= 128;
 };
 
 export const isEmail = (email: string) => {

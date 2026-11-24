@@ -223,7 +223,7 @@ function SidebarMenu() {
     };
   }, [location.pathname]);
 
-  const isAdmin = user && user.role === 'administrator';
+  const isAdmin = user && user.role === 'admin';
   const adminMenu = isAdmin ? (
     <List
       component="div"

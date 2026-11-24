@@ -2,62 +2,66 @@
  This file runs as part of the setup and creates an administrator account.
 */
 
-import { hashSync } from '@node-rs/argon2';
+import {hashSync} from '@node-rs/argon2';
 import reader from 'readline-sync';
 import Account from '../models/Account.js';
-// import dbConnect from 'src/mongo";
-import { createAccount, getAllAccounts } from 'src/services/account.js';
-import { isEmail, isPasswordStrong } from 'src/tools/utils';
-
-// dbConnect();
+import {createAccount, getAllAccounts} from 'src/services/account.js';
+import {isEmail, isPasswordStrong} from 'src/tools/utils';
 
 const main = async () => {
-  const accounts = await getAllAccounts();
-  // if (accounts.length > 0) {
-  //   console.log("An administrator account already exists. Exiting setup.");
-  //   process.exit(0);
-  // }
+    const accounts = await getAllAccounts();
+    if (accounts.length > 0) {
+        console.log("An administrator account already exists. Exiting setup.");
+        process.exit(0);
+    }
 
-  console.log("Welcome to the SensorSphere setup! Let's create an administrator account.");
+    console.log("Welcome to the SensorSphere setup! Let's create an administrator account.");
 
-  let name, email, password;
-  while (!name || !email || !password) {
-    name = reader.question("Enter a username: ");
-    email = reader.question("Enter an email address: ");
-    password = reader.question("Enter a password: ", { hideEchoBack: true });
-    if (!name || !email || !password) console.error("Please provide a username, email address, and password.\n");
-  }
+    let name, email, password;
+    while (!name || !email || !password) {
+        name = reader.question("Enter a username: ");
+        email = reader.question("Enter an email address: ");
+        password = reader.question("Enter a password: ", {hideEchoBack: true});
+        if (!name || !email || !password) console.error("Please provide a username, email address, and password.\n");
+    }
 
-  while (!isEmail(email)) {
-    console.error("The email address is not valid.");
-    email = reader.question("Enter an email address: ");
-  }
+    while (!isEmail(email)) {
+        console.error("The email address is not valid.");
+        email = reader.question("Enter an email address: ");
+    }
 
-  //   while (!isPasswordStrong(password)) {
-  //     console.error(
-  //       "The password is not strong enough. Please make sure it has at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character."
-  //     );
-  //     password = reader.question("Enter a password: ", { hideEchoBack: true });
-  //   }
+    while (!isPasswordStrong(password)) {
+        console.error("The password is not strong enough. Please make sure it is between 15 and 128 characters long");
+        password = reader.question("Enter a password: ", {hideEchoBack: true});
+    }
 
-  console.log("Creating administrator account...");
-  const accountObj: Partial<Account> = {
-    name,
-    email,
-    password: hashSync(password),
-    role: "admin",
-    hasChangedPassword: true, // We already created a secure password, no need to change it
-  };
-  const account = await createAccount(accountObj);
+    console.log("Creating administrator account...");
+    const accountObj: Partial<Account> = {
+        name,
+        email,
+        password: hashSync(password),
+        role: "admin",
+        hasChangedPassword: true,
+    };
 
-  if (!account) {
-    console.error("An error occurred while creating the administrator account.");
-    process.exit(1);
-  }
+    try {
+        const account = await createAccount(accountObj);
 
-  console.log("Administrator account created successfully.");
-  console.log("Setup complete. You can now start the backend and frontend.");
-  process.exit(0);
+        if (!account) {
+            console.error("An error occurred while creating the administrator account.");
+            process.exit(1);
+        }
+
+        console.log("Administrator account created successfully.");
+        console.log("Setup complete. You can now start the backend and frontend.");
+        process.exit(0);
+    } catch (error) {
+        console.error("Failed to create administrator account (the username or email may already exist):", error);
+        process.exit(1);
+    }
 };
 
-main();
+main().catch((error) => {
+    console.error("Setup failed:", error);
+    process.exit(1);
+});

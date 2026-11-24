@@ -36,15 +36,18 @@ import DoneTwoToneIcon from '@mui/icons-material/DoneTwoTone';
 import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
 import { useNavigate } from 'react-router-dom';
 import MuiAlert from '@mui/material/Alert';
+import { createPortal } from 'react-dom';
 import zIndex from '@mui/material/styles/zIndex';
 
 interface SecurityTabProps {
   sessions: any;
+  account?: any;
 }
 
 function SecurityTab(props: SecurityTabProps) {
   const theme = useTheme();
   const navigate = useNavigate();
+  const isForcedChange = props.account && !props.account.hasChangedPassword;
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -75,6 +78,7 @@ function SecurityTab(props: SecurityTabProps) {
   };
 
   const handlePasswordDialogClose = () => {
+    if (isForcedChange) return;
     setOpenPasswordDialog(false);
 
     setCurrentPass('');
@@ -115,13 +119,17 @@ function SecurityTab(props: SecurityTabProps) {
       setCurrentPass('');
       setNewPass('');
       setConfirmNewPass('');
-      handlePasswordDialogClose();
+      setErrorMessage('');
+      setOpenPasswordDialog(false);
+      if (isForcedChange) {
+        navigate('/home', {replace: true});
+      }
     } else {
       setSnackbar({
         open: true,
         message: data.message || 'Failed to update password',
         severity: 'error',
-        sx: { zIndex: 1300 }
+        sx: { zIndex: 1400 }
       });
     }
   };
@@ -146,14 +154,14 @@ function SecurityTab(props: SecurityTabProps) {
     setFilteredSessions(
       sessions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
     );
-    console.log("sessions ", sessions);
-    console.log("filteredSessions ", filteredSessions);
   }, [sessions, page, rowsPerPage]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('action') === 'change') handlePasswordDialogOpen();
-  }, []);
+    if (urlParams.get('action') === 'change' || isForcedChange) {
+      handlePasswordDialogOpen();
+    }
+  }, [isForcedChange]);
 
   const handleChangePage = (
     event: MouseEvent<HTMLButtonElement> | null,
@@ -233,21 +241,25 @@ function SecurityTab(props: SecurityTabProps) {
               {errorMessage}
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handlePasswordDialogClose} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleChangePassword} color="primary">
-            Change Password
-          </Button>
-        </DialogActions>
+          <DialogActions>
+              {!isForcedChange && (
+                  <Button onClick={handlePasswordDialogClose} color="primary">
+                      Cancel
+                  </Button>
+              )}
+              <Button onClick={handleChangePassword} color="primary">
+                  Change Password
+              </Button>
+          </DialogActions>
       </Dialog>
 
+    {createPortal(
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        sx={snackbar.sx || { zIndex: 1500 }}
       >
         <MuiAlert
           onClose={handleSnackbarClose}
@@ -257,7 +269,9 @@ function SecurityTab(props: SecurityTabProps) {
         >
           {snackbar.message}
         </MuiAlert>
-      </Snackbar>
+      </Snackbar>,
+      document.body
+    )}
     </Grid>
   );
 }

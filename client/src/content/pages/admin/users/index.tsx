@@ -114,7 +114,7 @@ const ManageUsers = () => {
     name: '',
     email: '',
     role: '',
-    password: generateRandomString(8)
+    password: generateRandomString(12)
   });
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -218,7 +218,7 @@ const ManageUsers = () => {
             name: '',
             email: '',
             role: '',
-            password: generateRandomString(8)
+            password: generateRandomString(12)
           });
           setSnackbar({
             open: true,
@@ -245,7 +245,7 @@ const ManageUsers = () => {
   };
 
   const handleResetPassword = (id: number) => {
-    const password = generateRandomString(8);
+    const password = generateRandomString(12);
     updateAccount(id, { password, hasChangedPassword: false });
   };
 
